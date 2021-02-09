@@ -1,0 +1,11 @@
+# self evident, these ones...
+*.[doa]
+gyronimo_dox/
+heldump
+heltrace
+
+# vim temporary files:
+*.swp
+
+# Useless macos stuff:
+.DS_Store
