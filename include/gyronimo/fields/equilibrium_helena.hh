@@ -4,8 +4,8 @@
 
 // @equilibrium_helena.hh
 
-#ifndef GYRONIMO_HELENA_EQUILIBRIUM
-#define GYRONIMO_HELENA_EQUILIBRIUM
+#ifndef GYRONIMO_EQUILIBRIUM_HELENA
+#define GYRONIMO_EQUILIBRIUM_HELENA
 
 #include <gyronimo/fields/IR3field_c1.hh>
 #include <gyronimo/metrics/metric_helena.hh>
@@ -32,13 +32,14 @@ class equilibrium_helena : public IR3field_c1{
       const metric_helena *g, const interpolator2d_factory *ifactory);
   virtual ~equilibrium_helena() override;
 
-  virtual IR3 contravariant(const IR3& position, double time) const;
-  virtual dIR3 del_contravariant(const IR3& position, double time) const;
+  virtual IR3 contravariant(const IR3& position, double time) const override;
+  virtual dIR3 del_contravariant(
+      const IR3& position, double time) const override;
   virtual IR3 partial_t_contravariant(
-      const IR3& position, double time) const {return {0.0, 0.0, 0.0};};
+      const IR3& position, double time) const override {return {0.0,0.0,0.0};};
 
- double R0() const {return metric_->parser()->rmag();};
- double B0() const {return metric_->parser()->bmag();};
+  double R0() const {return metric_->parser()->rmag();};
+  double B0() const {return metric_->parser()->bmag();};
 
  private:
   const metric_helena *metric_;
@@ -48,4 +49,4 @@ class equilibrium_helena : public IR3field_c1{
 }// end namespace gyronimo.
 
 
-#endif // GYRONIMO_HELENA_EQUILIBRIUM
+#endif // GYRONIMO_EQUILIBRIUM_HELENA

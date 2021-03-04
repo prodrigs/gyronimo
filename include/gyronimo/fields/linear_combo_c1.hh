@@ -19,7 +19,7 @@ class linear_combo_c1 : public IR3field_c1 {
   linear_combo_c1(
       const std::array<const IR3field_c1*, N>& p,
       const metric_covariant* g, double m_factor, double t_factor);
-  virtual ~linear_combo_c1() {};
+  virtual ~linear_combo_c1() override {};
   virtual IR3 contravariant(const IR3& position, double time) const override;
   virtual dIR3 del_contravariant(
       const IR3& position, double time) const override;

@@ -19,7 +19,7 @@ class linear_combo : public IR3field {
   linear_combo(
       const std::array<const IR3field*, N>& p,
       const metric_covariant* g, double m_factor, double t_factor);
-  virtual ~linear_combo() {};
+  virtual ~linear_combo() override {};
   virtual IR3 contravariant(const IR3& position, double time) const override;
  private:
   std::array<const IR3field*, N> field_set_;
