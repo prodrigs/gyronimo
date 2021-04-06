@@ -13,14 +13,16 @@ namespace gyronimo {
 
 //! Read helper for indexed objects.
 template<class T>
-void operator>>(std::istream& is,T& x) {
+std::istream& operator>>(std::istream& is,T& x) {
   for (size_t i = 0; i < x.size(); i++) is >> x[i];
+  return is;
 }
 
 //! Write helper for indexed objects.
 template<class T>
-void operator<<(std::ostream& os,T& x) {
+std::ostream& operator<<(std::ostream& os,T& x) {
   for (size_t i = 0; i < x.size(); i++) os << x[i];
+  return os;
 }
 
 } // end namespace gyronimo.
