@@ -31,7 +31,7 @@ metric_stellna::~metric_stellna() {
   if(sigma_) delete sigma_;
 }
 SM3 metric_stellna::operator()(const IR3& position) const {
-  double phi = std::fmod(phi, phi_modulus_factor_);
+  double phi = std::fmod(position[IR3::w], phi_modulus_factor_);
   double r = position[IR3::u], theta = position[IR3::v];
   double coso = std::cos(theta), sino = std::sin(theta);
   double l_prime = (*dldphi_)(phi);
@@ -59,14 +59,15 @@ SM3 metric_stellna::operator()(const IR3& position) const {
   return {guu, guv, guw, gvv, gvw, gww};
 }
 dSM3 metric_stellna::del(const IR3& position) const {
-  double phi = std::fmod(phi, phi_modulus_factor_);
+  double phi = std::fmod(position[IR3::w], phi_modulus_factor_);
   double r = position[IR3::u], theta = position[IR3::v];
   double coso = std::cos(theta), sino = std::sin(theta);
-  double l_prime = (*dldphi_)(phi);
+  double l_prime = (*dldphi_)(phi), l_prime_prime=(*dldphi_).derivative(phi);
   double k = (*curvature_)(phi), k_prime = (*curvature_).derivative(phi),
       k_prime_prime = (*curvature_).derivative2(phi);
   double sigma = (*sigma_)(phi), sigma_prime = (*sigma_).derivative(phi),
       sigma_prime_prime = (*sigma_).derivative2(phi);
+  double tau = (*torsion_)(phi), tau_prime = (*torsion_).derivative(phi);
   double eta_over_k = parser_->eta_bar()/k;
   double eta_over_k_squared = eta_over_k*eta_over_k;
   double factor_a = 1.0 + eta_over_k_squared*eta_over_k_squared - sigma*sigma;
@@ -124,13 +125,13 @@ dSM3 metric_stellna::del(const IR3& position) const {
   double d_v_gvw = -r*r*(cos2o*factor_b +
           2.0*coso*sino*(2.0*sigma*k_prime/k + sigma_prime))/eta_over_k_squared;
   double d_w_gvw = r*r*(eta_over_k_squared*(
-          l_prime*torsion_->derivative(phi) +
-          (*torsion_)(phi)*dldphi_->derivative(phi)) +
+          l_prime*tau_prime +
+          tau*l_prime_prime) +
       0.5*sigma_prime_prime + sigma_prime*k_prime/k +
-      0.25*cos2o*(
+      0.5*cos2o*(
           2.0*sigma*(k_prime/k*k_prime/k + k_prime_prime/k) +
           4.0*sigma_prime*k_prime/k + sigma_prime_prime) -
-      0.5*coso*sino*(
+      coso*sino*(
           k_prime/k*k_prime/k*(
               sigma*sigma + 3.0*eta_over_k_squared*eta_over_k_squared - 1.0) +
           4.0*sigma*sigma_prime*k_prime/k + sigma_prime*sigma_prime +
@@ -138,7 +139,7 @@ dSM3 metric_stellna::del(const IR3& position) const {
       )/eta_over_k_squared;
   double d_u_gww = -2.0*parser_->eta_bar()*l_prime*l_prime*coso;
   double d_v_gww = l_prime*l_prime*2.0*parser_->eta_bar()*r*sino;
-  double d_w_gww = 2.0*l_prime*dldphi_->derivative(phi)*(
+  double d_w_gww = 2.0*l_prime*l_prime_prime*(
       1.0 - 2.0*parser_->eta_bar()*r*coso);
   return {
       d_u_guu, d_v_guu, d_w_guu,
