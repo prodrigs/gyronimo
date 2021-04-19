@@ -139,7 +139,7 @@ dSM3 metric_stellna::del(const IR3& position) const {
       0.5*sigma_prime_prime + sigma_prime*k_prime_over_k +
       cos2o*(
           sigma*(k_prime_over_k*k_prime_over_k + k_prime_prime/k) +
-          2.0*sigma_prime*k_prime_over_k + sigma_prime_prime) -
+          2.0*sigma_prime*k_prime_over_k + 0.5*sigma_prime_prime) -
       coso*sino*(
           k_prime_over_k*k_prime_over_k*(
               sigma*sigma + 3.0*eta_over_k_quad - 1.0) +
