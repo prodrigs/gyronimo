@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021 Paulo Rodrigues, Rogerio Jorge.
 
 // @metric_stellna.cc
 
@@ -43,9 +43,12 @@ metric_stellna::~metric_stellna() {
   if(dldphi_) delete dldphi_;
   if(sigma_) delete sigma_;
 }
+double metric_stellna::reduce_phi(double phi) const {
+  return std::fmod(phi, phi_modulus_factor_);
+}
 SM3 metric_stellna::operator()(const IR3& position) const {
+  double phi = this->reduce_phi(position[IR3::w]);
   double r = position[IR3::u], theta = position[IR3::v];
-  double phi = std::fmod(position[IR3::w], phi_modulus_factor_);
   double coso = std::cos(theta), sino = std::sin(theta);
   double l_prime = (*dldphi_)(phi);
   double k = (*curvature_)(phi), k_prime = (*curvature_).derivative(phi);
@@ -73,8 +76,8 @@ SM3 metric_stellna::operator()(const IR3& position) const {
   return {guu, guv, guw, gvv, gvw, gww};
 }
 dSM3 metric_stellna::del(const IR3& position) const {
+  double phi = this->reduce_phi(position[IR3::w]);
   double r = position[IR3::u], theta = position[IR3::v];
-  double phi = std::fmod(position[IR3::w], phi_modulus_factor_);
   double coso = std::cos(theta), sino = std::sin(theta);
   double l_prime = (*dldphi_)(phi), l_prime_prime = dldphi_->derivative(phi);
   double torsion = (*torsion_)(phi), torsion_prime = torsion_->derivative(phi);

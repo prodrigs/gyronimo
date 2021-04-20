@@ -21,7 +21,7 @@ namespace gyronimo{
     The coordinates are set by the `metric_helena` object and the type of 2d
     interpolators is set by the specific `interpolator2d_factory` supplied.
     Contravariant components have dimensions of [m^{-1}]. Being an
-    **equilibrium** field, `t_factor` is set to zero.
+    **equilibrium** field, `t_factor` is set to one.
     
     Only the minimal interface is implemented for the moment and further
     specialisations may enhance the object's performance.

@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021 Paulo Rodrigues, Rogerio Jorge.
 
 // @metric_stellna.hh
 
@@ -21,7 +21,7 @@ namespace gyronimo{
     angle. The particular kind of 1d interpolator to use is set by 'ifactory'.
 
     The right-handed coordinate set @f$\{r, \theta, \phi\}@f$ is described in
-    R.~Jorge et al., Nuc. Fusion 60, 076021 (2020).
+    R.~Jorge et al., Nuc. Fusion **60**, 076021 (2020).
 */
 class metric_stellna : public metric_covariant {
  public:
@@ -36,6 +36,12 @@ class metric_stellna : public metric_covariant {
 
   virtual SM3 operator()(const IR3& position) const override;
   virtual dSM3 del(const IR3& position) const override;
+
+  const interpolator1d* curvature() const {return curvature_;};
+  const interpolator1d* torsion() const {return torsion_;};
+  const interpolator1d* dldphi() const {return dldphi_;};
+  const interpolator1d* sigma() const {return sigma_;};
+  double reduce_phi(double phi) const;
 
  private:
   const double eta_bar_, phi_modulus_factor_;
