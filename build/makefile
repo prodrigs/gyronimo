@@ -9,7 +9,7 @@ export CXXFLAGS:=-std=c++20 -Wfatal-errors -I../include
 
 vpath %.hh ../include/gyronimo
 vpath %.cc ../src:../apps
-lib_srcs = $(shell basename ../src/*.cc)
+lib_srcs = $(shell basename -a ../src/*.cc)
 lib_objs = $(lib_srcs:.cc=.o)
 lib_deps = $(lib_srcs:.cc=.d)
 

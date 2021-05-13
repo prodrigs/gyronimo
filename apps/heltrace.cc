@@ -25,7 +25,7 @@
 #include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
 
 void print_help() {
-  std::cout << "heltrace, powered by ::gyronimo:: v"
+  std::cout << "heltrace, powered by ::gyronimo::v"
       << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
   std::cout <<
       "usage: heltrace [options] hmap\n";

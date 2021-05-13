@@ -58,7 +58,7 @@ parser_helena::parser_helena(const std::string& filename) {
   input_stream >> cpsurf_ >> radius_;
   this->layout_2d_field(input_stream, gmh33_);
 
-  input_stream >> raxis_;
+  input_stream >> raxis_;  // sadly, HELENA always prints 1.0 here.
   p0_.resize(npsi_); input_stream >> p0_;
   input_stream >> dp0_ >> dpe_;
   rbphi_.resize(npsi_); input_stream >> rbphi_;
@@ -86,6 +86,7 @@ parser_helena::parser_helena(const std::string& filename) {
   input_stream >> rmag_ >> bmag_;
   input_stream.close();
 
+  rgeo_ = radius_/eps_*rmag_;
   this->build_auxiliar_data();
 }
  
