@@ -47,19 +47,25 @@ void print_help() {
 class orbit_observer {
 public:
   orbit_observer(
+      double zstar, double vstar,
       const gyronimo::IR3field_c1* e, const gyronimo::guiding_centre* g)
-    : eq_pointer_(e), gc_pointer_(g) {};
+    : zstar_(zstar), vstar_(vstar), eq_pointer_(e), gc_pointer_(g) {};
   void operator()(const gyronimo::guiding_centre::state& s, double t) {
     gyronimo::IR3 x = gc_pointer_->get_position(s);
-    double B = eq_pointer_->magnitude(x, t);
+    double v_parallel = gc_pointer_->get_vpp(s);
+    double bphi = eq_pointer_->covariant_versor(x, t)[gyronimo::IR3::w];
+    double flux = x[gyronimo::IR3::u]*x[gyronimo::IR3::u];
     std::cout << t << " "
         << x[gyronimo::IR3::u] << " "
         << x[gyronimo::IR3::v] << " "
         << x[gyronimo::IR3::w] << " "
+        << v_parallel << " "
+        << -zstar_*flux + vstar_*v_parallel*bphi << " "
         << gc_pointer_->energy_perpendicular(s, t) << " "
         << gc_pointer_->energy_parallel(s) << "\n";
   };
 private:
+  double zstar_, vstar_;
   const gyronimo::IR3field_c1* eq_pointer_;
   const gyronimo::guiding_centre* gc_pointer_;
 };
@@ -78,19 +84,19 @@ private:
    Function arguments:
    pphi: \P_\phi in eV.s;
    zstar: (q_s/e) \Psi_b, with \Psi_b the boundary flux, q_s the species charge;
-   v_star: \sqrt{2 m_s (E/e)}, with E in eV, m_s the species mass;
+   vdagger: \sqrt{2 m_s (E/e)}, with E in eV, m_s the species mass;
    lambda: \Lambda;
    vpp_sign: the name says it all;
    heq: reference to an HELENA equilibrium object;
 */
 double get_initial_radial_position(
-    double pphi, double z_star, double v_star, double lambda,
+    double pphi, double zstar, double vdagger, double lambda,
     double vpp_sign, const gyronimo::equilibrium_helena& heq) {
-  auto pphi_functional = [z_star, v_star, lambda, vpp_sign, &heq](double s) {
+  auto pphi_functional = [zstar, vdagger, lambda, vpp_sign, &heq](double s) {
       gyronimo::IR3 pos = {s, 0.0, 0.0};  // Assuming {s,chi,phi} coordinates!
       double Btilde = heq.magnitude(pos, 0.0);
       double bphi = heq.covariant_versor(pos, 0.0)[gyronimo::IR3::w];
-      return -z_star*s*s + vpp_sign*v_star*bphi*std::sqrt(1.0 - lambda*Btilde);
+      return -zstar*s*s + vpp_sign*vdagger*bphi*std::sqrt(1.0 - lambda*Btilde);
   };
   auto orbit = [&pphi_functional, pphi](double s) {
       return pphi_functional(s) - pphi;};
@@ -149,18 +155,18 @@ int main(int argc, char* argv[]) {
   std::cout << " v_alfven = " << Valfven << " [m/s];";
   std::cout << " u_alfven = " << Ualfven << " [J];";
   std::cout << " energy = " << energySI << " [J]." << "\n";
-  std::cout << "# vars: t s chi phi Eperp/Ealfven Eparallel/Ealfven\n";
+  std::cout << "# vars: t s chi phi vpar Pphi/e Eperp/Ealfven Epar/Ealfven\n";
 
 // Builds the guiding_centre object:
   gyronimo::guiding_centre gc(
       Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &heq);
 
 // Computes the initial conditions from the supplied constants of motion:
-  double initial_radial_position = get_initial_radial_position(
-      pphi,
-      charge*g.parser()->cpsurf()*heq.B0()*heq.R0()*heq.R0(),
-      std::sqrt(2.0*mass*energy*gyronimo::codata::m_proton/gyronimo::codata::e),
-      lambda, vpp_sign, heq);
+  double zstar = charge*g.parser()->cpsurf()*heq.B0()*heq.R0()*heq.R0();
+  double vstar = Valfven*mass*gyronimo::codata::m_proton/gyronimo::codata::e;
+  double vdagger = vstar*std::sqrt(energySI/Ualfven);
+  double initial_radial_position =
+      get_initial_radial_position(pphi, zstar, vdagger, lambda, vpp_sign, heq);
   gyronimo::guiding_centre::state initial_state = gc.generate_state(
       {initial_radial_position, 0.0, 0.0}, energySI/Ualfven,
       (vpp_sign > 0 ?
@@ -169,7 +175,7 @@ int main(int argc, char* argv[]) {
 // integrates for t in [0,Tfinal], with dt=Tfinal/nsamples, using RK4.
   std::cout.precision(16);
   std::cout.setf(std::ios::scientific);
-  orbit_observer observer(&heq, &gc);
+  orbit_observer observer(zstar, vstar, &heq, &gc);
   std::size_t nsamples; command_line("nsamples", 512) >> nsamples;
   boost::numeric::odeint::runge_kutta4<gyronimo::guiding_centre::state>
       integration_algorithm;
