@@ -122,8 +122,9 @@ int main(int argc, char* argv[]) {
     std::cout << "heltrace: no helena mapping file provided; -h for help.\n";
     std::exit(1);
   }
-  gyronimo::bicubic_gsl_factory ifactory;
   gyronimo::parser_helena hmap(command_line[1]);
+  gyronimo::bicubic_gsl_factory ifactory(false,
+      (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
   gyronimo::metric_helena g(&hmap, &ifactory);
   gyronimo::equilibrium_helena heq(&g, &ifactory);
 

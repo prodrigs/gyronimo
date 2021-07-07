@@ -16,17 +16,13 @@ metric_helena::metric_helena(
       guu_(nullptr), guv_(nullptr), gvv_(nullptr), gww_(nullptr) {
   dblock_adapter s_range(p->s()), chi_range(p->chi());
   guu_ = ifactory->interpolate_data(
-      s_range, chi_range,
-      dblock_adapter(transpose(p->covariant_g11(), p->nchi())));
+      s_range, chi_range, dblock_adapter(p->covariant_g11()));
   guv_ = ifactory->interpolate_data(
-      s_range, chi_range,
-      dblock_adapter(transpose(p->covariant_g12(), p->nchi())));
+      s_range, chi_range, dblock_adapter(p->covariant_g12()));
   gvv_ = ifactory->interpolate_data(
-      s_range, chi_range,
-      dblock_adapter(transpose(p->covariant_g22(), p->nchi())));
+      s_range, chi_range, dblock_adapter(p->covariant_g22()));
   gww_ = ifactory->interpolate_data(
-      s_range, chi_range,
-      dblock_adapter(transpose(p->covariant_g33(), p->nchi())));
+      s_range, chi_range, dblock_adapter(p->covariant_g33()));
 }
 metric_helena::~metric_helena() {
   if(guu_) delete guu_;

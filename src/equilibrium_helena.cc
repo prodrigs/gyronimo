@@ -18,12 +18,10 @@ equilibrium_helena::equilibrium_helena(
   dblock_adapter s_range(p->s()), chi_range(p->chi());
   Bchi_ = ifactory->interpolate_data(
       s_range, chi_range,
-      dblock_adapter(transpose(
-          parser_helena::narray_type(p->contravariant_B2()/R0()), p->nchi())));
+      dblock_adapter(parser_helena::narray_type(p->contravariant_B2()/R0())));
   Bphi_ = ifactory->interpolate_data(
       s_range, chi_range,
-      dblock_adapter(transpose(
-          parser_helena::narray_type(p->contravariant_B3()/R0()), p->nchi())));
+      dblock_adapter(parser_helena::narray_type(p->contravariant_B3()/R0())));
 }
 equilibrium_helena::~equilibrium_helena() {
   if(Bchi_) delete Bchi_;
