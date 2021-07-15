@@ -97,6 +97,9 @@ dIR3 contraction<first>(const dSM3& dA, const IR3& B) {
 
     with `i,j = u, v, w`. Replacements dSM3::ijk -> dSM3::jik have been
     explicitly performed.
+
+    @todo check if this <second> can be replaced by <first> because dSM3 are
+    symmetric in their first and second indices.
 */
 template<>
 dIR3 contraction<second>(const dSM3& dA, const IR3& B) {
@@ -161,6 +164,128 @@ dIR3 contraction<second, first>(const SM3& g, const dIR3& dB) {
     g[SM3::uw]*dB[dIR3::uv] + g[SM3::vw]*dB[dIR3::vv] + g[SM3::ww]*dB[dIR3::wv],
     g[SM3::uw]*dB[dIR3::uw] + g[SM3::vw]*dB[dIR3::vw] + g[SM3::ww]*dB[dIR3::ww]
   };
+}
+
+//! Contration of a `dSM3` and two `SM3` objects.
+/*!
+    Returns the object
+    ```
+    C[dSM3::ijk] = d[dSM3::mnk]*g[SM3::mi]*h[SM3::nj]
+    ```
+    where summation is implicit in the indices `m,n`, with `i,j = u, v, w`.
+    Replacements dSM3::jik -> dSM3::ijk and SM3:ji -> SM3::ij have been
+    explicitly performed.
+*/
+dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h) {
+  return {
+    g[SM3::uu]*( // these are dSM3::uu?
+      d[dSM3::uuu]*h[SM3::uu]+d[dSM3::uvu]*h[SM3::uv]+d[dSM3::uwu]*h[SM3::uw]) +
+    g[SM3::uv]*(
+      d[dSM3::uvu]*h[SM3::uu]+d[dSM3::vvu]*h[SM3::uv]+d[dSM3::vwu]*h[SM3::uw]) +
+    g[SM3::uw]*(
+      d[dSM3::uwu]*h[SM3::uu]+d[dSM3::vwu]*h[SM3::uv]+d[dSM3::wwu]*h[SM3::uw]),
+    g[SM3::uu]*(
+      d[dSM3::uuv]*h[SM3::uu]+d[dSM3::uvv]*h[SM3::uv]+d[dSM3::uwv]*h[SM3::uw]) +
+    g[SM3::uv]*(
+      d[dSM3::uvv]*h[SM3::uu]+d[dSM3::vvv]*h[SM3::uv]+d[dSM3::vwv]*h[SM3::uw]) +
+    g[SM3::uw]*(
+      d[dSM3::uwv]*h[SM3::uu]+d[dSM3::vwv]*h[SM3::uv]+d[dSM3::wwv]*h[SM3::uw]),
+    g[SM3::uu]*(
+      d[dSM3::uuw]*h[SM3::uu]+d[dSM3::uvw]*h[SM3::uv]+d[dSM3::uww]*h[SM3::uw]) +
+    g[SM3::uv]*(
+      d[dSM3::uvw]*h[SM3::uu]+d[dSM3::vvw]*h[SM3::uv]+d[dSM3::vww]*h[SM3::uw]) +
+    g[SM3::uw]*(
+      d[dSM3::uww]*h[SM3::uu]+d[dSM3::vww]*h[SM3::uv]+d[dSM3::www]*h[SM3::uw]),
+    g[SM3::uu]*( // these are dSM3::uv?
+      d[dSM3::uuu]*h[SM3::uv]+d[dSM3::uvu]*h[SM3::vv]+d[dSM3::uwu]*h[SM3::vw]) +
+    g[SM3::uv]*(
+      d[dSM3::uvu]*h[SM3::uv]+d[dSM3::vvu]*h[SM3::vv]+d[dSM3::vwu]*h[SM3::vw]) +
+    g[SM3::uw]*(
+      d[dSM3::uwu]*h[SM3::uv]+d[dSM3::vwu]*h[SM3::vv]+d[dSM3::wwu]*h[SM3::vw]),
+    g[SM3::uu]*(
+      d[dSM3::uuv]*h[SM3::uv]+d[dSM3::uvv]*h[SM3::vv]+d[dSM3::uwv]*h[SM3::vw]) +
+    g[SM3::uv]*(
+      d[dSM3::uvv]*h[SM3::uv]+d[dSM3::vvv]*h[SM3::vv]+d[dSM3::vwv]*h[SM3::vw]) +
+    g[SM3::uw]*(
+      d[dSM3::uwv]*h[SM3::uv]+d[dSM3::vwv]*h[SM3::vv]+d[dSM3::wwv]*h[SM3::vw]),
+    g[SM3::uu]*(
+      d[dSM3::uuw]*h[SM3::uv]+d[dSM3::uvw]*h[SM3::vv]+d[dSM3::uww]*h[SM3::vw]) +
+    g[SM3::uv]*(
+      d[dSM3::uvw]*h[SM3::uv]+d[dSM3::vvw]*h[SM3::vv]+d[dSM3::vww]*h[SM3::vw]) +
+    g[SM3::uw]*(
+      d[dSM3::uww]*h[SM3::uv]+d[dSM3::vww]*h[SM3::vv]+d[dSM3::www]*h[SM3::vw]),
+    g[SM3::uu]*( // these are dSM3::uw?
+      d[dSM3::uuu]*h[SM3::uw]+d[dSM3::uvu]*h[SM3::vw]+d[dSM3::uwu]*h[SM3::ww]) +
+    g[SM3::uv]*(
+      d[dSM3::uvu]*h[SM3::uw]+d[dSM3::vvu]*h[SM3::vw]+d[dSM3::vwu]*h[SM3::ww]) +
+    g[SM3::uw]*(
+      d[dSM3::uwu]*h[SM3::uw]+d[dSM3::vwu]*h[SM3::vw]+d[dSM3::wwu]*h[SM3::ww]),
+    g[SM3::uu]*(
+      d[dSM3::uuv]*h[SM3::uw]+d[dSM3::uvv]*h[SM3::vw]+d[dSM3::uwv]*h[SM3::ww]) +
+    g[SM3::uv]*(
+      d[dSM3::uvv]*h[SM3::uw]+d[dSM3::vvv]*h[SM3::vw]+d[dSM3::vwv]*h[SM3::ww]) +
+    g[SM3::uw]*(
+      d[dSM3::uwv]*h[SM3::uw]+d[dSM3::vwv]*h[SM3::vw]+d[dSM3::wwv]*h[SM3::ww]),
+    g[SM3::uu]*(
+      d[dSM3::uuw]*h[SM3::uw]+d[dSM3::uvw]*h[SM3::vw]+d[dSM3::uww]*h[SM3::ww]) +
+    g[SM3::uv]*(
+      d[dSM3::uvw]*h[SM3::uw]+d[dSM3::vvw]*h[SM3::vw]+d[dSM3::vww]*h[SM3::ww]) +
+    g[SM3::uw]*(
+      d[dSM3::uww]*h[SM3::uw]+d[dSM3::vww]*h[SM3::vw]+d[dSM3::www]*h[SM3::ww]),
+    g[SM3::uv]*( // these are dSM3::vv?
+      d[dSM3::uuu]*h[SM3::uv]+d[dSM3::uvu]*h[SM3::vv]+d[dSM3::uwu]*h[SM3::vw]) +
+    g[SM3::vv]*(
+      d[dSM3::uvu]*h[SM3::uv]+d[dSM3::vvu]*h[SM3::vv]+d[dSM3::vwu]*h[SM3::vw]) +
+    g[SM3::vw]*(
+      d[dSM3::uwu]*h[SM3::uv]+d[dSM3::vwu]*h[SM3::vv]+d[dSM3::wwu]*h[SM3::vw]),
+    g[SM3::uv]*(
+      d[dSM3::uuv]*h[SM3::uv]+d[dSM3::uvv]*h[SM3::vv]+d[dSM3::uwv]*h[SM3::vw]) +
+    g[SM3::vv]*(
+      d[dSM3::uvv]*h[SM3::uv]+d[dSM3::vvv]*h[SM3::vv]+d[dSM3::vwv]*h[SM3::vw]) +
+    g[SM3::vw]*(
+      d[dSM3::uwv]*h[SM3::uv]+d[dSM3::vwv]*h[SM3::vv]+d[dSM3::wwv]*h[SM3::vw]),
+    g[SM3::uv]*(
+      d[dSM3::uuw]*h[SM3::uv]+d[dSM3::uvw]*h[SM3::vv]+d[dSM3::uww]*h[SM3::vw]) +
+    g[SM3::vv]*(
+      d[dSM3::uvw]*h[SM3::uv]+d[dSM3::vvw]*h[SM3::vv]+d[dSM3::vww]*h[SM3::vw]) +
+    g[SM3::vw]*(
+      d[dSM3::uww]*h[SM3::uv]+d[dSM3::vww]*h[SM3::vv]+d[dSM3::www]*h[SM3::vw]),
+    g[SM3::uv]*( // these are dSM3::vw?
+      d[dSM3::uuu]*h[SM3::uw]+d[dSM3::uvu]*h[SM3::vw]+d[dSM3::uwu]*h[SM3::ww]) +
+    g[SM3::vv]*(
+      d[dSM3::uvu]*h[SM3::uw]+d[dSM3::vvu]*h[SM3::vw]+d[dSM3::vwu]*h[SM3::ww]) +
+    g[SM3::vw]*(
+      d[dSM3::uwu]*h[SM3::uw]+d[dSM3::vwu]*h[SM3::vw]+d[dSM3::wwu]*h[SM3::ww]),
+    g[SM3::uv]*(
+      d[dSM3::uuv]*h[SM3::uw]+d[dSM3::uvv]*h[SM3::vw]+d[dSM3::uwv]*h[SM3::ww]) +
+    g[SM3::vv]*(
+      d[dSM3::uvv]*h[SM3::uw]+d[dSM3::vvv]*h[SM3::vw]+d[dSM3::vwv]*h[SM3::ww]) +
+    g[SM3::vw]*(
+      d[dSM3::uwv]*h[SM3::uw]+d[dSM3::vwv]*h[SM3::vw]+d[dSM3::wwv]*h[SM3::ww]),
+    g[SM3::uv]*(
+      d[dSM3::uuw]*h[SM3::uw]+d[dSM3::uvw]*h[SM3::vw]+d[dSM3::uww]*h[SM3::ww]) +
+    g[SM3::vv]*(
+      d[dSM3::uvw]*h[SM3::uw]+d[dSM3::vvw]*h[SM3::vw]+d[dSM3::vww]*h[SM3::ww]) +
+    g[SM3::vw]*(
+      d[dSM3::uww]*h[SM3::uw]+d[dSM3::vww]*h[SM3::vw]+d[dSM3::www]*h[SM3::ww]),
+    g[SM3::uw]*( // these are dSM3::ww?
+      d[dSM3::uuu]*h[SM3::uw]+d[dSM3::uvu]*h[SM3::vw]+d[dSM3::uwu]*h[SM3::ww]) +
+    g[SM3::vw]*(
+      d[dSM3::uvu]*h[SM3::uw]+d[dSM3::vvu]*h[SM3::vw]+d[dSM3::vwu]*h[SM3::ww]) +
+    g[SM3::ww]*(
+      d[dSM3::uwu]*h[SM3::uw]+d[dSM3::vwu]*h[SM3::vw]+d[dSM3::wwu]*h[SM3::ww]),
+    g[SM3::uw]*(
+      d[dSM3::uuv]*h[SM3::uw]+d[dSM3::uvv]*h[SM3::vw]+d[dSM3::uwv]*h[SM3::ww]) +
+    g[SM3::vw]*(
+      d[dSM3::uvv]*h[SM3::uw]+d[dSM3::vvv]*h[SM3::vw]+d[dSM3::vwv]*h[SM3::ww]) +
+    g[SM3::ww]*(
+      d[dSM3::uwv]*h[SM3::uw]+d[dSM3::vwv]*h[SM3::vw]+d[dSM3::wwv]*h[SM3::ww]),
+    g[SM3::uw]*(
+      d[dSM3::uuw]*h[SM3::uw]+d[dSM3::uvw]*h[SM3::vw]+d[dSM3::uww]*h[SM3::ww]) +
+    g[SM3::vw]*(
+      d[dSM3::uvw]*h[SM3::uw]+d[dSM3::vvw]*h[SM3::vw]+d[dSM3::vww]*h[SM3::ww]) +
+    g[SM3::ww]*(
+      d[dSM3::uww]*h[SM3::uw]+d[dSM3::vww]*h[SM3::vw]+d[dSM3::www]*h[SM3::ww])};
 }
 
 } // end namespace gyronimo.
