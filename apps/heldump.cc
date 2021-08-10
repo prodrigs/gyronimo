@@ -74,10 +74,12 @@ void print_prof(const gyronimo::parser_helena& hmap) {
 void print_rz(const gyronimo::parser_helena& hmap) {
   gyronimo::dblock_adapter s_range(hmap.s());
   gyronimo::dblock_adapter chi_range(hmap.chi());
-  gyronimo::bicubic_gsl x(s_range, chi_range,
-      gyronimo::dblock_adapter(gyronimo::transpose(hmap.x(), hmap.nchi())));
-  gyronimo::bicubic_gsl y(s_range, chi_range,
-      gyronimo::dblock_adapter(gyronimo::transpose(hmap.y(), hmap.nchi())));
+  gyronimo::bicubic_gsl x(
+      s_range, chi_range, gyronimo::dblock_adapter(hmap.x()), false,
+          (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
+  gyronimo::bicubic_gsl y(
+      s_range, chi_range, gyronimo::dblock_adapter(hmap.y()), false,
+          (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
   double s, chi;
   while (std::cin >> s >> chi) {
     chi -= 2*std::numbers::pi*std::floor(chi/(2*std::numbers::pi));
@@ -94,10 +96,12 @@ void print_rz(const gyronimo::parser_helena& hmap) {
 void print_levels(
     const gyronimo::parser_helena& hmap, const argh::parser& command_line) {
   gyronimo::dblock_adapter s_range(hmap.s()), chi_range(hmap.chi());
-  gyronimo::bicubic_gsl x(s_range, chi_range,
-      gyronimo::dblock_adapter(gyronimo::transpose(hmap.x(), hmap.nchi())));
-  gyronimo::bicubic_gsl y(s_range, chi_range,
-      gyronimo::dblock_adapter(gyronimo::transpose(hmap.y(), hmap.nchi())));
+  gyronimo::bicubic_gsl x(
+      s_range, chi_range, gyronimo::dblock_adapter(hmap.x()), false,
+          (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
+  gyronimo::bicubic_gsl y(
+      s_range, chi_range, gyronimo::dblock_adapter(hmap.y()), false,
+          (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
   size_t nchi;
   command_line("nchi", 128) >> nchi;  // defaults to 128.
   double delta_chi = 2*std::numbers::pi/nchi;
