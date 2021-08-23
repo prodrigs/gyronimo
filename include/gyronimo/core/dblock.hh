@@ -11,24 +11,34 @@
 
 namespace gyronimo {
 
-//! Interface to a *read-only* contiguous range of doubles.
+//! Interface to a **read-only** contiguous range of doubles.
 /*!
     Useful to seamlessly interact with 3rd-party client code (c, fortran, etc.)
-    that assume an array to be contiguously stored in memory and its name to
-    hold a pointer to the first element. General `gyronimo` code should use only
-    this abstract interface, actual translation is achived by deriving adapters
-    for each specific case (c/fortran arrays, gsl_block, whatever).
+    or libraries that provide their own data structures to store arrays of
+    doubles contiguously in memory. General-purpose `gyronimo` code **should use
+    only** this abstract interface. The actual translation to each particular
+    data type is achieved by deriving adapter classes for each specific case
+    (c/fortran arrays, gsl_block, whatever). The class supports std::ranges
+    semantics.
 */
 class dblock {
  public:
+  typedef size_t size_type;
+  typedef double value_type;
+  typedef const double* iterator;
+  typedef const double& reference;
+  typedef const double* const_iterator;
+  typedef const double& const_reference;
   virtual ~dblock() {};
-  virtual const double* begin() const = 0;
-  virtual const double* end() const = 0;
-  const double* data() const {return this->begin();};
-  size_t size() const {return this->end() - this->begin();};
+  virtual iterator begin() const = 0;
+  virtual iterator end() const = 0;
+  iterator data() const {return this->begin();};
+  size_type size() const {return this->end() - this->begin();};
+  value_type front() const {return this->data()[0];};
+  value_type back() const {return this->data()[this->size() - 1];};
 };
 
-//! Adapter for any contiguous STL range of doubles.
+//! Templated adapter for any contiguous STL range of doubles.
 template<typename Range> requires
   std::ranges::contiguous_range<Range> &&
   std::same_as<std::ranges::range_value_t<Range>, double>
