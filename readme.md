@@ -1,5 +1,8 @@
-::gyronimo:: - gyromotion for the people, by the people -
-=========================================================
+::gyronimo::
+============
+
+*- gyromotion for the people, by the people -*
+
 *An object-oriented library for gyromotion applications in plasma physics.*  
 
 Philosophy and purpose:
