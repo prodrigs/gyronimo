@@ -38,6 +38,8 @@ class metric_covariant {
   virtual IR3 del_jacobian(const IR3& r) const;
   virtual IR3 to_covariant(const IR3& B, const IR3& r) const;
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const;
+  virtual SM3 inverse(const IR3& r) const;
+  virtual dSM3 del_inverse(const IR3& r) const;
 };
 
 }

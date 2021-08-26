@@ -25,6 +25,7 @@ template<contraction_index>
 dIR3 contraction(const dSM3& dA, const IR3& B);
 template<contraction_index, contraction_index>
 dIR3 contraction(const SM3& g, const dIR3& dB);
+dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h);
 
 } // end namespace gyronimo.
 
