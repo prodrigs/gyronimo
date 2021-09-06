@@ -1,11 +1,15 @@
 # self evident, these ones...
-*.[doa]
+*.[doax]
 gyronimo_dox/
-heldump
-heltrace
+
+# build directory
+build/
 
 # vim temporary files:
 *.swp
+
+# Visual Studio Code temporary files:
+.vscode
 
 # Useless macos stuff:
 .DS_Store
