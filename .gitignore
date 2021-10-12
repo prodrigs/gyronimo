@@ -1,9 +1,5 @@
 # self evident, these ones...
 *.[doax]
-gyronimo_dox/
-
-# build directory
-build/
 
 # vim temporary files:
 *.swp
