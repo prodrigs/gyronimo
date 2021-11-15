@@ -7,6 +7,7 @@
 #ifndef GYRONIMO_LINSPACE
 #define GYRONIMO_LINSPACE
 
+#include <ranges>
 #include <algorithm>
 #include <gyronimo/core/error.hh>
 

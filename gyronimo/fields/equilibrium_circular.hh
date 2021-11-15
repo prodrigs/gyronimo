@@ -29,8 +29,9 @@ class equilibrium_circular : public IR3field_c1 {
 
   equilibrium_circular(
       double m_factor, const metric_polar_torus *g,
-      const radial_profile& q, const radial_profile& qprime)
-      : IR3field_c1(m_factor, 1.0, g), metric_(g), q_(q), qprime_(qprime) {};
+      radial_profile q, radial_profile qprime)
+      : IR3field_c1(m_factor, 1.0, g), metric_(g),
+        q_(std::move(q)), qprime_(std::move(qprime)) {};
   virtual ~equilibrium_circular() override {};
 
   virtual IR3 contravariant(const IR3& position, double time) const override;
@@ -55,8 +56,8 @@ class equilibrium_circular : public IR3field_c1 {
 
  private:
   const metric_polar_torus *metric_;
-  const radial_profile& q_;
-  const radial_profile& qprime_;
+  const radial_profile q_;
+  const radial_profile qprime_;
   };
 
 } // end namespace gyronimo.
