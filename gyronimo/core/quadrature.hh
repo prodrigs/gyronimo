@@ -24,6 +24,26 @@ Range::value_type trapezoidal(const Range& samples) {
   return boost::accumulate(samples, -boundary_correction)/(n - 1);
 }
 
+//! Trapezoidal quadrature of a function non-uniformly sampled.
+template<typename RangeIn1, typename RangeIn2, typename RangeOut> requires
+  std::floating_point<typename RangeIn1::value_type> &&
+  std::floating_point<typename RangeIn2::value_type> &&
+  std::floating_point<typename RangeOut::value_type> &&
+  std::ranges::random_access_range<RangeIn1> &&
+  std::ranges::random_access_range<RangeIn2> &&
+  std::ranges::random_access_range<RangeOut> &&
+  requires(const RangeOut& c) {c.back();}
+RangeOut::value_type trapezoidal(
+    const RangeIn1& samples, const RangeIn2& grid, RangeOut& quadrature) {
+  auto q = std::ranges::begin(quadrature);
+  auto y = std::ranges::begin(samples);
+  auto x = std::ranges::begin(grid);
+  q[0] = 0.0;
+  for(size_t i = 1;i < std::ranges::size(samples); i++)
+    q[i] = q[i - 1] + 0.5*(y[i] + y[i - 1])*(x[i] - x[i - 1]);
+  return quadrature.back();
+}
+
 //! Simpson quadrature of a function uniformly sampled in [0:1].
 template <typename Range> requires
   std::ranges::sized_range<Range> &&
