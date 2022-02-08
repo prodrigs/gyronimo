@@ -36,6 +36,7 @@ class dblock {
   size_type size() const {return this->end() - this->begin();};
   value_type front() const {return this->data()[0];};
   value_type back() const {return this->data()[this->size() - 1];};
+  value_type operator[](size_t k) const {return this->data()[k];};
 };
 
 //! Templated adapter for any contiguous STL range of doubles.
