@@ -13,10 +13,11 @@ namespace gyronimo {
 //! General-purpose implementation of the Jacobian.
 double metric_covariant::jacobian(const IR3& r) const {
   SM3 g = (*this)(r);
-  return  std::sqrt(
-      g[SM3::uu]*g[SM3::vv]*g[SM3::ww] + 2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] -
-      g[SM3::uv]*g[SM3::uv]*g[SM3::ww] - g[SM3::uu]*g[SM3::vw]*g[SM3::vw] -
-      g[SM3::uw]*g[SM3::uw]*g[SM3::vv]);
+  double J = g[SM3::uu]*g[SM3::vv]*g[SM3::ww] + 2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] -
+             g[SM3::uv]*g[SM3::uv]*g[SM3::ww] - g[SM3::uu]*g[SM3::vw]*g[SM3::vw] -
+             g[SM3::uw]*g[SM3::uw]*g[SM3::vv];
+  double signJ = (J < 0) ? -1 : 1;
+  return  signJ * std::sqrt( signJ * J);
 }
 
 //! General-purpose implementation of the Jacobian gradient.
@@ -127,6 +128,10 @@ dSM3 metric_covariant::del_inverse(const IR3& r) const {
     -dg[dSM3::vvu], -dg[dSM3::vvv], -dg[dSM3::vvw],
     -dg[dSM3::vwu], -dg[dSM3::vwv], -dg[dSM3::vww],
     -dg[dSM3::wwu], -dg[dSM3::wwv], -dg[dSM3::www]};
+}
+
+IR3 metric_covariant::transform2cylindrical(const IR3& r) const {
+  return {0.0, 0.0, 0.0};
 }
 
 } // end namespace gyronimo.
