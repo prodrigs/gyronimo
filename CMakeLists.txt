@@ -33,7 +33,20 @@ message("*  Configuring gyronimo-"
 
 # build options
 option(BUILD_VMEC_SUPPORT "Add support to VMEC equilibria" OFF)
-option(BUILD_WITH_OPENMP  "Add support to OPENMP" OFF)
+
+# detect platform
+string(COMPARE EQUAL "Darwin"  ${CMAKE_HOST_SYSTEM_NAME} OS_X)
+string(COMPARE EQUAL "Linux"   ${CMAKE_HOST_SYSTEM_NAME} LINUX)
+string(COMPARE EQUAL "Windows" ${CMAKE_HOST_SYSTEM_NAME} WINDOWS)
+if(LINUX)
+  set(OS_STRING "linux")
+elseif(WINDOWS)
+  set(OS_STRING "windows")
+elseif(OS_X)
+  set(OS_STRING "macOS")
+else()
+  set(OS_STRING "Unknown")
+endif()
 
 # sets project properties:
 project(
@@ -57,36 +70,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Og -ggdb3)
   endif()
   if(CMAKE_BUILD_TYPE MATCHES "Release")
-    add_compile_options(-O2 -march=native)
+    add_compile_options(-march=native)
   endif()
 endif()
-
-if(BUILD_WITH_OPENMP)
-	find_package(OpenMP REQUIRED)
-	if (OPENMP_CXX_FOUND)
-		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-		add_compile_options(-DOPENMP)
-		#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-	endif()
-endif()
-
-if(BUILD_WITH_MPI)
-	find_package(MPI REQUIRED)
-	message("MPI stuff")
-	message("CXX_COMPILE " ${MPI_CXX_COMPILE_FLAGS})
-	message("CX LINK " ${MPI_CXX_LINK_FLAGS})
-	message("MPI INCLUDE " ${MPI_INCLUDE_PATH})
-	message("C LIBS " ${MPI_C_LIBRARIES})
-	message("CXX LIBS " ${MPI_CXX_LIBRARIES})
-	message("MPI_CXX " ${MPI_CXX})
-	if (MPI_FOUND)
-		message("inside MPI_FOUND")
-		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_COMPILE_FLAGS}")
-		set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_LINK_FLAGS}")
-		set(targets_mpi_depending_libs ${targets_mpi_depending_libs} ${MPI_CXX_LIBRARIES})
-	endif()
-endif()
-
 
 # find all gyronimo sources
 file(GLOB gyronimo_sources ${PROJECT_SOURCE_DIR}/gyronimo/*/*.cc)
@@ -103,14 +89,14 @@ find_package(Boost REQUIRED)
 if(BUILD_VMEC_SUPPORT)
   # find_package(PkgConfig REQUIRED)
   # pkg_check_modules(netcdf-cxx4 REQUIRED IMPORTED_TARGET netcdf-cxx4)
-  find_program(NF_CONFIG "nc-config")
-  if (NF_CONFIG)
-    execute_process(COMMAND "nc-config" --cxx4libs
+  find_program(NCXX4_CONFIG "ncxx4-config")
+  if (NCXX4_CONFIG)
+    execute_process(COMMAND "ncxx4-config" --libs
         OUTPUT_VARIABLE netcdf_cxx_libs)
-    execute_process(COMMAND "nc-config" --cxx4flags
+    execute_process(COMMAND "ncxx4-config" --cflags
         OUTPUT_VARIABLE netcdf_cxx_flags)
   else()
-    message(SEND_ERROR "nf-config not found. Please install libnetcdff-dev")
+    message(SEND_ERROR "ncxx4-config not found. Please install Unidata's netCDF-CXX4 package")
   endif()
   string(STRIP ${netcdf_cxx_libs} netcdf_cxx_libs)
   string(STRIP ${netcdf_cxx_flags} netcdf_cxx_flags)
@@ -146,12 +132,6 @@ foreach(target_file IN LISTS apps_sources)
   target_include_directories(${target}
     PUBLIC ${PROJECT_SOURCE_DIR}/misc/apps/include)
   target_link_libraries(${target} PRIVATE gyronimo)
-  if (OPENMP_CXX_FOUND)
-    target_link_libraries(${target} PUBLIC OpenMP::OpenMP_CXX)
-  endif()
-  if (MPI_FOUND)
-    target_link_libraries(${target} PUBLIC MPI::MPI_CXX)
-  endif()
   install(TARGETS ${target} DESTINATION bin)
 endforeach()
 

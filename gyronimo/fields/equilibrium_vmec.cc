@@ -1,11 +1,10 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues and Jorge Ferreira.
+// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira.
 
 // @equilibrium_vmec.cc
 
 #include <gyronimo/core/dblock.hh>
-#include <gyronimo/core/transpose.hh>
 #include <gyronimo/fields/equilibrium_vmec.hh>
 
 namespace gyronimo{
@@ -22,7 +21,7 @@ equilibrium_vmec::equilibrium_vmec(
   bmnc_ = new interpolator1d* [xm_nyq_.size()];
   bsupumnc_ = new interpolator1d* [xm_nyq_.size()];
   bsupvmnc_ = new interpolator1d* [xm_nyq_.size()];
-  //TODO NEED TO FIX AXIS AND EDGE! TBI! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//@todo NEED TO FIX AXIS AND EDGE! TBI! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   #pragma omp parallel for
   for(size_t i=0; i<xm_nyq_.size(); i++) {
     std::slice s_cut (i, s_range.size(), xm_nyq_.size());
@@ -85,11 +84,8 @@ dIR3 equilibrium_vmec::del_contravariant(
       dB_theta_ds, dB_theta_dzeta, dB_theta_dtheta
   };
 }
-
-//TODO we can actually override the methods to calculate the covariant components of the field
-// TBI
-
-//TODO move this to magnitude after the half radius issue is sorted out
+//@todo we can actually override the methods to calculate the covariant components of the field
+//@todo move this to magnitude after the half radius issue is sorted out
 double equilibrium_vmec::magnitude_vmec(
     const IR3& position, double time) const {
   double s = position[IR3::u];

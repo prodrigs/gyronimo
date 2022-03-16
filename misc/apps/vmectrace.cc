@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues and Jorge Ferreira
+// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira
 
 // @vmectrace.cc
 // Command-line tool to print guiding-centre orbits in `VMEC` equilibria.

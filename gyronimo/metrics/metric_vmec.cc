@@ -1,13 +1,11 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues and Jorge Ferreira
+// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira
 
 // @metric_vmec.cc
 
-#include <numbers>
 #include <gyronimo/core/transpose.hh>
 #include <gyronimo/metrics/metric_vmec.hh>
-#include <ranges>
 
 namespace gyronimo{
 
@@ -26,7 +24,7 @@ metric_vmec::metric_vmec(
     Rmnc_ = new interpolator1d* [xm_.size()];
     Zmns_ = new interpolator1d* [xm_.size()];
     gmnc_ = new interpolator1d* [xm_.size()];
-    // NEED TO FIX AXIS AND EDGE! TBI! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//@todo NEED TO FIX AXIS AND EDGE! TBI! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     #pragma omp parallel for
     for(size_t i=0; i<xm_.size(); i++) {
       std::slice s_cut (i, s_range.size(), xm_.size());
@@ -124,7 +122,7 @@ dSM3 metric_vmec::del(const IR3& position) const {
     d2Z_dthetadzeta += m * n * zmns_i * sinmn;
     d2Z_dzeta2 -= n * n * zmns_i * sinmn;
 }
-//TODO still need to test this carefully. Find a way to test d_g!
+//@todo still need to test this carefully. Find a way to test d_g!
   return {
       2 * (dR_ds * d2R_ds2      + dZ_ds * d2Z_ds2), 
       2 * (dR_ds * d2R_dsdzeta  + dZ_ds * d2Z_dsdzeta), // d_i g_uu
@@ -162,7 +160,7 @@ IR3 metric_vmec::transform2cylindrical(const IR3& position) const {
     return  {R, v, Z};
  };
  
-// TODO move this to jacobian, and think about testing this by calling the parent
+//@todo move this to jacobian and think about testing this by calling the parent
 double metric_vmec::jacobian_vmec(const IR3& position) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];

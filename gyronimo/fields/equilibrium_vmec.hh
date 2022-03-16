@@ -1,10 +1,11 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues and Jorge Ferreira.
+// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira.
 
 // @equilibrium_vmec.hh
 
-#pragma once
+#ifndef GYRONIMO_EQUILIBRIUM_VMEC
+#define GYRONIMO_EQUILIBRIUM_VMEC
 
 #include <gyronimo/fields/IR3field_c1.hh>
 #include <gyronimo/metrics/metric_vmec.hh>
@@ -38,7 +39,6 @@ class equilibrium_vmec : public IR3field_c1{
       const IR3& position, double time) const override;
   virtual IR3 partial_t_contravariant(
       const IR3& position, double time) const override {return {0.0,0.0,0.0};};
-  // double magnitude(const IR3& position, double time) const override;
   double magnitude_vmec(const IR3& position, double time) const;
 
   double R_0() const {return metric_->parser()->R_0();};
@@ -47,10 +47,11 @@ class equilibrium_vmec : public IR3field_c1{
  private:
   const metric_vmec *metric_;
   narray_type xm_nyq_, xn_nyq_; 
-  // spectral interpolators
   interpolator1d **bmnc_;
   interpolator1d **bsupumnc_;
   interpolator1d **bsupvmnc_;
 };
 
 }// end namespace gyronimo.
+
+#endif // GYRONIMO_EQUILIBRIUM_VMEC

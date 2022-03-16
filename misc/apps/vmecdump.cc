@@ -2,15 +2,16 @@
 // An object-oriented library for gyromotion applications in plasma physics.
 // Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira 
 
-// @vmectrace.cc
-// Command-line tool to print guiding-centre orbits in `VMEC` equilibria.
+// @vmecdump.cc
+// Command-line tool to extract info from `VMEC` output files.
 // External dependencies:
 // - [argh](https://github.com/adishavit/argh), a minimalist argument handler.
 // - [GSL](https://www.gnu.org/software/gsl), the GNU Scientific Library.
 // - [boost](https://www.gnu.org/software/gsl), the boost library.
-// - [netcdf-c++] (https://github.com/Unidata/netcdf-cxx4.git), for the netCDF-4 C++ library.
+// - [netcdf-c++4] (https://github.com/Unidata/netcdf-cxx4.git).
 
 #include <cmath>
+#include <numbers>
 #include <iostream>
 #include <argh.h>
 #include <gyronimo/version.hh>
