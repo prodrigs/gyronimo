@@ -31,6 +31,23 @@ endif()
 message("*  Configuring gyronimo-"
   ${version_string} " in " ${CMAKE_BUILD_TYPE} " mode:")
 
+# build options
+option(BUILD_VMEC_SUPPORT "Add support to VMEC equilibria" OFF)
+
+# detect platform
+string(COMPARE EQUAL "Darwin"  ${CMAKE_HOST_SYSTEM_NAME} OS_X)
+string(COMPARE EQUAL "Linux"   ${CMAKE_HOST_SYSTEM_NAME} LINUX)
+string(COMPARE EQUAL "Windows" ${CMAKE_HOST_SYSTEM_NAME} WINDOWS)
+if(LINUX)
+  set(OS_STRING "linux")
+elseif(WINDOWS)
+  set(OS_STRING "windows")
+elseif(OS_X)
+  set(OS_STRING "macOS")
+else()
+  set(OS_STRING "Unknown")
+endif()
+
 # sets project properties:
 project(
   gyronimo
@@ -57,22 +74,58 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   endif()
 endif()
 
+# find all gyronimo sources
+file(GLOB gyronimo_sources ${PROJECT_SOURCE_DIR}/gyronimo/*/*.cc)
+# find all apps sources
+file(GLOB apps_sources ${PROJECT_SOURCE_DIR}/misc/apps/*.cc)
+
 # required libraries
 find_package(GSL REQUIRED)
   include_directories(${GSL_INCLUDE_DIRS})
   set(gyronimo_depending_libs ${gyronimo_depending_libs} ${GSL_LIBRARIES})
 find_package(Boost REQUIRED)
   include_directories(${Boost_INCLUDE_DIRS})
+# add libraries needed to provide VMEC support
+if(BUILD_VMEC_SUPPORT)
+  # find_package(PkgConfig REQUIRED)
+  # pkg_check_modules(netcdf-cxx4 REQUIRED IMPORTED_TARGET netcdf-cxx4)
+  find_program(NCXX4_CONFIG "ncxx4-config")
+  if (NCXX4_CONFIG)
+    execute_process(COMMAND "ncxx4-config" --libs
+        OUTPUT_VARIABLE netcdf_cxx_libs)
+    execute_process(COMMAND "ncxx4-config" --cflags
+        OUTPUT_VARIABLE netcdf_cxx_flags)
+  else()
+    message(SEND_ERROR "ncxx4-config not found. Please install Unidata's netCDF-CXX4 package")
+  endif()
+  string(STRIP ${netcdf_cxx_libs} netcdf_cxx_libs)
+  string(STRIP ${netcdf_cxx_flags} netcdf_cxx_flags)
+else()
+    # remove all VMEC related gyronimo and apps sources
+    message(STATUS "Not building VMEC support!")
+    list(REMOVE_ITEM gyronimo_sources
+      ${PROJECT_SOURCE_DIR}/gyronimo/metrics/metric_vmec.cc
+      ${PROJECT_SOURCE_DIR}/gyronimo/parsers/parser_vmec.cc
+    )
+    list(REMOVE_ITEM apps_sources
+      ${PROJECT_SOURCE_DIR}/misc/apps/vmecdump.cc
+      ${PROJECT_SOURCE_DIR}/misc/apps/vmectrace.cc
+    )
+endif()
 
 # builds gyronimo library:
-file(GLOB gyronimo_sources ${PROJECT_SOURCE_DIR}/gyronimo/*/*.cc)
 add_library(gyronimo SHARED ${gyronimo_sources})
 set_target_properties(gyronimo PROPERTIES VERSION ${PROJECT_VERSION})
-target_include_directories(gyronimo PUBLIC ${PROJECT_SOURCE_DIR})
-target_link_libraries(gyronimo PUBLIC ${gyronimo_depending_libs})
+if(NOT BUILD_VMEC_SUPPORT)
+  target_include_directories(gyronimo PUBLIC ${PROJECT_SOURCE_DIR})
+  target_link_libraries(gyronimo PUBLIC ${gyronimo_depending_libs})
+else()
+  # target_link_libraries(gyronimo PUBLIC ${gyronimo_depending_libs} PkgConfig::netcdf-cxx4)
+  target_include_directories(gyronimo PUBLIC ${PROJECT_SOURCE_DIR} ${netcdf_cxx_flags})
+  target_link_libraries(gyronimo PUBLIC ${gyronimo_depending_libs} ${netcdf_cxx_libs})
+endif()
 
 # builds the apps:
-file(GLOB apps_sources ${PROJECT_SOURCE_DIR}/misc/apps/*.cc)
 foreach(target_file IN LISTS apps_sources)
   get_filename_component(target ${target_file} NAME_WE)
   add_executable(${target} ${target_file})
