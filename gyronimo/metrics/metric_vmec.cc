@@ -1,10 +1,22 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira
+// Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
 
-// @metric_vmec.cc
+// ::gyronimo:: is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-#include <gyronimo/core/transpose.hh>
+// ::gyronimo:: is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
+
+// @metric_vmec.cc, this file is part of ::gyronimo::
+
 #include <gyronimo/metrics/metric_vmec.hh>
 
 namespace gyronimo{
@@ -158,7 +170,7 @@ IR3 metric_vmec::transform2cylindrical(const IR3& position) const {
       Z+= (*Zmns_[i])(u) * std::sin( m*w - n*v );
     }
     return  {R, v, Z};
- };
+}
  
 //@todo move this to jacobian and think about testing this by calling the parent
 double metric_vmec::jacobian_vmec(const IR3& position) const {

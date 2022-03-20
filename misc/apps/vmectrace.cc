@@ -1,8 +1,22 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira
+// Copyright (C) 2021 Paulo Rodrigues.
 
-// @vmectrace.cc
+// ::gyronimo:: is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// ::gyronimo:: is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
+
+// @vmectrace.cc, this file is part of ::gyronimo::
+
 // Command-line tool to print guiding-centre orbits in `VMEC` equilibria.
 // External dependencies:
 // - [argh](https://github.com/adishavit/argh), a minimalist argument handler.
@@ -13,8 +27,8 @@
 #include <omp.h>
 #endif
 #include <cmath>
-#include <iostream>
 #include <argh.h>
+#include <iostream>
 #include <gyronimo/version.hh>
 #include <gyronimo/core/codata.hh>
 #include <gyronimo/core/linspace.hh>
@@ -24,8 +38,8 @@
 #include <gyronimo/dynamics/guiding_centre.hh>
 #include <gyronimo/dynamics/odeint_adapter.hh>
 #include <boost/math/tools/roots.hpp>
-#include <boost/numeric/odeint/integrate/integrate_const.hpp>
 #include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
+#include <boost/numeric/odeint/integrate/integrate_const.hpp>
 
 void print_help() {
   std::cout << "vmectrace, powered by gyronimo-v"

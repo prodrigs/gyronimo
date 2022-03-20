@@ -2,7 +2,20 @@
 // An object-oriented library for gyromotion applications in plasma physics.
 // Copyright (C) 2021 Paulo Rodrigues.
 
-// @parser_helena.hh
+// ::gyronimo:: is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// ::gyronimo:: is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
+
+// @parser_helena.hh, this file is part of ::gyronimo::
 
 #ifndef GYRONIMO_PARSER_HELENA
 #define GYRONIMO_PARSER_HELENA
@@ -17,7 +30,7 @@ namespace gyronimo {
 /*!
     Reads and parses a mapping file produced by `HELENA`, a Grad-Shafanov
     equilibrium code [G. Huysmans *et al*., Int. J.  Mod. Phys. C 2 **371**,
-    (1991)]. The mapping file is usually produced as text file named `fort.12`.
+    (1991)]. The mapping is usually produced as text file named `fort.12`.
     Parsed data is accessed via public member functions, some of them returning
     `parser_helena::narray_type` arrays. Useful data is computed from the parsed
     one and made available by the same mechanism: Contravariant metric-tensor
@@ -30,7 +43,9 @@ namespace gyronimo {
     poloidal flux normalised to its boundary value (in Wb/rad), @f$\chi@f$ is a
     counterclockwise angle such that @f$B^\phi=q B^\chi@f$, with @f$\chi=0@f$
     the low-field side midplane, @f$\phi@f$ is the clockwise toroidal angle as
-    seen from above the torus, and @f$q@f$ the safety factor.
+    seen from above the torus, and @f$q@f$ the safety factor. 2d data is
+    supplied in linear arrays with @f$\chi@f$ samples changing faster than
+    @f$s@f$ ones.
 */
 
 class parser_helena {

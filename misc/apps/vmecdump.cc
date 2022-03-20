@@ -1,8 +1,22 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Jorge Ferreira 
+// Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
 
-// @vmecdump.cc
+// ::gyronimo:: is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// ::gyronimo:: is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
+
+// @vmecdump.cc, this file is part of ::gyronimo::
+
 // Command-line tool to extract info from `VMEC` output files.
 // External dependencies:
 // - [argh](https://github.com/adishavit/argh), a minimalist argument handler.
@@ -11,11 +25,10 @@
 // - [netcdf-c++4] (https://github.com/Unidata/netcdf-cxx4.git).
 
 #include <cmath>
+#include <argh.h>
 #include <numbers>
 #include <iostream>
-#include <argh.h>
 #include <gyronimo/version.hh>
-#include <gyronimo/core/codata.hh>
 #include <gyronimo/core/linspace.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
 #include <gyronimo/metrics/metric_vmec.hh>
@@ -196,7 +209,7 @@ void print_surface(const Scalar scalar,
       std::cout << std::endl;
     };
   };
-};
+}
 void print_surface(const Scalar scalar, const gyronimo::parser_vmec& vmap, const gyronimo::interpolator1d_factory *ifactory) {
   print_surface(scalar, vmap, ifactory, 128, 128);
 }

@@ -5,8 +5,9 @@
 
 *An object-oriented library for gyromotion applications in plasma physics.*
 
-Philosophy and purpose:
------------------------
+Philosophy, purpose, and other useless matters:
+-----------------------------------------------
+
 Have you ever had a bright and promising idea about gyromotion in
 plasmas that just faded away the moment you realised the amount of
 non-trivial, tedious, unrewarding, non-physics details you would have to
@@ -29,8 +30,8 @@ In brief, the goal of `gyronimo` is to keep maintenance efforts to a
 minimum, code readability to its best, and performance to the level that
 is really needed by each specific gyromotion application.
 
-"What's in a name?", wondered Juliet.
--------------------------------------
+###### "What's in a name?", wondered Juliet...
+
 Quite obviously, `gyronimo` is an acronym for GYRO-MOtion. To those with
 a sharp eye and an inquisitive mind, the author must confess that he has
 absolutely No Idea on how the `ni` managed to sneak into the middle.
@@ -43,8 +44,26 @@ Whichever the actual cause might have been, library users are expected
 to occasionally shout an enthusiastic "gyronimo!" while happily coding
 their favorite gyromotion application.
 
-Documentation:
---------------
+Contents:
+---------
+
+#### Licensing and terms of use:
+
+::gyronimo:: is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+#### A word about code documentation:
+
 The source code is extensively documented in order to allow tools like
 `doxygen` to easily generate HTML-formatted documentation of the library
 API. This procedure ensures up-to-date information at the users finger
@@ -57,34 +76,40 @@ particular features of `gyronimo` design. Each of these files is
 organized in three main sections: what is it (the corresponding feature,
 of course), why is it needed for, and how does it work.
 
-Installation:
--------------
+#### Compiling and installing, a minimal and very optimistic howto:
+
 The library requires `cmake` and a c++ compiler supporting the **c++20**
 standard (e.g., gcc-10.1.0). HTML-formatted documentation can be
 generated from the source code by `doxygen` if the latter is installed.
 
-Basic build&install procedure:
+###### Basic build&install procedure:
 
-- Run `cmake [options] path/to/gyronimo/repository` on an build
-  directory to configure the installation;
-- Run `cmake --build . [options]` to generate the shared library
-  `libgyronimo` and the available apps;
-- Run `cmake --build . --target doc` to extract the API documentation
-  from source files with `doxygen`;
-- Run `cmake --install . --prefix path/to/install/dir [options]` to
-  install include files (prefix/include/gyronimo), shared library
-  (prefix/lib), available apps (prefix/bin), and eventual HTML
-  documentation (prefix/share/doc/gyronimo);
+1. Run `cmake [options] path/to/gyronimo/repository` on an build
+   directory to configure the installation;
+2. Run `cmake --build . [options]` to generate the shared library
+   `libgyronimo` and the available apps;
+3. Run `cmake --build . --target doc` to extract the API documentation
+   from source files with `doxygen`;
+4. Run `cmake --install . --prefix path/to/install/dir [options]` to
+   install include files (prefix/include/gyronimo), shared library
+   (prefix/lib), available apps (prefix/bin), and eventual HTML
+   documentation (prefix/share/doc/gyronimo);
+
+###### Some useful `cmake` options:
+- `-DCMAKE_BUILD_TYPE={Release,Debug}` (default `Release`);
+- `-DBUILD_VMEC_SUPPORT={ON,OFF}` (default `OFF`);
 
 After installing and before using the library, make sure to update
 relevant environment variables if the installation folder is not one of
 the system's defaults.
 
-External dependencies:
-----------------------
+#### External dependencies and other nightmares:
+
 Applications developed using `gyronimo` may, eventually, have to be
 compiled and/or linked against the following libraries:
 
-- GNU Scientific Library [GSL](https://www.gnu.org/software/gsl).
+- GNU Scientific Library [GSL](https://www.gnu.org/software/gsl);
+- c++ extension to NetCDF-4
+  [netcdf-cxx4](https://github.com/Unidata/netcdf-cxx4);
 - odeint, an ODE c++ library distributed with
-  [boost](https://www.boost.org).
+  [boost](https://www.boost.org);
