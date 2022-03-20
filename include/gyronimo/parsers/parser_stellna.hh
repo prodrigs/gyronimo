@@ -19,6 +19,20 @@ class parser_stellna {
   typedef std::valarray<double> narray_type;
 
   parser_stellna(const std::string& filename);
+
+  parser_stellna(
+  double Raxis, double axis_coeff_size,
+  const narray_type& Rcoeff,
+  const narray_type& Zcoeff,
+  double eta_bar, double iota, double Niota,
+  double axis_length, double field_periods, double n_phi,
+  const narray_type& phi_grid,
+  const narray_type& sigma,
+  const narray_type& curvature,
+  const narray_type& torsion,
+  const narray_type& dldphi
+  );
+
   ~parser_stellna() {};
 
   int Niota() const {return Niota_;};
@@ -32,11 +46,8 @@ class parser_stellna {
   const narray_type& sigma() const {return sigma_;};
   const narray_type& Rcoeff() const {return Rcoeff_;};
   const narray_type& Zcoeff() const {return Zcoeff_;};
-  const narray_type& normal() const {return normal_;};
   const narray_type& dldphi() const {return dldphi_;};
   const narray_type& torsion() const {return torsion_;};
-  const narray_type& tangent() const {return tangent_;};
-  const narray_type& binormal() const {return binormal_;};
   const narray_type& phi_grid() const {return phi_grid_;};
   const narray_type& curvature() const {return curvature_;};
 
@@ -46,7 +57,6 @@ class parser_stellna {
   size_t axis_coeff_size_;
   narray_type Rcoeff_, Zcoeff_;
   narray_type phi_grid_, sigma_, curvature_, torsion_, dldphi_;
-  narray_type tangent_, normal_, binormal_;
 };
 
 } // end namespace gyronimo.
