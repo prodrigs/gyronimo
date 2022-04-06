@@ -98,7 +98,7 @@ file(GLOB apps_sources ${PROJECT_SOURCE_DIR}/misc/apps/*.cc)
 find_package(GSL REQUIRED)
   include_directories(${GSL_INCLUDE_DIRS})
   set(gyronimo_depending_libs ${gyronimo_depending_libs} ${GSL_LIBRARIES})
-find_package(Boost 1.73.0 REQUIRED)
+find_package(Boost 1.71.0 REQUIRED)
   include_directories(${Boost_INCLUDE_DIRS})
 
 # add libraries needed to provide openMP support if required
