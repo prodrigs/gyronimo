@@ -27,11 +27,11 @@ endif()
 # extracts the version numbers from version.hh:
 set(version_major_regex "[ \t]*constexpr int version_major = ([0-9]+);")
 set(version_minor_regex "[ \t]*constexpr int version_minor = ([0-9]+);")
-file(STRINGS ${CMAKE_SOURCE_DIR}/gyronimo/version.hh
+file(STRINGS ${CMAKE_CURRENT_LIST_DIR}/gyronimo/version.hh
   string_to_replace REGEX ${version_major_regex})
 string(REGEX REPLACE
   ${version_major_regex} "\\1" version_major ${string_to_replace})
-file(STRINGS ${CMAKE_SOURCE_DIR}/gyronimo/version.hh
+file(STRINGS ${CMAKE_CURRENT_LIST_DIR}/gyronimo/version.hh
   string_to_replace REGEX ${version_minor_regex})
 string(REGEX REPLACE
   ${version_minor_regex} "\\1" version_minor ${string_to_replace})
@@ -205,7 +205,7 @@ endif()
 # installs gyronimo library:
 install(TARGETS gyronimo LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/gyronimo
+  DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/gyronimo
   TYPE INCLUDE MESSAGE_NEVER
   FILES_MATCHING PATTERN "*.hh")
 
