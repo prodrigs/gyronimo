@@ -21,6 +21,23 @@
 
 namespace gyronimo {
 
+dIR3 inverse(const dIR3& m) {
+  double ideterminant = 1.0/(
+      m[dIR3::uu]*(m[dIR3::vv]*m[dIR3::ww] - m[dIR3::vw]*m[dIR3::wv]) -
+      m[dIR3::uv]*(m[dIR3::vu]*m[dIR3::ww] - m[dIR3::vw]*m[dIR3::wu]) +
+      m[dIR3::uw]*(m[dIR3::vu]*m[dIR3::wv] - m[dIR3::vv]*m[dIR3::wu]));
+  return {
+    ideterminant*(m[dIR3::vv]*m[dIR3::ww] - m[dIR3::vw]*m[dIR3::wv]),
+    ideterminant*(m[dIR3::uw]*m[dIR3::wv] - m[dIR3::uv]*m[dIR3::ww]),
+    ideterminant*(m[dIR3::uv]*m[dIR3::vw] - m[dIR3::uw]*m[dIR3::vv]),
+    ideterminant*(m[dIR3::vw]*m[dIR3::wu] - m[dIR3::vu]*m[dIR3::ww]),
+    ideterminant*(m[dIR3::uu]*m[dIR3::ww] - m[dIR3::uw]*m[dIR3::wu]),
+    ideterminant*(m[dIR3::uw]*m[dIR3::vu] - m[dIR3::uu]*m[dIR3::vw]),
+    ideterminant*(m[dIR3::vu]*m[dIR3::wv] - m[dIR3::vv]*m[dIR3::wu]),
+    ideterminant*(m[dIR3::uv]*m[dIR3::wu] - m[dIR3::uu]*m[dIR3::wv]),
+    ideterminant*(m[dIR3::uu]*m[dIR3::vv] - m[dIR3::uv]*m[dIR3::vu])};
+}
+
 BinOpTree<IR3, IR3, std::plus<double>> const operator+(
     const IR3& x1, const IR3& x2) {
   return BinOpTree<IR3, IR3, std::plus<double>>(x1, x2);

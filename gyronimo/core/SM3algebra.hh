@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2022 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -59,6 +59,9 @@ class dSM3 {
 
   std::array<double, 18> data_;
 };
+
+//! Inverse of a symmetric 3x3 matrix.
+SM3 inverse(const SM3& m);
 
 } // end namespace gyronimo.
 

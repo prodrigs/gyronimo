@@ -53,7 +53,6 @@ class metric_covariant {
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const;
   virtual SM3 inverse(const IR3& r) const;
   virtual dSM3 del_inverse(const IR3& r) const;
-  virtual IR3 transform2cylindrical(const IR3& r) const;
 };
 
 }
