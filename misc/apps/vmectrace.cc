@@ -65,7 +65,7 @@ class orbit_observer {
 public:
   orbit_observer(
       double zstar, double vstar,
-      const gyronimo::IR3field_c1* e, const gyronimo::guiding_centre* g)
+      const gyronimo::equilibrium_vmec* e, const gyronimo::guiding_centre* g)
     : zstar_(zstar), vstar_(vstar), eq_pointer_(e), gc_pointer_(g) {};
   void operator()(const gyronimo::guiding_centre::state& s, double t) {
     gyronimo::IR3 x = gc_pointer_->get_position(s);
@@ -87,7 +87,7 @@ public:
   };
 private:
   double zstar_, vstar_;
-  const gyronimo::IR3field_c1* eq_pointer_;
+  const gyronimo::equilibrium_vmec* eq_pointer_;
   const gyronimo::guiding_centre* gc_pointer_;
 };
 
