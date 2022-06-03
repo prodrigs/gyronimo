@@ -28,13 +28,11 @@ namespace gyronimo {
 class morphism {
  public:
   virtual ~morphism() {};
-
   virtual IR3 operator()(const IR3& q) const = 0;
-  virtual IR3 inverse(const IR3& q) const = 0;
+  virtual IR3 inverse(const IR3& x) const = 0;
   virtual dIR3 del(const IR3& q) const = 0;
-
   virtual dIR3 del_inverse(
-      const IR3& x) const {return gyronimo::inverse(del(q));};
+      const IR3& q) const {return gyronimo::inverse(del(q));};
   virtual dIR3 tan_basis(const IR3& q) const {return del(q);};
   virtual dIR3 dual_basis(const IR3& q) const {return del_inverse(q);};
 };
