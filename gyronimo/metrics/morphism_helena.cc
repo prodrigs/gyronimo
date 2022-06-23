@@ -90,7 +90,7 @@ dIR3 morphism_helena::del(const IR3& q) const {
   double s = q[IR3::u], phi = q[IR3::w];
   double chi = this->reduce_chi(q[IR3::v]);
   double R = (*R_)(s, chi),
-      Ru = (*R_).partial_v(s, chi), Rv = (*R_).partial_v(s, chi);
+      Ru = (*R_).partial_u(s, chi), Rv = (*R_).partial_v(s, chi);
   double cos = std::cos(phi), sin = std::sin(phi);
   return {Ru*cos, Rv*cos, -R*sin, -Ru*sin, -Rv*sin, -R*cos,
       (*z_).partial_u(s, chi), (*z_).partial_v(s, chi), 0.0};
@@ -98,7 +98,7 @@ dIR3 morphism_helena::del(const IR3& q) const {
 
 //! Reduces an arbitrary angle chi to the interval [0:pi].
 double morphism_helena::reduce_chi(double chi) const {
-  reduce(chi, 2*std::numbers::pi);
+  chi = reduce(chi, 2*std::numbers::pi);
   if(parser_->is_symmetric() && chi > std::numbers::pi)
       chi = 2*std::numbers::pi - chi;
   return chi;
