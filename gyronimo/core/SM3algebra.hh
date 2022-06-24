@@ -32,7 +32,7 @@ namespace gyronimo {
 */
 class SM3 {
  public:
-  enum index : size_t {uu = 0, uv = 1, uw = 2, vv = 3, vw = 4, ww = 5};
+  enum index {uu = 0, uv = 1, uw = 2, vv = 3, vw = 4, ww = 5};
 
   double& operator[](index i) {return data_[i];};
   const double& operator[](index i) const {return data_[i];};
@@ -49,7 +49,7 @@ class SM3 {
 */
 class dSM3 {
  public:
-  enum index : size_t {
+  enum index {
     uuu = 0, uuv = 1, uuw = 2, uvu = 3, uvv = 4, uvw = 5,
     uwu = 6, uwv = 7, uww = 8, vvu = 9, vvv = 10, vvw = 11,
     vwu = 12, vwv = 13, vww = 14, wwu = 15, wwv = 16, www = 17};

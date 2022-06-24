@@ -79,7 +79,7 @@ namespace gyronimo {
 class guiding_centre {
  public:
   typedef std::array<double, 4> state;
-  enum vpp_sign : int {minus = -1, plus = 1};
+  enum vpp_sign {minus = -1, plus = 1};
 
   guiding_centre(
       double Lref, double Vref, double qom, double mu,
