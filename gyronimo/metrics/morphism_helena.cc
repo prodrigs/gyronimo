@@ -18,8 +18,8 @@
 // @morphism_helena.cc, this file is part of ::gyronimo::
 
 #include <numbers>
-#include <gsl/gsl_multiroots.h>
 #include <gyronimo/core/error.hh>
+#include <gyronimo/core/multiroot.hh>
 #include <gyronimo/metrics/morphism_helena.hh>
 
 namespace gyronimo{
@@ -42,66 +42,42 @@ morphism_helena::~morphism_helena() {
   if(z_) delete z_;
 }
 IR3 morphism_helena::operator()(const IR3& q) const {
-  double s = q[IR3::u], phi = q[IR3::w];
-  double chi = this->reduce_chi(q[IR3::v]);
+  double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]), phi = q[IR3::w];
   double R = (*R_)(s, chi);
   return {R*std::cos(phi), -R*std::sin(phi), (*z_)(s, chi)};
 }
-int morphism_helena::root_f(const gsl_vector *q, void *target, gsl_vector *f) {
-  double u = reduce(gsl_vector_get(q, 0), 1);
-  double v = reduce(gsl_vector_get(q, 1), 2*std::numbers::pi);
-  double target_R = ((struct root_target*) target)->R;
-  double target_z = ((struct root_target*) target)->z;
-  interpolator2d* interpolator_R = ((struct root_target*) target)->i_R;
-  interpolator2d* interpolator_z = ((struct root_target*) target)->i_z;
-  gsl_vector_set(f, 0, target_R - (*interpolator_R)(u, v));
-  gsl_vector_set(f, 1, target_z - (*interpolator_z)(u, v));
-  return GSL_SUCCESS;
-}
 IR3 morphism_helena::inverse(const IR3& X) const {
-  const gsl_multiroot_fsolver_type *T = gsl_multiroot_fsolver_broyden;
-  gsl_multiroot_fsolver *s = gsl_multiroot_fsolver_alloc(T, 2);
-
+  typedef std::array<double, 2> IR2;
   double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
   double R = std::sqrt(x*x + y*y);
-  struct root_target target = {R, z, R_, z_};
-  gsl_multiroot_function f = {&root_f, 2, &target};
-
-  gsl_vector *guess_q = gsl_vector_alloc(2);
-  gsl_vector_set(guess_q, 0, 0.5);
-  gsl_vector_set(guess_q, 1, 0.0);
-
-  const double tolerance = 1.0e-09;
-  gsl_multiroot_fsolver_set(s, &f, guess_q);
-  for (auto i : std::views::iota(1, 100)) {
-    if (gsl_multiroot_fsolver_iterate(s)) break;  // breaks if stuck;
-    if (gsl_multiroot_test_residual(s->f, tolerance) != GSL_CONTINUE) break;
-  }
-  if (std::max(gsl_vector_get(s->f, 0), gsl_vector_get(s->f, 1)) > tolerance)
-      error(__func__, __FILE__, __LINE__,
-          "above tolerance after max iterations.", 1);
-  double u = reduce(gsl_vector_get(s->x, 0), 1.0);
-  double v = reduce(gsl_vector_get(s->x, 1), 2*std::numbers::pi);
-  gsl_multiroot_fsolver_free(s);
-  gsl_vector_free(guess_q);
-  return {u, v, std::atan2(-y, x)};
+  std::function<IR2(const IR2&)> zero_function =
+      [&](const IR2& args) {
+        auto [s, chi] = reflection_past_axis(args[0], args[1]);
+        return IR2({(*R_)(s, chi) - R, (*z_)(s, chi) - z});
+      };
+  IR2 guess = {0.5, std::atan2(z, R - parser_->rmag())};
+  IR2 roots = multiroot(1.0e-15, 100)(zero_function, guess);
+  auto [s, chi] = reflection_past_axis(roots[0], roots[1]);
+  return {s, chi, std::atan2(-y, x)};
 }
 dIR3 morphism_helena::del(const IR3& q) const {
-  double s = q[IR3::u], phi = q[IR3::w];
-  double chi = this->reduce_chi(q[IR3::v]);
+  double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]), phi = q[IR3::w];
   double R = (*R_)(s, chi),
       Ru = (*R_).partial_u(s, chi), Rv = (*R_).partial_v(s, chi);
   double cos = std::cos(phi), sin = std::sin(phi);
   return {Ru*cos, Rv*cos, -R*sin, -Ru*sin, -Rv*sin, -R*cos,
       (*z_).partial_u(s, chi), (*z_).partial_v(s, chi), 0.0};
 }
-
-//! Reduces an arbitrary angle chi to the interval [0:pi].
-double morphism_helena::reduce_chi(double chi) const {
-  chi = reduce(chi, 2*std::numbers::pi);
-  if(parser_->is_symmetric() && chi > std::numbers::pi)
-      chi = 2*std::numbers::pi - chi;
-  return chi;
+std::tuple<double, double> morphism_helena::reflection_past_axis(
+    double s, double chi) {
+  if(s < 0)
+    return {-s, reduce_2pi(chi + std::numbers::pi)};
+  else
+    return {s, chi};
+}
+double morphism_helena::reduce_2pi(double x) {
+  double l = 2*std::numbers::pi;
+  return (x -= l*std::floor(x/l));
 }
 
 } // end namespace gyronimo

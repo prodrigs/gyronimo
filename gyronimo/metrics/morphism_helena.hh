@@ -20,7 +20,6 @@
 #ifndef GYRONIMO_MORPHISM_HELENA
 #define GYRONIMO_MORPHISM_HELENA
 
-#include <gsl/gsl_vector.h>
 #include <gyronimo/metrics/morphism.hh>
 #include <gyronimo/parsers/parser_helena.hh>
 #include <gyronimo/interpolators/interpolator2d.hh>
@@ -37,13 +36,11 @@ class morphism_helena : public morphism {
   virtual IR3 inverse(const IR3& x) const override;
   virtual dIR3 del(const IR3& q) const override;
   const parser_helena* parser() const {return parser_;};
-  double reduce_chi(double chi) const;
  private:
-  static double reduce(double x, double l) {return (x -= l*std::floor(x/l));};
   const parser_helena *parser_;
   interpolator2d *R_, *z_;
-  static int root_f(const gsl_vector *q, void *target, gsl_vector *f);
-  struct root_target {double R, z;interpolator2d *i_R, *i_z;};
+  static double reduce_2pi(double x);
+  static std::tuple<double, double> reflection_past_axis(double s, double chi);
 };
 
 }
