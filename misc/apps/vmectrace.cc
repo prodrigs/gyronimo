@@ -23,188 +23,123 @@
 // - [GSL](https://www.gnu.org/software/gsl), the GNU Scientific Library.
 // - [boost](https://www.gnu.org/software/gsl), the boost library.
 
-#ifdef OPENMP
-#include <omp.h>
-#endif
 #include <cmath>
-#include <argh.h>
 #include <iostream>
+
+#include <argh.h>
+#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
+#include <boost/numeric/odeint/integrate/integrate_const.hpp>
+
 #include <gyronimo/version.hh>
 #include <gyronimo/core/codata.hh>
-#include <gyronimo/core/linspace.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
 #include <gyronimo/fields/equilibrium_vmec.hh>
 #include <gyronimo/interpolators/cubic_gsl.hh>
 #include <gyronimo/dynamics/guiding_centre.hh>
 #include <gyronimo/dynamics/odeint_adapter.hh>
-#include <boost/math/tools/roots.hpp>
-#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
-#include <boost/numeric/odeint/integrate/integrate_const.hpp>
 
 void print_help() {
-  std::cout << "vmectrace, powered by gyronimo-v"
+  std::cout << "vmectrace, powered by ::gyronimo::"
       << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
   std::cout <<
       "usage: vmectrace [options] vmap\n";
   std::cout <<
       "reads an VMEC vmap and prints the required orbit to stdout.\n";
   std::cout << "options:\n";
-  std::cout << "  -rhom=rrr      Axis density (in m_proton*1e19, default 1).\n";
-  std::cout << "  -mass=mmm      Particle mass (in m_proton, default 1).\n";
-  std::cout << "  -charge=qqq    Particle charge (in q_proton, default 1).\n";
-  std::cout << "  -pphi=ppp      Pphi value (in eV.s, default 1).\n";
-  std::cout << "  -energy=eee    Energy value (in eV, default 1).\n";
-  std::cout << "  -lambda=lll    Lambda value, signed as Vpp (default +1).\n";
-  std::cout << "  -tfinal=ttt    Time limit (in R0/Valfven, default 1).\n";
-  std::cout << "  -nsamples=nnn  Number of orbit samples (default 512).\n";
+  std::cout << "  -lref=val      Reference length (in si, default 1).\n";
+  std::cout << "  -vref=val      Reference velocity (in si, default 1).\n";
+  std::cout << "  -mass=val      Particle mass (in m_proton, default 1).\n";
+  std::cout << "  -rho=val       Initial radius (vmec, default 0.5).\n";
+  std::cout << "  -zeta=val      Initial zeta (vmec in rad, default 0).\n";
+  std::cout << "  -theta=val     Initial theta (vmec in rad, default 0).\n";
+  std::cout << "  -energy=val    Energy value (in eV, default 1).\n";
+  std::cout << "  -lambda=val    Lambda value, signed as v_par (default 1).\n";
+  std::cout << "  -tfinal=val    Time limit (in lref/vref, default 1).\n";
+  std::cout << "  -charge=val    Particle charge (in q_proton, default 1).\n";
+  std::cout << "  -nsamples=val  Number of orbit samples (default 512).\n";
+  std::cout << "Note: lambda=magnetic_moment_si*B_axis_si/energy_si.\n";
   std::exit(0);
 }
 
 // ODEInt observer object to print diagnostics at each time step.
+using namespace gyronimo;
 class orbit_observer {
-public:
+ public:
   orbit_observer(
-      double zstar, double vstar,
-      const gyronimo::IR3field_c1* e, const gyronimo::guiding_centre* g)
-    : zstar_(zstar), vstar_(vstar), eq_pointer_(e), gc_pointer_(g) {};
-  void operator()(const gyronimo::guiding_centre::state& s, double t) {
-    gyronimo::IR3 x = gc_pointer_->get_position(s);
-    double v_parallel = gc_pointer_->get_vpp(s);
-    double bphi = eq_pointer_->covariant_versor(x, t)[gyronimo::IR3::w];
-    double flux = x[gyronimo::IR3::u]*x[gyronimo::IR3::u];
-    gyronimo::IR3 X = eq_pointer_->metric()->transform2cylindrical(x);
+      const IR3field_c1* e, const guiding_centre* g)
+    : eq_pointer_(e), gc_pointer_(g) {};
+  void operator()(const guiding_centre::state& s, double t) {
+    IR3 q = gc_pointer_->get_position(s);
+    IR3 c = eq_pointer_->metric()->transform2cylindrical(q);
+    double R = c[IR3::u], phi = c[IR3::v], z = c[IR3::w];
+    double x = R*std::cos(phi), y = R*std::sin(phi);
     std::cout << t << " "
-        << x[gyronimo::IR3::u] << " "
-        << x[gyronimo::IR3::v] << " "
-        << x[gyronimo::IR3::w] << " "
-        << v_parallel << " "
-        << -zstar_*flux + vstar_*v_parallel*bphi << " "
+        << q[IR3::u] << " "
+        << q[IR3::v] << " "
+        << q[IR3::w] << " "
         << gc_pointer_->energy_perpendicular(s, t) << " "
         << gc_pointer_->energy_parallel(s) << " " 
-        << X[gyronimo::IR3::u] << " "
-        << X[gyronimo::IR3::v] << " "
-        << X[gyronimo::IR3::w] << "\n";
+        << x << " " << y << " " << z << "\n";
   };
-private:
-  double zstar_, vstar_;
-  const gyronimo::IR3field_c1* eq_pointer_;
-  const gyronimo::guiding_centre* gc_pointer_;
+ private:
+  const IR3field_c1* eq_pointer_;
+  const guiding_centre* gc_pointer_;
 };
-
-// Finds the radial position s = \sqrt{\Phi/\Phi_b}.
-/*
-   The canonical toroidal momentum is
-     P_phi = q_s A_\phi + m_s v_\parallel B_\phi/B,
-   where
-     \mathbf{B} = \nabla \phi \times \nabla \Psi + B_\phi \nabla \phi,
-     \mathbf{B} = \nabla \times \mathbf{A} => A_\phi = - \Psi,
-   and all variables are in SI units, except \Phi and \Psi in Wb/rad. Writting P_\phi in
-   eV.s and the energy E in eV, with e the electron charge, one gets:
-     P_phi = - (q_s/e) \Psi +
-         \sigma_\parallel b_\phi \sqrt{2 m_s (E/e) \Lambda (1 - B/B_0)}
-   Function arguments:
-   pphi: \P_\phi in eV.s;
-   zstar: (q_s/e) \Psi_b, with \Psi_b the boundary flux, q_s the species charge;
-   vdagger: \sqrt{2 m_s (E/e)}, with E in eV, m_s the species mass;
-   lambda: \Lambda;
-   vpp_sign: the name says it all;
-   veq: reference to an VMEC equilibrium object;
-*/
-double get_initial_radial_position(
-    double pphi, double zstar, double vdagger, double lambda,
-    double vpp_sign, const gyronimo::equilibrium_vmec& veq) {
-  auto pphi_functional = [zstar, vdagger, lambda, vpp_sign, &veq](double s) {
-      gyronimo::IR3 pos = {s, 0.0, 0.0};  // Assuming {s, u, v} coordinates!
-      double Btilde = veq.magnitude(pos, 0.0);
-      double bphi = veq.covariant_versor(pos, 0.0)[gyronimo::IR3::w];
-      return -zstar*s*s + vpp_sign*vdagger*bphi*std::sqrt(1.0 - lambda*Btilde);
-  };
-
-  auto orbit = [&pphi_functional, pphi](double s) {
-      return pphi_functional(s) - pphi;};
-  auto s_grid = gyronimo::linspace<std::valarray<double>>(0.0, 1.0, 1024);
-  
-  auto bracketing_iterator = std::adjacent_find(
-      std::begin(s_grid), std::end(s_grid),
-      [&orbit](double x, double y){return orbit(x)*orbit(y) < 0.0;});
-  if(bracketing_iterator == std::end(s_grid)) {
-    std::cout << "# orbit not crossing the low-field side midplane.\n";
-    std::exit(1);
-  }
-  auto root_interval = boost::math::tools::bisect(
-      [&orbit](double s){return orbit(s);},
-      *bracketing_iterator, *(bracketing_iterator + 1),
-      [](double a, double b){return std::abs(b - a) < 1.0e-09;});
-  return 0.5*(root_interval.first + root_interval.second);
-}
 
 int main(int argc, char* argv[]) {
   auto command_line = argh::parser(argv);
   if (command_line[{"h", "help"}]) print_help();
   if (!command_line(1)) {  // the 1st non-option argument is the mapping file.
-    std::cout << "vmectrace: no VMEC equilibrium file provided; -h for help.\n";
+    std::cout << "vmectrace: no vmec equilibrium file provided; -h for help.\n";
     std::exit(1);
   }
-  gyronimo::parser_vmec vmap(command_line[1]);
-  gyronimo::cubic_gsl_factory ifactory;
-  gyronimo::metric_vmec g(&vmap, &ifactory);
-  gyronimo::equilibrium_vmec veq(&g, &ifactory);
+  cubic_gsl_factory ifactory;
+  parser_vmec parser(command_line[1]);
+  metric_vmec g(&parser, &ifactory);
+  equilibrium_vmec veq(&g, &ifactory);
 
 // Reads parameters from the command line:
-  double pphi; command_line("pphi", 1.0) >> pphi;  // pphi in eV.s.
-  double mass; command_line("mass", 1.0) >> mass;  // m_proton units.
-  double rhom; command_line("rhom", 1.0) >> rhom;  // density in m_proton*1e19.
-  double charge; command_line("charge", 1.0) >> charge;  // q_electron units.
-  double energy; command_line("energy", 1.0) >> energy;  // energy in eV.
-  double lambda; command_line("lambda", 1.0) >> lambda;  // lambda is signed!
-  double Tfinal; command_line("tfinal", 1.0) >> Tfinal;
+  double rho; command_line("rho", 0.5) >> rho;
+  double zeta; command_line("zeta", 0.0) >> zeta;
+  double mass; command_line("mass", 1.0) >> mass;
+  double lref; command_line("lref", 1.0) >> lref;
+  double vref; command_line("vref", 1.0) >> vref;
+  double theta; command_line("theta", 0.0) >> theta;
+  double tfinal; command_line("tfinal", 1.0) >> tfinal;
+  double charge; command_line("charge", 1.0) >> charge;
+  double energy; command_line("energy", 1.0) >> energy;
+  double lambda; command_line("lambda", 1.0) >> lambda;
   double vpp_sign = std::copysign(1.0, lambda);  // lambda carries vpp sign.
   lambda = std::abs(lambda);  // once vpp sign is stored, lambda turns unsigned.
 
-// Computes normalisation constants:
-  double Valfven = veq.B_0()/std::sqrt(
-      gyronimo::codata::mu0*(rhom*gyronimo::codata::m_proton*1.e+19));
-  double Ualfven = 0.5*gyronimo::codata::m_proton*mass*Valfven*Valfven;
-  double energySI = energy*gyronimo::codata::e;
-  double Lref = veq.R_0();
+  double energy_ref = 0.5*codata::m_proton*mass*vref*vref;
+  double energy_si = energy*codata::e;
+  guiding_centre gc(lref, vref, charge/mass, lambda*energy_si/energy_ref, &veq);
+  guiding_centre::state initial_state = gc.generate_state(
+      {rho, zeta, theta}, energy_si/energy_ref,
+          (vpp_sign > 0 ?  guiding_centre::plus : guiding_centre::minus));
 
 // Prints output header:
-  std::cout << "# vmectrace, powered by ::gyronimo:: v"
-      << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
+  std::cout << "# vmectrace, powered by ::gyronimo::"
+      << version_major << "." << version_minor << ".\n";
   std::cout << "# args: ";
   for(int i = 1; i < argc; i++) std::cout << argv[i] << " ";
-  std::cout << std::endl;
-  std::cout << "# l_ref = " << Lref << " [m];";
-  std::cout << " v_alfven = " << Valfven << " [m/s];";
-  std::cout << " u_alfven = " << Ualfven << " [J];";
-  std::cout << " energy = " << energySI << " [J]." << "\n";
-  std::cout << "# vars: t s theta zeta vpar Pphi/e Eperp/Ealfven Epar/Ealfven R phi Z\n";
+  std::cout << std::endl
+      << "# E_ref: " << energy_ref << " [J]"
+          << " B_axis: " << veq.m_factor() << " [T]"
+              << " mu_tilde: " << gc.mu_tilde() << "\n";
+  std::cout << "# vars: t rho zeta theta E_perp/E_ref E_parallel/E_ref x y z\n";
 
-// Builds the guiding_centre object:
-  gyronimo::guiding_centre gc(
-      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &veq);
-
-// Computes the initial conditions from the supplied constants of motion:
-  double zstar = charge*g.parser()->cpsurf()*veq.B_0()*veq.R_0()*veq.R_0();
-  double vstar = Valfven*mass*gyronimo::codata::m_proton/gyronimo::codata::e;
-  double vdagger = vstar*std::sqrt(energySI/Ualfven);
-  double initial_radial_position =
-      get_initial_radial_position(pphi, zstar, vdagger, lambda, vpp_sign, veq);
-  gyronimo::guiding_centre::state initial_state = gc.generate_state(
-      {initial_radial_position, 0.0, 0.0}, energySI/Ualfven,
-      (vpp_sign > 0 ?
-        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus));
-
-// integrates for t in [0,Tfinal], with dt=Tfinal/nsamples, using RK4.
+// integrates for t in [0,tfinal], with dt=tfinal/nsamples, using RK4.
   std::cout.precision(16);
   std::cout.setf(std::ios::scientific);
-  orbit_observer observer(zstar, vstar, &veq, &gc);
+  orbit_observer observer(&veq, &gc);
   std::size_t nsamples; command_line("nsamples", 512) >> nsamples;
-  boost::numeric::odeint::runge_kutta4<gyronimo::guiding_centre::state>
+  boost::numeric::odeint::runge_kutta4<guiding_centre::state>
       integration_algorithm;
   boost::numeric::odeint::integrate_const(
-      integration_algorithm, gyronimo::odeint_adapter(&gc),
-      initial_state, 0.0, Tfinal, Tfinal/nsamples, observer);
+      integration_algorithm, odeint_adapter(&gc),
+      initial_state, 0.0, tfinal, tfinal/nsamples, observer);
 
   return 0;
 }
