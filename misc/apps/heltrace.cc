@@ -21,7 +21,7 @@
 // External dependencies:
 // - [argh](https://github.com/adishavit/argh), a minimalist argument handler.
 // - [GSL](https://www.gnu.org/software/gsl), the GNU Scientific Library.
-// - [boost](https://www.gnu.org/software/gsl), the boost library.
+// - [boost](https://www.boost.org), the boost library.
 
 #include <cmath>
 #include <iostream>

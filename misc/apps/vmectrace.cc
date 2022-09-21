@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 // External dependencies:
 // - [argh](https://github.com/adishavit/argh), a minimalist argument handler.
 // - [GSL](https://www.gnu.org/software/gsl), the GNU Scientific Library.
-// - [boost](https://www.gnu.org/software/gsl), the boost library.
+// - [boost](https://www.boost.org), the boost library.
+// - [netcdf-c++4] (https://github.com/Unidata/netcdf-cxx4.git).
 
 #include <cmath>
 #include <iostream>
@@ -39,17 +40,16 @@
 #include <gyronimo/dynamics/odeint_adapter.hh>
 
 void print_help() {
-  std::cout << "vmectrace, powered by ::gyronimo::"
+  std::cout << "vmectrace, powered by ::gyronimo::v"
       << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
+  std::cout << "usage: vmectrace [options] vmec_netcdf_file\n";
   std::cout <<
-      "usage: vmectrace [options] vmap\n";
-  std::cout <<
-      "reads an VMEC vmap and prints the required orbit to stdout.\n";
+      "reads a vmec output file, prints the required orbit to stdout.\n";
   std::cout << "options:\n";
   std::cout << "  -lref=val      Reference length (in si, default 1).\n";
   std::cout << "  -vref=val      Reference velocity (in si, default 1).\n";
   std::cout << "  -mass=val      Particle mass (in m_proton, default 1).\n";
-  std::cout << "  -rho=val       Initial radius (vmec, default 0.5).\n";
+  std::cout << "  -flux=val      Initial toroidal flux (vmec, default 0.5).\n";
   std::cout << "  -zeta=val      Initial zeta (vmec in rad, default 0).\n";
   std::cout << "  -theta=val     Initial theta (vmec in rad, default 0).\n";
   std::cout << "  -energy=val    Energy value (in eV, default 1).\n";
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
   equilibrium_vmec veq(&g, &ifactory);
 
 // Reads parameters from the command line:
-  double rho; command_line("rho", 0.5) >> rho;
+  double flux; command_line("flux", 0.5) >> flux;
   double zeta; command_line("zeta", 0.0) >> zeta;
   double mass; command_line("mass", 1.0) >> mass;
   double lref; command_line("lref", 1.0) >> lref;
@@ -116,11 +116,11 @@ int main(int argc, char* argv[]) {
   double energy_si = energy*codata::e;
   guiding_centre gc(lref, vref, charge/mass, lambda*energy_si/energy_ref, &veq);
   guiding_centre::state initial_state = gc.generate_state(
-      {rho, zeta, theta}, energy_si/energy_ref,
+      {flux, zeta, theta}, energy_si/energy_ref,
           (vpp_sign > 0 ?  guiding_centre::plus : guiding_centre::minus));
 
 // Prints output header:
-  std::cout << "# vmectrace, powered by ::gyronimo::"
+  std::cout << "# vmectrace, powered by ::gyronimo::v"
       << version_major << "." << version_minor << ".\n";
   std::cout << "# args: ";
   for(int i = 1; i < argc; i++) std::cout << argv[i] << " ";
@@ -128,7 +128,8 @@ int main(int argc, char* argv[]) {
       << "# E_ref: " << energy_ref << " [J]"
           << " B_axis: " << veq.m_factor() << " [T]"
               << " mu_tilde: " << gc.mu_tilde() << "\n";
-  std::cout << "# vars: t rho zeta theta E_perp/E_ref E_parallel/E_ref x y z\n";
+  std::cout <<
+      "# vars: t flux zeta theta E_perp/E_ref E_parallel/E_ref x y z\n";
 
 // integrates for t in [0,tfinal], with dt=tfinal/nsamples, using RK4.
   std::cout.precision(16);
