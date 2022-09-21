@@ -57,7 +57,7 @@ class multiroot {
   template<SizedContiguousRange UserArgs>
   auto allocate_gsl_objects(
       user_function_t<UserArgs>& f, const UserArgs& guess) const;
-  void deallocate_gsl_objects(
+  inline void deallocate_gsl_objects(
       gsl_multiroot_fsolver*, gsl_vector*, gsl_multiroot_function*) const;
 };
 
@@ -114,7 +114,7 @@ auto multiroot::allocate_gsl_objects(
           >({solver, guess_gsl, struct_f_gsl});
 }
 
-void multiroot::deallocate_gsl_objects(
+inline void multiroot::deallocate_gsl_objects(
     gsl_multiroot_fsolver* solver,
     gsl_vector* guess_gsl, gsl_multiroot_function* struct_f_gsl) const {
   gsl_multiroot_fsolver_free(solver);
