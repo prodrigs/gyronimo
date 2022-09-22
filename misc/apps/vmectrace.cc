@@ -66,7 +66,7 @@ using namespace gyronimo;
 class orbit_observer {
  public:
   orbit_observer(
-      const IR3field_c1* e, const guiding_centre* g)
+      const equilibrium_vmec* e, const guiding_centre* g)
     : eq_pointer_(e), gc_pointer_(g) {};
   void operator()(const guiding_centre::state& s, double t) {
     IR3 q = gc_pointer_->get_position(s);
@@ -82,7 +82,7 @@ class orbit_observer {
         << x << " " << y << " " << z << "\n";
   };
  private:
-  const IR3field_c1* eq_pointer_;
+  const equilibrium_vmec* eq_pointer_;
   const guiding_centre* gc_pointer_;
 };
 

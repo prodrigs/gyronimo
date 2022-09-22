@@ -1,21 +1,21 @@
-// ::gyronimo:: - gyromotion for the people, by the people -
+// :: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
 // Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
 
-// ::gyronimo:: is free software: you can redistribute it and/or modify
+// :: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 
-// ::gyronimo:: is distributed in the hope that it will be useful,
+// :: is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
+// along with ::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @vmecdump.cc, this file is part of ::gyronimo::
+// @vmecdump.cc, this file is part of ::
 
 // Command-line tool to extract info from `VMEC` output files.
 // External dependencies:
@@ -37,7 +37,7 @@
 #include <gyronimo/interpolators/cubic_gsl.hh>
 
 void print_help() {
-  std::cout << "vmecdump, powered by ::gyronimo::v"
+  std::cout << "vmecdump, powered by ::v"
       << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
   std::string help_message =
       "usage: vmecdump [options] vmec_netcdf_file\n"
@@ -48,10 +48,10 @@ void print_help() {
       "  -rphiz    Reads u v w lines from stdin, prints R phi Z to stdout.\n"
       "  -surface  Reads a u sequence from stdin, prints the required scalar\n"
       "            field along the corresponding flux surface.\n"
-      "    -b_gymo    B magnitude, by IR3field::magnitude() (default).\n"
+      "    -b      B magnitude, by IR3field::magnitude() (default).\n"
       "    -b_vmec    B magnitude, via vmec output.\n"
-      "    -r/-z/phi  Any of the R/Z/phi coordinates.\n"
-      "    -jac_gymo  Metric jacobian, by metric_covariant::jacobian().\n"
+      "    -r/-z/-phi Any of the R/Z/phi coordinates.\n"
+      "    -jac       Metric jacobian, by metric_covariant::jacobian().\n"
       "    -jac_vmec  Native metric jacobian, via vmec output.\n"
       "    -python    Output in python array format (default table).\n"
       "    -nzeta=/-ntheta= Sets surface sampling rate (default 75).\n";
@@ -59,17 +59,16 @@ void print_help() {
   std::exit(0);
 }
 
+using namespace gyronimo;
 enum format_t {table, python};
 enum scalar_t {r_cyl, phi_cyl, z_cyl, b_gymo, b_vmec, jac_gymo, jac_vmec};
 
 int main(int argc, char* argv[]) {
-  void print_info(const gyronimo::parser_vmec&);
-  void print_profiles(const gyronimo::parser_vmec&);
-  void print_rphiz(
-      const gyronimo::parser_vmec&, const gyronimo::interpolator1d_factory*);
+  void print_info(const parser_vmec&);
+  void print_profiles(const parser_vmec&);
+  void print_rphiz(const parser_vmec&, const interpolator1d_factory*);
   void print_surface(
-      const gyronimo::parser_vmec&,
-      const gyronimo::interpolator1d_factory*,
+      const parser_vmec&, const interpolator1d_factory*,
       const int, const int, const scalar_t, const format_t);
   auto command_line = argh::parser(argv);
   if(command_line[{"h", "help"}]) print_help();
@@ -77,8 +76,8 @@ int main(int argc, char* argv[]) {
     std::cout << "vmecdump: no vmec_netcdf file provided; -h for help.\n";
     std::exit(1);
   }
-  gyronimo::parser_vmec vmec(command_line[1]);
-  gyronimo::cubic_gsl_factory ifactory;
+  parser_vmec vmec(command_line[1]);
+  cubic_gsl_factory ifactory;
   if(command_line["info"]) print_info(vmec);
   if(command_line["prof"]) print_profiles(vmec);
   if(command_line["rphiz"]) print_rphiz(vmec, &ifactory);
@@ -90,14 +89,14 @@ int main(int argc, char* argv[]) {
     if(command_line["r"]) scalar = r_cyl;
     if(command_line["z"]) scalar = z_cyl;
     if(command_line["phi"]) scalar = phi_cyl;
+    if(command_line["jac"]) scalar = jac_gymo;
     if(command_line["b_vmec"]) scalar = b_vmec;
-    if(command_line["jac_gymo"]) scalar = jac_gymo;
     if(command_line["jac_vmec"]) scalar = jac_vmec;
     print_surface(vmec, &ifactory, ntheta, nzeta, scalar, format);
   }
   return 0;
 }
-void print_info(const gyronimo::parser_vmec& vmec) {
+void print_info(const parser_vmec& vmec) {
   std::cout << "axisymmetric: " << (vmec.is_axisymmetric() ? "yes\n" : "no\n");
   std::cout << "fieldperiods: " << vmec.nfp() << "\n";
   std::cout << "     nradial: " << vmec.ns() << "\n";
@@ -111,27 +110,22 @@ void print_info(const gyronimo::parser_vmec& vmec) {
   std::cout << "     a_minor: " << vmec.Aminor() << " [m]" << "\n";
   std::cout << "      volume: " << vmec.volume() << " [m^3]" << "\n";
 }
-void print_profiles(const gyronimo::parser_vmec& vmec) {
+void print_profiles(const parser_vmec& vmec) {
   for(size_t i = 0;i < vmec.ns();i++)
       std::cout << vmec.radius()[i] << " "
           << vmec.iotaf()[i] << " " << vmec.pres()[i] << "\n";
 }
 void print_rphiz(
-    const gyronimo::parser_vmec& vmap,
-    const gyronimo::interpolator1d_factory *ifactory) {
-  gyronimo::dblock_adapter u_range(vmap.radius());
-  gyronimo::interpolator1d **Rmnc =
-      new gyronimo::interpolator1d* [vmap.xm().size()];
-  gyronimo::interpolator1d **Zmns =
-      new gyronimo::interpolator1d* [vmap.xm().size()];
+    const parser_vmec& vmap, const interpolator1d_factory *ifactory) {
+  dblock_adapter u_range(vmap.radius());
+  interpolator1d **Rmnc = new interpolator1d* [vmap.xm().size()];
+  interpolator1d **Zmns = new interpolator1d* [vmap.xm().size()];
   for(size_t i=0; i<vmap.xm().size(); i++) {
       std::slice u_slice (i, u_range.size(), vmap.xm().size());
       std::valarray<double> rmnc_i = (vmap.rmnc())[u_slice];
-      Rmnc[i] = ifactory->interpolate_data(
-          u_range, gyronimo::dblock_adapter(rmnc_i));
+      Rmnc[i] = ifactory->interpolate_data(u_range, dblock_adapter(rmnc_i));
       std::valarray<double> zmns_i = (vmap.zmns())[u_slice];
-      Zmns[i] = ifactory->interpolate_data(
-          u_range, gyronimo::dblock_adapter(zmns_i));
+      Zmns[i] = ifactory->interpolate_data(u_range, dblock_adapter(zmns_i));
   };
   std::cout.precision(16);
   std::cout.setf(std::ios::scientific);
@@ -148,27 +142,24 @@ void print_rphiz(
   };
 }
 void print_surface(
-    const gyronimo::parser_vmec& vmap,
-    const gyronimo::interpolator1d_factory *ifactory,
+    const parser_vmec& vmap,
+    const interpolator1d_factory *ifactory,
     const int ntheta, const int nzeta,
     const scalar_t scalar, const format_t format) {
   std::cout.precision(16);
   std::cout.setf(std::ios::scientific);
-  gyronimo::metric_vmec g(&vmap, ifactory);
-  gyronimo::equilibrium_vmec veq(&g, ifactory);
+  metric_vmec g(&vmap, ifactory);
+  equilibrium_vmec veq(&g, ifactory);
   auto zeta_range =
-      gyronimo::linspace<gyronimo::parser_vmec::narray_type>(
-          0.0, 2*std::numbers::pi, nzeta);
+      linspace<parser_vmec::narray_type>(0.0, 2*std::numbers::pi, nzeta);
   auto theta_range =
-      gyronimo::linspace<gyronimo::parser_vmec::narray_type>(
-          0.0, 2*std::numbers::pi, ntheta);
+      linspace<parser_vmec::narray_type>(0.0, 2*std::numbers::pi, ntheta);
   double u; while(std::cin >> u ) {
     for(double w : theta_range) {
       for(double v : zeta_range) {
-        const gyronimo::IR3 p = {u, v, w};
-        gyronimo::IR3 c = veq.metric()->transform2cylindrical(p);
-        double R = c[gyronimo::IR3::u],
-            phi = c[gyronimo::IR3::v], z = c[gyronimo::IR3::w];
+        const IR3 p = {u, v, w};
+        IR3 c = veq.metric()->transform2cylindrical(p);
+        double R = c[IR3::u], phi = c[IR3::v], z = c[IR3::w];
         double x = R*std::cos(phi), y = R*std::sin(phi);
         switch(format) {
           case table: std::cout << x << " " << y << " " << z << " ";break;

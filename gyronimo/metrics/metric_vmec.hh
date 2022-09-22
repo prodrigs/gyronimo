@@ -37,7 +37,7 @@ class metric_vmec : public metric_covariant {
   virtual ~metric_vmec() override;
   virtual SM3 operator()(const IR3& position) const override;
   virtual dSM3 del(const IR3& position) const override;
-  virtual IR3 transform2cylindrical(const IR3& position) const override;
+  virtual IR3 transform2cylindrical(const IR3& position) const;
   double jacobian_vmec(const IR3& position) const;
   const parser_vmec* parser() const {return parser_;};
   const double signgs() const {return signsgs_;};
