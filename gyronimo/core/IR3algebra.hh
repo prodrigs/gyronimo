@@ -106,7 +106,7 @@ class dIR3 {
   const double& operator[](index i) const {return data_[i];}
   template <typename T>
   dIR3& operator=(const T& expr) {
-    for(size_t i = 0;i < 3;i++) data_[i] = expr[i];
+    for(size_t i = 0;i < 9;i++) data_[i] = expr[i];
     return *this;
   }
 
