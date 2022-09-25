@@ -36,6 +36,7 @@ public:
 	virtual IR3 operator()(const IR3 &q) const override;
 	virtual IR3 inverse(const IR3 &x) const override;
 	virtual dIR3 del(const IR3 &q) const override;
+	virtual ddIR3 del2(const IR3 &q) const override;
 
 	virtual double jacobian(const IR3 &q) const override;
 	virtual dIR3 del_inverse(const IR3 &q) const override;

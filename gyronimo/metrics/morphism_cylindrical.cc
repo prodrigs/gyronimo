@@ -21,18 +21,49 @@
 
 namespace gyronimo {
 
-//! Maps the curvilinear coordinates `q = (r, \phi, z)` into cartesian coordinates `x`.
+//! Maps cylindrical coordinates @f$ q^\alpha @f$ into cartesian coordinates @f$ \textbf{x} @f$.
+/*!
+	In cylindrical coordinates, @f$ \left( q^1, q^2, q^3 \right) = \left( r, \phi, z \right) @f$.
+	Implements the coordinate transformation:
+	@f{gather*}{
+		\begin{aligned}
+			x &= r \, \cos \phi \\
+			y &= r \, \sin \phi \\
+			z &= z
+		\end{aligned}
+    @f}
+*/
 IR3 morphism_cylindrical::operator()(const IR3 &q) const {
 	return {q[IR3::u] * std::cos(q[IR3::v]), q[IR3::u] * std::sin(q[IR3::v]), q[IR3::w]};
 }
 
-//! Inverse transform from cartesian coordinates `x` into curvilinear coordinates `q`.
+//! Inverse transform from cartesian coordinates @f$ \textbf{x} @f$ into cylindrical coordinates @f$ q^\alpha @f$.
+/*!
+	Implements the inverse transformation:
+	@f{gather*}{
+		\begin{aligned}
+			r &= \sqrt{x^2 + y^2} \\
+			\phi &= \arctan \left( \frac{y}{x} \right) \\
+			z &= z
+		\end{aligned}
+    @f}
+*/
 IR3 morphism_cylindrical::inverse(const IR3 &x) const {
 	return {sqrt(x[IR3::u]*x[IR3::u] + x[IR3::v]*x[IR3::v]),
 			atan2(x[IR3::v], x[IR3::u]), x[IR3::w]};
 }
 
-//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point `q`.
+//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
+/*!
+	Implements the coordinate transformation's first derivatives:
+	@f{gather*}{
+		\begin{aligned}
+			\textbf{e}_r &= \left( \cos \phi, \sin \phi, 0 \right) \\
+			\textbf{e}_\phi &= \left( -r \, \sin \phi, r \, \cos \phi, 0 \right) \\
+			\textbf{e}_z &= \left( 0, 0, 1 \right)
+		\end{aligned}
+    @f}
+*/
 dIR3 morphism_cylindrical::del(const IR3 &q) const {
 	double sn = sin(q[IR3::v]);
 	double cn = cos(q[IR3::v]);
@@ -44,12 +75,39 @@ dIR3 morphism_cylindrical::del(const IR3 &q) const {
 	};
 }
 
-//! General-purpose implementation of the Jacobian of the transformation in point `q`.
+//! Returns the morphism's second derivatives, calculated in point @f$ q^\alpha @f$.
+ddIR3 morphism_cylindrical::del2(const IR3 &q) const {
+	double r = q[IR3::u];
+	double sn = sin(q[IR3::v]);
+	double cn = cos(q[IR3::v]);
+	return {
+	// iuu iuv iuw   ivv  ivw  iww
+		0, -sn, 0, -r * cn, 0, 0,
+		0,  cn, 0, -r * sn, 0, 0,
+		0,   0, 0,		 0, 0, 0
+	};
+}
+
+//! General-purpose implementation of the Jacobian of the transformation in point @f$ q^\alpha @f$.
+/*!
+	Implements the Jacobian in spherical coordinates: 
+	@f$ J = r @f$
+*/
 double morphism_cylindrical::jacobian(const IR3 &q) const {
 	return q[IR3::u];
 }
 
-//! Returns the morphism's inverse derivatives, correspondent to the contravariant basis vectors in point `q`.
+//! Returns the morphism's inverse derivatives, correspondent to the contravariant basis vectors in point @f$ q^\alpha @f$.
+/*!
+	Implements the inverse transformation's first derivatives:
+	@f{gather*}{
+		\begin{aligned}
+			\textbf{e}^r &= \left( \cos \phi, \sin \phi, 0 \right) \\
+			\textbf{e}^\phi &= \left( -\frac{1}{r} \, \sin \phi, \frac{1}{r} \, \cos \phi, 0 \right) \\
+			\textbf{e}^z &= \left( 0, 0, 1 \right)
+		\end{aligned}
+    @f}
+*/
 dIR3 morphism_cylindrical::del_inverse(const IR3 &q) const {
 	double sn = sin(q[IR3::v]);
 	double cn = cos(q[IR3::v]);

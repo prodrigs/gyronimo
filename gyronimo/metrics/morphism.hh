@@ -25,7 +25,7 @@
 
 namespace gyronimo {
 
-//! Abstract morphism from curvilinear (q) into cartesian (x) coordinates.
+//! Abstract morphism class from curvilinear @f$ q^\alpha @f$ into cartesian @f$ \textbf{x} @f$ coordinates.
 class morphism {
 
 public:
@@ -33,17 +33,27 @@ public:
 	morphism() {};
 	virtual ~morphism() {};
 
-	//! Maps the curvilinear coordinates `q` into cartesian coordinates `x`.
+	//! Maps curvilinear coordinates @f$ q^\alpha @f$ into cartesian coordinates @f$ \textbf{x} @f$.
 	virtual IR3 operator()(const IR3 &q) const = 0;
-	//! Inverse transform from cartesian coordinates `x` into curvilinear coordinates `q`.
+	//! Inverse transform from cartesian coordinates @f$ \textbf{x} @f$ into curvilinear coordinates @f$ q^\alpha @f$.
 	virtual IR3 inverse(const IR3 &x) const = 0;
-	//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point `q`.
+	//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
+	/*!
+		Implements the covariant basis vectors:
+		@f$ \textbf{e}_\alpha = \frac{\partial \textbf{x}}{\partial q^\alpha} @f$
+	*/
 	virtual dIR3 del(const IR3 &q) const = 0;
+	//! Returns the morphism's second derivatives, calculated in point `q`.
+	/*!
+		Implements the derivatives of the covariant basis vectors:
+		@f$ \partial_\beta \, \textbf{e}_\alpha = \frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\alpha} @f$
+	*/
+	virtual ddIR3 del2(const IR3 &q) const = 0;
 
 	virtual double jacobian(const IR3 &q) const;
 	virtual dIR3 del_inverse(const IR3 &q) const;
-	virtual dIR3 tan_basis(const IR3& q) const {return del(q);};
-	virtual dIR3 dual_basis(const IR3& q) const {return del_inverse(q);};
+	virtual dIR3 tan_basis(const IR3& q) const;
+	virtual dIR3 dual_basis(const IR3& q) const;
 
 	virtual IR3 to_covariant(const IR3 &q, const IR3 &A) const;
 	virtual IR3 to_contravariant(const IR3 &q, const IR3 &A) const;
