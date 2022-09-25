@@ -113,6 +113,33 @@ class dIR3 {
   std::array<double, 9> data_;
 };
 
+//! Double partial derivatives of a @f$\mathbb{R}^3@f$ vector.
+/*!
+    **Aggregate** type supporting list initialization. Unlike `IR3`, no
+    vectorised algebraic operations are supported. The index operator
+    `B[ddIR3::ijk]` returns the value @f$\partial_k\partial_j B^i@f$ (for contravariant
+    vectors) or @f$\partial_k\partial_j B_i@f$ (for covariant vectors) with `i,j,k = u, v,
+    w`.
+*/
+class ddIR3 {
+ public:
+  enum index {
+    uuu = 0, uuv = 1, uuw = 2, uvv = 3, uvw = 4, uww = 5,
+    vuu = 6, vuv = 7, vuw = 8, vvv = 9, vvw = 10, vww = 11,
+    wuu = 12, wuv = 13, wuw = 14, wvv = 15, wvw = 16, www = 17,
+	};
+
+  double& operator[](index i) {return data_[i];}
+  const double& operator[](index i) const {return data_[i];}
+  template <typename T>
+  ddIR3& operator=(const T& expr) {
+    for(size_t i = 0;i < 18;i++) data_[i] = expr[i];
+    return *this;
+  }
+
+  std::array<double, 18> data_;
+};
+
 //! Inverse of a dIR3 matrix.
 dIR3 inverse(const dIR3& m);
 

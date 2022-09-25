@@ -26,8 +26,7 @@ namespace gyronimo{
 
 morphism_helena::morphism_helena(
 		const parser_helena *p, const interpolator2d_factory *ifactory)
-		: parser_(p), R_(nullptr), z_(nullptr), 
-		R0_(p->rmag()), squaredR0_(p->rmag()*p->rmag()) {
+		: parser_(p), R_(nullptr), z_(nullptr) {
 	double Rgeo = p->rgeo();
 	double a = p->eps()*Rgeo;
 	dblock_adapter s_range(p->s()), chi_range(p->chi());
@@ -44,12 +43,25 @@ morphism_helena::~morphism_helena() {
 	if(z_) delete z_;
 }
 
+//! Maps `HELENA` coordinates @f$ q^\alpha @f$ into cartesian coordinates @f$ \textbf{x} @f$.
+/*!
+	In `HELENA` coordinates, @f$ \left( q^1, q^2, q^3 \right) = \left( s, \chi, \phi \right) @f$,
+	where @f$ s @f$ is the flux surface label, @f$ \chi @f$ is the poloidal angle 
+	and @f$ \phi @f$ is the toroidal angle.
+	Implements the coordinate transformation:
+	@f$ \left( x, y, z \right) = \textbf{R} \left( s, \chi, \phi \right) @f$
+*/
 IR3 morphism_helena::operator()(const IR3& q) const {
 	double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]), phi = q[IR3::w];
 	double R = (*R_)(s, chi);
 	return {R*std::cos(phi), -R*std::sin(phi), (*z_)(s, chi)};
 }
 
+//! Inverse transform from cartesian coordinates @f$ \textbf{x} @f$ into `HELENA` coordinates @f$ q^\alpha @f$.
+/*!
+	Implements the inverse transformation:
+	@f$ \left( s, \chi, \phi \right) = \textbf{R}^{-1} \left( x, y, z \right) @f$
+*/
 IR3 morphism_helena::inverse(const IR3& X) const {
 	typedef std::array<double, 2> IR2;
 	double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
@@ -65,6 +77,7 @@ IR3 morphism_helena::inverse(const IR3& X) const {
 	return {s, chi, std::atan2(-y, x)};
 }
 
+//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
 dIR3 morphism_helena::del(const IR3& q) const {
 	double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]), phi = q[IR3::w];
 	double R = (*R_)(s, chi),
@@ -72,6 +85,30 @@ dIR3 morphism_helena::del(const IR3& q) const {
 	double cos = std::cos(phi), sin = std::sin(phi);
 	return {Ru*cos, Rv*cos, -R*sin, -Ru*sin, -Rv*sin, -R*cos,
 		(*z_).partial_u(s, chi), (*z_).partial_v(s, chi), 0.0};
+}
+
+//! Returns the morphism's second derivatives, calculated in point @f$ q^\alpha @f$.
+ddIR3 morphism_helena::del2(const IR3 &q) const {
+	double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]), phi = q[IR3::w];
+	double R = (*R_)(s, chi), Ru = R_->partial_u(s, chi), Rv = R_->partial_v(s, chi);
+	double Ruu = R_->partial2_uu(s, chi), Ruv = R_->partial2_uv(s, chi), Rvv = R_->partial2_vv(s, chi);
+	double Zu = z_->partial_u(s, chi), Zv = z_->partial_v(s, chi);
+	double Zuu = z_->partial2_uu(s, chi), Zuv = z_->partial2_uv(s, chi), Zvv = z_->partial2_vv(s, chi);
+	double sn = std::sin(phi), cn = std::cos(phi);
+	return {
+	// 		iuu		iuv			iuw		ivv			ivw		iww
+		Ruu * cn, Ruv * cn, -Ru * sn, Rvv * cn, -Rv * sn, -R * cn,
+		Ruu * sn, Ruv * sn,  Ru * cn, Rvv * sn,  Rv * cn,  R * sn,
+			 Zuu, 	   Zuv, 	   0, 	   Zvv, 	   0,    	0
+	};
+}
+
+//! General-purpose implementation of the Jacobian of the transformation in point @f$ q^\alpha @f$.
+double morphism_helena::jacobian(const IR3 &q) const {
+	double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]);
+	double R = (*R_)(s, chi), Ru = R_->partial_u(s, chi), Rv = R_->partial_v(s, chi);
+	double Zu = z_->partial_u(s, chi), Zv = z_->partial_v(s, chi);
+	return R * (Rv * Zu - Ru * Zv);
 }
 
 std::tuple<double, double> morphism_helena::reflection_past_axis(
