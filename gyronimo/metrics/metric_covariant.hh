@@ -20,6 +20,7 @@
 #ifndef GYRONIMO_METRIC_COVARIANT
 #define GYRONIMO_METRIC_COVARIANT
 
+#include <gyronimo/core/contraction.hh>
 #include <gyronimo/core/IR3algebra.hh>
 #include <gyronimo/core/SM3algebra.hh>
 
@@ -53,6 +54,9 @@ class metric_covariant {
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const;
   virtual SM3 inverse(const IR3& r) const;
   virtual dSM3 del_inverse(const IR3& r) const;
+  
+  virtual ddIR3 christoffel_first_kind(const IR3& r) const;
+  virtual ddIR3 christoffel_second_kind(const IR3& r) const;
 };
 
 }

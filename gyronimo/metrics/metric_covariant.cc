@@ -114,4 +114,48 @@ dSM3 metric_covariant::del_inverse(const IR3& r) const {
     -dg[dSM3::wwu], -dg[dSM3::wwv], -dg[dSM3::www]};
 }
 
+//! Implementation of Christoffel symbols of the first kind @f$ \Gamma_{\alpha\beta\gamma} @f$
+/*!
+    Implements the rule
+    @f$ \Gamma_{\alpha\beta\gamma} = \frac{1}{2} \left( 
+		\frac{\partial g_{\alpha\beta}}{\partial q^\gamma} +
+		\frac{\partial g_{\alpha\gamma}}{\partial q^\beta} -
+		\frac{\partial g_{\beta\gamma}}{\partial q^\alpha}
+	\right) @f$
+*/
+ddIR3 metric_covariant::christoffel_first_kind(const IR3& r) const {
+	dSM3 dg = del(r);
+	return {
+		0.5 * (dg[dSM3::uuu] + dg[dSM3::uuu] - dg[dSM3::uuu]), // uuu
+		0.5 * (dg[dSM3::uuv] + dg[dSM3::uvu] - dg[dSM3::uvu]), // uuv
+		0.5 * (dg[dSM3::uuw] + dg[dSM3::uwu] - dg[dSM3::uwu]), // uuw
+		0.5 * (dg[dSM3::uvv] + dg[dSM3::uvv] - dg[dSM3::vvu]), // uvv
+		0.5 * (dg[dSM3::uvw] + dg[dSM3::uwv] - dg[dSM3::vwu]), // uvw
+		0.5 * (dg[dSM3::uww] + dg[dSM3::uww] - dg[dSM3::wwu]), // uww
+		0.5 * (dg[dSM3::uvu] + dg[dSM3::uvu] - dg[dSM3::uuv]), // vuu
+		0.5 * (dg[dSM3::uvv] + dg[dSM3::vvu] - dg[dSM3::uvv]), // vuv
+		0.5 * (dg[dSM3::uvw] + dg[dSM3::vwu] - dg[dSM3::uwv]), // vuw
+		0.5 * (dg[dSM3::vvv] + dg[dSM3::vvv] - dg[dSM3::vvv]), // vvv
+		0.5 * (dg[dSM3::vvw] + dg[dSM3::vwv] - dg[dSM3::vwv]), // vvw
+		0.5 * (dg[dSM3::vww] + dg[dSM3::vww] - dg[dSM3::wwv]), // vww
+    	0.5 * (dg[dSM3::uwu] + dg[dSM3::uwu] - dg[dSM3::uuw]), // wuu
+		0.5 * (dg[dSM3::uwv] + dg[dSM3::vwu] - dg[dSM3::uvw]), // wuv
+		0.5 * (dg[dSM3::uww] + dg[dSM3::wwu] - dg[dSM3::uww]), // wuw
+		0.5 * (dg[dSM3::vwv] + dg[dSM3::vwv] - dg[dSM3::vvw]), // wvv
+		0.5 * (dg[dSM3::vww] + dg[dSM3::wwv] - dg[dSM3::vww]), // wvw
+		0.5 * (dg[dSM3::www] + dg[dSM3::www] - dg[dSM3::www])  // www
+	};
+}
+
+//! Implementation of Christoffel symbols of the second kind @f$ \Gamma^\alpha_{\beta\gamma} @f$
+/*!
+    Implements the rule
+    @f$ \Gamma^\alpha_{\beta\gamma} = g^{\alpha\mu} \, \Gamma_{\mu\beta\gamma} @f$
+*/
+ddIR3 metric_covariant::christoffel_second_kind(const IR3& r) const {
+	SM3 ig = inverse(r);
+	ddIR3 CF1 = christoffel_first_kind(r);
+	return contraction<second, first>(ig, CF1);
+}
+
 } // end namespace gyronimo.

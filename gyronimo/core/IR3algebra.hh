@@ -126,8 +126,8 @@ class ddIR3 {
   enum index {
     uuu = 0, uuv = 1, uuw = 2, uvv = 3, uvw = 4, uww = 5,
     vuu = 6, vuv = 7, vuw = 8, vvv = 9, vvw = 10, vww = 11,
-    wuu = 12, wuv = 13, wuw = 14, wvv = 15, wvw = 16, www = 17,
-	};
+    wuu = 12, wuv = 13, wuw = 14, wvv = 15, wvw = 16, www = 17
+  };
 
   double& operator[](index i) {return data_[i];}
   const double& operator[](index i) const {return data_[i];}

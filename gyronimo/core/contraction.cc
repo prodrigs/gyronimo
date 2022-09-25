@@ -153,6 +153,111 @@ IR3 contraction<second, third>(const ddIR3& ddA, const IR3& B, const IR3& C) {
   };
 }
 
+//! One index contraction of `SM3` object and First index of `ddIR3` object.
+/*!
+    Returns the object
+    ```
+    ddC[ddIR3::ijk] = g[SM3::iu] * ddA[ddIR3::ujk] +
+			+ g[SM3::iv] * ddA[ddIR3::vjk] + g[SM3::iw] * ddA[ddIR3::wjk]
+    ```
+    with `i,j,k = u, v, w`.
+    Replacements SM3::ij -> SM3::ji and ddIR3::ikj -> ddIR3::ijk have been
+    explicitly performed.
+*/
+template<>
+ddIR3 contraction<second, first>(const SM3& g, const ddIR3& ddA) {
+  return {
+    g[SM3::uu]*ddA[ddIR3::uuu] + g[SM3::uv]*ddA[ddIR3::vuu] + g[SM3::uw]*ddA[ddIR3::wuu], // uuu
+    g[SM3::uu]*ddA[ddIR3::uuv] + g[SM3::uv]*ddA[ddIR3::vuv] + g[SM3::uw]*ddA[ddIR3::wuv], // uuv
+    g[SM3::uu]*ddA[ddIR3::uuw] + g[SM3::uv]*ddA[ddIR3::vuw] + g[SM3::uw]*ddA[ddIR3::wuw], // uuw
+    g[SM3::uu]*ddA[ddIR3::uvv] + g[SM3::uv]*ddA[ddIR3::vvv] + g[SM3::uw]*ddA[ddIR3::wvv], // uvv
+    g[SM3::uu]*ddA[ddIR3::uvw] + g[SM3::uv]*ddA[ddIR3::vvw] + g[SM3::uw]*ddA[ddIR3::wvw], // uvw
+    g[SM3::uu]*ddA[ddIR3::uww] + g[SM3::uv]*ddA[ddIR3::vww] + g[SM3::uw]*ddA[ddIR3::www], // uww
+    g[SM3::uv]*ddA[ddIR3::uuu] + g[SM3::vv]*ddA[ddIR3::vuu] + g[SM3::vw]*ddA[ddIR3::wuu], // vuu
+    g[SM3::uv]*ddA[ddIR3::uuv] + g[SM3::vv]*ddA[ddIR3::vuv] + g[SM3::vw]*ddA[ddIR3::wuv], // vuv
+    g[SM3::uv]*ddA[ddIR3::uuw] + g[SM3::vv]*ddA[ddIR3::vuw] + g[SM3::vw]*ddA[ddIR3::wuw], // vuw
+    g[SM3::uv]*ddA[ddIR3::uvv] + g[SM3::vv]*ddA[ddIR3::vvv] + g[SM3::vw]*ddA[ddIR3::wvv], // vvv
+    g[SM3::uv]*ddA[ddIR3::uvw] + g[SM3::vv]*ddA[ddIR3::vvw] + g[SM3::vw]*ddA[ddIR3::wvw], // vvw
+    g[SM3::uv]*ddA[ddIR3::uww] + g[SM3::vv]*ddA[ddIR3::vww] + g[SM3::vw]*ddA[ddIR3::www], // vww
+    g[SM3::uw]*ddA[ddIR3::uuu] + g[SM3::vw]*ddA[ddIR3::vuu] + g[SM3::ww]*ddA[ddIR3::wuu], // wuu
+    g[SM3::uw]*ddA[ddIR3::uuv] + g[SM3::vw]*ddA[ddIR3::vuv] + g[SM3::ww]*ddA[ddIR3::wuv], // wuv
+    g[SM3::uw]*ddA[ddIR3::uuw] + g[SM3::vw]*ddA[ddIR3::vuw] + g[SM3::ww]*ddA[ddIR3::wuw], // wuw
+    g[SM3::uw]*ddA[ddIR3::uvv] + g[SM3::vw]*ddA[ddIR3::vvv] + g[SM3::ww]*ddA[ddIR3::wvv], // wvv
+    g[SM3::uw]*ddA[ddIR3::uvw] + g[SM3::vw]*ddA[ddIR3::vvw] + g[SM3::ww]*ddA[ddIR3::wvw], // wvw
+    g[SM3::uw]*ddA[ddIR3::uww] + g[SM3::vw]*ddA[ddIR3::vww] + g[SM3::ww]*ddA[ddIR3::www], // www
+  };
+}
+
+//! First-index contraction of `dIR3` object with First index of `ddIR3` object.
+/*!
+    Returns the object
+    ```
+    ddC[ddIR3::ijk] = dA[dIR3::ui] * ddB[ddIR3::ujk] +
+			+ dA[dIR3::vi] * ddB[ddIR3::vjk] + dA[dIR3::wi] * ddB[ddIR3::wjk]
+    ```
+    with `i,j,k = u, v, w`.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been
+    explicitly performed.
+*/
+template<>
+ddIR3 contraction<first, first>(const dIR3& dA, const ddIR3& ddB) {
+  return {
+    dA[dIR3::uu]*ddB[ddIR3::uuu] + dA[dIR3::vu]*ddB[ddIR3::vuu] + dA[dIR3::wu]*ddB[ddIR3::wuu], // uuu
+    dA[dIR3::uu]*ddB[ddIR3::uuv] + dA[dIR3::vu]*ddB[ddIR3::vuv] + dA[dIR3::wu]*ddB[ddIR3::wuv], // uuv
+    dA[dIR3::uu]*ddB[ddIR3::uuw] + dA[dIR3::vu]*ddB[ddIR3::vuw] + dA[dIR3::wu]*ddB[ddIR3::wuw], // uuw
+    dA[dIR3::uu]*ddB[ddIR3::uvv] + dA[dIR3::vu]*ddB[ddIR3::vvv] + dA[dIR3::wu]*ddB[ddIR3::wvv], // uvv
+    dA[dIR3::uu]*ddB[ddIR3::uvw] + dA[dIR3::vu]*ddB[ddIR3::vvw] + dA[dIR3::wu]*ddB[ddIR3::wvw], // uvw
+    dA[dIR3::uu]*ddB[ddIR3::uww] + dA[dIR3::vu]*ddB[ddIR3::vww] + dA[dIR3::wu]*ddB[ddIR3::www], // uww
+    dA[dIR3::uv]*ddB[ddIR3::uuu] + dA[dIR3::vv]*ddB[ddIR3::vuu] + dA[dIR3::wv]*ddB[ddIR3::wuu], // vuu
+    dA[dIR3::uv]*ddB[ddIR3::uuv] + dA[dIR3::vv]*ddB[ddIR3::vuv] + dA[dIR3::wv]*ddB[ddIR3::wuv], // vuv
+    dA[dIR3::uv]*ddB[ddIR3::uuw] + dA[dIR3::vv]*ddB[ddIR3::vuw] + dA[dIR3::wv]*ddB[ddIR3::wuw], // vuw
+    dA[dIR3::uv]*ddB[ddIR3::uvv] + dA[dIR3::vv]*ddB[ddIR3::vvv] + dA[dIR3::wv]*ddB[ddIR3::wvv], // vvv
+    dA[dIR3::uv]*ddB[ddIR3::uvw] + dA[dIR3::vv]*ddB[ddIR3::vvw] + dA[dIR3::wv]*ddB[ddIR3::wvw], // vvw
+    dA[dIR3::uv]*ddB[ddIR3::uww] + dA[dIR3::vv]*ddB[ddIR3::vww] + dA[dIR3::wv]*ddB[ddIR3::www], // vww
+    dA[dIR3::uw]*ddB[ddIR3::uuu] + dA[dIR3::vw]*ddB[ddIR3::vuu] + dA[dIR3::ww]*ddB[ddIR3::wuu], // wuu
+    dA[dIR3::uw]*ddB[ddIR3::uuv] + dA[dIR3::vw]*ddB[ddIR3::vuv] + dA[dIR3::ww]*ddB[ddIR3::wuv], // wuv
+    dA[dIR3::uw]*ddB[ddIR3::uuw] + dA[dIR3::vw]*ddB[ddIR3::vuw] + dA[dIR3::ww]*ddB[ddIR3::wuw], // wuw
+    dA[dIR3::uw]*ddB[ddIR3::uvv] + dA[dIR3::vw]*ddB[ddIR3::vvv] + dA[dIR3::ww]*ddB[ddIR3::wvv], // wvv
+    dA[dIR3::uw]*ddB[ddIR3::uvw] + dA[dIR3::vw]*ddB[ddIR3::vvw] + dA[dIR3::ww]*ddB[ddIR3::wvw], // wvw
+    dA[dIR3::uw]*ddB[ddIR3::uww] + dA[dIR3::vw]*ddB[ddIR3::vww] + dA[dIR3::ww]*ddB[ddIR3::www], // www
+  };
+}
+
+//! Second-index contraction of `dIR3` object with First index of `ddIR3` object.
+/*!
+    Returns the object
+    ```
+    ddC[ddIR3::ijk] = dA[dIR3::iu] * ddB[ddIR3::ujk] +
+			+ dA[dIR3::iv] * ddB[ddIR3::vjk] + dA[dIR3::iw] * ddB[ddIR3::wjk]
+    ```
+    with `i,j,k = u, v, w`.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been
+    explicitly performed.
+*/
+template<>
+ddIR3 contraction<second, first>(const dIR3& dA, const ddIR3& ddB) {
+  return {
+    dA[dIR3::uu]*ddB[ddIR3::uuu] + dA[dIR3::uv]*ddB[ddIR3::vuu] + dA[dIR3::uw]*ddB[ddIR3::wuu], // uuu
+    dA[dIR3::uu]*ddB[ddIR3::uuv] + dA[dIR3::uv]*ddB[ddIR3::vuv] + dA[dIR3::uw]*ddB[ddIR3::wuv], // uuv
+    dA[dIR3::uu]*ddB[ddIR3::uuw] + dA[dIR3::uv]*ddB[ddIR3::vuw] + dA[dIR3::uw]*ddB[ddIR3::wuw], // uuw
+    dA[dIR3::uu]*ddB[ddIR3::uvv] + dA[dIR3::uv]*ddB[ddIR3::vvv] + dA[dIR3::uw]*ddB[ddIR3::wvv], // uvv
+    dA[dIR3::uu]*ddB[ddIR3::uvw] + dA[dIR3::uv]*ddB[ddIR3::vvw] + dA[dIR3::uw]*ddB[ddIR3::wvw], // uvw
+    dA[dIR3::uu]*ddB[ddIR3::uww] + dA[dIR3::uv]*ddB[ddIR3::vww] + dA[dIR3::uw]*ddB[ddIR3::www], // uww
+    dA[dIR3::vu]*ddB[ddIR3::uuu] + dA[dIR3::vv]*ddB[ddIR3::vuu] + dA[dIR3::vw]*ddB[ddIR3::wuu], // vuu
+    dA[dIR3::vu]*ddB[ddIR3::uuv] + dA[dIR3::vv]*ddB[ddIR3::vuv] + dA[dIR3::vw]*ddB[ddIR3::wuv], // vuv
+    dA[dIR3::vu]*ddB[ddIR3::uuw] + dA[dIR3::vv]*ddB[ddIR3::vuw] + dA[dIR3::vw]*ddB[ddIR3::wuw], // vuw
+    dA[dIR3::vu]*ddB[ddIR3::uvv] + dA[dIR3::vv]*ddB[ddIR3::vvv] + dA[dIR3::vw]*ddB[ddIR3::wvv], // vvv
+    dA[dIR3::vu]*ddB[ddIR3::uvw] + dA[dIR3::vv]*ddB[ddIR3::vvw] + dA[dIR3::vw]*ddB[ddIR3::wvw], // vvw
+    dA[dIR3::vu]*ddB[ddIR3::uww] + dA[dIR3::vv]*ddB[ddIR3::vww] + dA[dIR3::vw]*ddB[ddIR3::www], // vww
+    dA[dIR3::wu]*ddB[ddIR3::uuu] + dA[dIR3::wv]*ddB[ddIR3::vuu] + dA[dIR3::ww]*ddB[ddIR3::wuu], // wuu
+    dA[dIR3::wu]*ddB[ddIR3::uuv] + dA[dIR3::wv]*ddB[ddIR3::vuv] + dA[dIR3::ww]*ddB[ddIR3::wuv], // wuv
+    dA[dIR3::wu]*ddB[ddIR3::uuw] + dA[dIR3::wv]*ddB[ddIR3::vuw] + dA[dIR3::ww]*ddB[ddIR3::wuw], // wuw
+    dA[dIR3::wu]*ddB[ddIR3::uvv] + dA[dIR3::wv]*ddB[ddIR3::vvv] + dA[dIR3::ww]*ddB[ddIR3::wvv], // wvv
+    dA[dIR3::wu]*ddB[ddIR3::uvw] + dA[dIR3::wv]*ddB[ddIR3::vvw] + dA[dIR3::ww]*ddB[ddIR3::wvw], // wvw
+    dA[dIR3::wu]*ddB[ddIR3::uww] + dA[dIR3::wv]*ddB[ddIR3::vww] + dA[dIR3::ww]*ddB[ddIR3::www], // www
+  };
+}
+
 //! First-index contration of a `dSM3` object and a `IR3` vector.
 /*!
     Returns the object
