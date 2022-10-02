@@ -25,12 +25,18 @@ namespace gyronimo {
 metric_spherical::metric_spherical(double radius_norm)
     : radius_norm_(radius_norm),
       radius_norm_squared_(radius_norm*radius_norm),
-      radius_norm_cube_(radius_norm*radius_norm*radius_norm) {
+      radius_norm_cube_(radius_norm*radius_norm*radius_norm), 
+	  iradius_norm_squared_(1/radius_norm_squared_) {
 }
 SM3 metric_spherical::operator()(const IR3& r) const {
   double factor = radius_norm_squared_*r[IR3::u]*r[IR3::u];
   double sinv = std::sin(r[IR3::v]);
   return {radius_norm_squared_, 0.0, 0.0, factor, 0.0, factor*sinv*sinv};
+}
+SM3 metric_spherical::inverse(const IR3& r) const {
+  double ifactor = iradius_norm_squared_/(r[IR3::u]*r[IR3::u]);
+  double isinv = 1/std::sin(r[IR3::v]);
+  return {iradius_norm_squared_, 0.0, 0.0, ifactor, 0.0, ifactor*isinv*isinv};
 }
 dSM3 metric_spherical::del(const IR3& r) const {
   double cosv = std::cos(r[IR3::v]), sinv = std::sin(r[IR3::v]);

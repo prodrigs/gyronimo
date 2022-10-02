@@ -37,16 +37,20 @@ class metric_spherical : public metric_covariant {
   metric_spherical(double radius_norm);
   virtual ~metric_spherical() override {};
 
-  virtual SM3 operator()(const IR3& r) const override ;
+  virtual SM3 operator()(const IR3& r) const override;
+  virtual SM3 inverse(const IR3& r) const override;
   virtual dSM3 del(const IR3& r) const override;
 
   virtual double jacobian(const IR3& r) const override;
   virtual IR3 del_jacobian(const IR3& r) const override;
-  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override ;
+  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
+
+  double radius_norm() const {return radius_norm_;};
+
  private:
-  const double radius_norm_;
-  const double radius_norm_squared_, radius_norm_cube_;
+  const double radius_norm_, radius_norm_squared_;
+  const double radius_norm_cube_, iradius_norm_squared_;
 };
 
 } // end namespace gyronimo.

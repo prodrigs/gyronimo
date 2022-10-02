@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues.
+// Copyright (C) 2022 Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@
 #ifndef GYRONIMO_MORPHISM_CYLINDRICAL
 #define GYRONIMO_MORPHISM_CYLINDRICAL
 
-#include <cmath>
-
 #include <gyronimo/metrics/morphism.hh>
 
 namespace gyronimo {
@@ -30,18 +28,20 @@ class morphism_cylindrical : public morphism {
 
 public:
 
-	morphism_cylindrical() : morphism() {};
+	morphism_cylindrical(const double &L0) 
+		: morphism(), L0_(L0), iL0_(1/L0), L0_3_(L0*L0*L0) {};
 	virtual ~morphism_cylindrical() override {};
 
 	virtual IR3 operator()(const IR3 &q) const override;
 	virtual IR3 inverse(const IR3 &x) const override;
 	virtual dIR3 del(const IR3 &q) const override;
-	virtual ddIR3 del2(const IR3 &q) const override;
+	virtual ddIR3 ddel(const IR3 &q) const override;
 
 	virtual double jacobian(const IR3 &q) const override;
 	virtual dIR3 del_inverse(const IR3 &q) const override;
 
 private:
+	const double L0_, iL0_, L0_3_;
 
 }; // end class morphism_cylindrical
 

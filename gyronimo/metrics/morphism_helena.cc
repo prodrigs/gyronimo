@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
 // @morphism_helena.cc, this file is part of ::gyronimo::
 
 #include <gyronimo/metrics/morphism_helena.hh>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_multiroots.h>
+#include <numbers>
 #include <gyronimo/core/multiroot.hh>
 
 namespace gyronimo{
@@ -88,7 +87,7 @@ dIR3 morphism_helena::del(const IR3& q) const {
 }
 
 //! Returns the morphism's second derivatives, calculated in point @f$ q^\alpha @f$.
-ddIR3 morphism_helena::del2(const IR3 &q) const {
+ddIR3 morphism_helena::ddel(const IR3 &q) const {
 	double s = q[IR3::u], chi = reduce_2pi(q[IR3::v]), phi = q[IR3::w];
 	double R = (*R_)(s, chi), Ru = R_->partial_u(s, chi), Rv = R_->partial_v(s, chi);
 	double Ruu = R_->partial2_uu(s, chi), Ruv = R_->partial2_uv(s, chi), Rvv = R_->partial2_vv(s, chi);

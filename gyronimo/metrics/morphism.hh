@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ public:
 		Implements the derivatives of the covariant basis vectors:
 		@f$ \partial_\beta \, \textbf{e}_\alpha = \frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\alpha} @f$
 	*/
-	virtual ddIR3 del2(const IR3 &q) const = 0;
+	virtual ddIR3 ddel(const IR3 &q) const = 0;
 
 	virtual double jacobian(const IR3 &q) const;
 	virtual dIR3 del_inverse(const IR3 &q) const;
