@@ -20,15 +20,15 @@
 #ifndef GYRONIMO_METRIC_CYLINDRICAL
 #define GYRONIMO_METRIC_CYLINDRICAL
 
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/morphism_cylindrical.hh>
 
 namespace gyronimo {
 
 //! Trivial covariant metric for cylindrical space.
-class metric_cylindrical : public metric_covariant {
+class metric_cylindrical : public metric_nexus {
 public:
-	metric_cylindrical(const double &L0) 
-		: L0_(L0), L0_2_(L0*L0), iL0_2_(1/L0_2_), L0_3_(L0*L0*L0){};
+	metric_cylindrical(const morphism_cylindrical *morph);
 	virtual ~metric_cylindrical() override {};
 
 	virtual SM3 operator()(const IR3& q) const override;
@@ -39,6 +39,9 @@ public:
 	virtual IR3 del_jacobian(const IR3& q) const override;
 	virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
 	virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
+
+	virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
+	virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
 
 	double L0() {return L0_;};
 

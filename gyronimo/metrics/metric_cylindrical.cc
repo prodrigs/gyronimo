@@ -22,6 +22,13 @@
 
 namespace gyronimo {
 
+metric_cylindrical::metric_cylindrical(const morphism_cylindrical *morph) 
+		: metric_nexus(morph),
+		L0_(morph->L0()), L0_2_(L0_*L0_), 
+		iL0_2_(1/L0_2_), L0_3_(L0_*L0_*L0_) {
+	
+}
+
 SM3 metric_cylindrical::operator()(const IR3& q) const {
 	return {L0_2_, 0.0, 0.0, L0_2_*q[IR3::u]*q[IR3::u], 0.0, L0_2_};
 }
@@ -49,6 +56,22 @@ IR3 metric_cylindrical::to_covariant(const IR3& B, const IR3& q) const {
 
 IR3 metric_cylindrical::to_contravariant(const IR3& B, const IR3& q) const {
 	return {iL0_2_*B[IR3::u], iL0_2_*B[IR3::v]/(q[IR3::u]*q[IR3::u]), iL0_2_*B[IR3::w]};
+}
+
+ddIR3 metric_cylindrical::christoffel_first_kind(const IR3& q) const {
+	return {
+		0, 0, 0, -L0_2_*q[IR3::u], 0, 0,
+		0,  L0_2_*q[IR3::u], 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0
+	};
+}
+
+ddIR3 metric_cylindrical::christoffel_second_kind(const IR3& q) const {
+	return {
+		0, 0, 0,  -q[IR3::u], 0, 0,
+		0, 1/q[IR3::u], 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0
+	};
 }
 
 } // end namespace gyronimo
