@@ -43,10 +43,10 @@ public:
 	virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
 	virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
 
-	double L0() {return L0_;};
+	double Lref() {return Lref_;};
 
 private:
-	const double L0_, L0_2_, iL0_2_, L0_3_;
+	const double Lref_, Lref_2_, iLref_2_, Lref_3_;
 
 }; // end class metric_cylindrical
 

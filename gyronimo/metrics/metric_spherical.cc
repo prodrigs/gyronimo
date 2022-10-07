@@ -24,24 +24,24 @@ namespace gyronimo {
 
 metric_spherical::metric_spherical(const morphism_spherical *morph)
     : metric_nexus(morph),
-	  radius_norm_(morph->r0()),
-      radius_norm_squared_(radius_norm_*radius_norm_),
-      radius_norm_cube_(radius_norm_*radius_norm_*radius_norm_), 
-	  iradius_norm_squared_(1/radius_norm_squared_) {
+	  Lref_(morph->Lref()),
+      Lref_squared_(Lref_*Lref_),
+      Lref_cube_(Lref_*Lref_*Lref_), 
+	  iLref_squared_(1/Lref_squared_) {
 }
 SM3 metric_spherical::operator()(const IR3& r) const {
-  double factor = radius_norm_squared_*r[IR3::u]*r[IR3::u];
+  double factor = Lref_squared_*r[IR3::u]*r[IR3::u];
   double sinv = std::sin(r[IR3::v]);
-  return {radius_norm_squared_, 0.0, 0.0, factor, 0.0, factor*sinv*sinv};
+  return {Lref_squared_, 0.0, 0.0, factor, 0.0, factor*sinv*sinv};
 }
 SM3 metric_spherical::inverse(const IR3& r) const {
-  double ifactor = iradius_norm_squared_/(r[IR3::u]*r[IR3::u]);
+  double ifactor = iLref_squared_/(r[IR3::u]*r[IR3::u]);
   double isinv = 1/std::sin(r[IR3::v]);
-  return {iradius_norm_squared_, 0.0, 0.0, ifactor, 0.0, ifactor*isinv*isinv};
+  return {iLref_squared_, 0.0, 0.0, ifactor, 0.0, ifactor*isinv*isinv};
 }
 dSM3 metric_spherical::del(const IR3& r) const {
   double cosv = std::cos(r[IR3::v]), sinv = std::sin(r[IR3::v]);
-  double factor = 2.0*radius_norm_squared_*r[IR3::u];
+  double factor = 2.0*Lref_squared_*r[IR3::u];
   return {
       0.0, 0.0, 0.0, // d_i g_uu (i=u,v,w)
       0.0, 0.0, 0.0, // d_i g_uv
@@ -51,27 +51,27 @@ dSM3 metric_spherical::del(const IR3& r) const {
       factor*sinv*sinv, factor*r[IR3::u]*sinv*cosv, 0.0}; // d_i g_ww
 }
 double metric_spherical::jacobian(const IR3& r) const {
-  return radius_norm_cube_*r[IR3::u]*r[IR3::u]*std::sin(r[IR3::v]);
+  return Lref_cube_*r[IR3::u]*r[IR3::u]*std::sin(r[IR3::v]);
 }
 IR3 metric_spherical::del_jacobian(const IR3& r) const {
   double cosv = std::cos(r[IR3::v]), sinv = std::sin(r[IR3::v]);
-  double factor = radius_norm_cube_*r[IR3::u];
+  double factor = Lref_cube_*r[IR3::u];
   return {2.0*factor*sinv, factor*r[IR3::u]*cosv, 0.0};
 }
 IR3 metric_spherical::to_covariant(const IR3& B, const IR3& r) const {
-  double factor = radius_norm_squared_*r[IR3::u]*r[IR3::u];
+  double factor = Lref_squared_*r[IR3::u]*r[IR3::u];
   double sinv = std::sin(r[IR3::v]);
-  return {radius_norm_squared_*B[IR3::u],
+  return {Lref_squared_*B[IR3::u],
       factor*B[IR3::v], factor*sinv*sinv*B[IR3::w]};
 }
 IR3 metric_spherical::to_contravariant(const IR3& B, const IR3& r) const {
-  double factor = radius_norm_squared_*r[IR3::u]*r[IR3::u];
+  double factor = Lref_squared_*r[IR3::u]*r[IR3::u];
   double sinv = std::sin(r[IR3::v]);
-  return {B[IR3::u]/radius_norm_squared_,
+  return {B[IR3::u]/Lref_squared_,
       B[IR3::v]/factor, B[IR3::w]/(factor*sinv*sinv)};
 }
 ddIR3 metric_spherical::christoffel_first_kind(const IR3& q) const {
-	double r = radius_norm_squared_*q[IR3::u];
+	double r = Lref_squared_*q[IR3::u];
 	double s = std::sin(q[IR3::v]);
 	double c = std::cos(q[IR3::v]);
 	double rss = r*s*s;

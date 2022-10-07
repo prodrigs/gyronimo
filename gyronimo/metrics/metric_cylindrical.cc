@@ -24,44 +24,44 @@ namespace gyronimo {
 
 metric_cylindrical::metric_cylindrical(const morphism_cylindrical *morph) 
 		: metric_nexus(morph),
-		L0_(morph->L0()), L0_2_(L0_*L0_), 
-		iL0_2_(1/L0_2_), L0_3_(L0_*L0_*L0_) {
+		Lref_(morph->Lref()), Lref_2_(Lref_*Lref_), 
+		iLref_2_(1/Lref_2_), Lref_3_(Lref_*Lref_*Lref_) {
 	
 }
 
 SM3 metric_cylindrical::operator()(const IR3& q) const {
-	return {L0_2_, 0.0, 0.0, L0_2_*q[IR3::u]*q[IR3::u], 0.0, L0_2_};
+	return {Lref_2_, 0.0, 0.0, Lref_2_*q[IR3::u]*q[IR3::u], 0.0, Lref_2_};
 }
 
 SM3 metric_cylindrical::inverse(const IR3& q) const {
-	return {iL0_2_, 0.0, 0.0, iL0_2_/(q[IR3::u]*q[IR3::u]), 0.0, iL0_2_};
+	return {iLref_2_, 0.0, 0.0, iLref_2_/(q[IR3::u]*q[IR3::u]), 0.0, iLref_2_};
 }
 
 dSM3 metric_cylindrical::del(const IR3& q) const {
 	return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 2*q[IR3::u]*L0_2_, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		0.0, 2*q[IR3::u]*Lref_2_, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
 
 double metric_cylindrical::jacobian(const IR3& q) const {
-	return L0_3_*q[IR3::u];
+	return Lref_3_*q[IR3::u];
 }
 
 IR3 metric_cylindrical::del_jacobian(const IR3& q) const {
-	return {L0_2_*std::cos(q[IR3::v]), L0_2_*std::sin(q[IR3::v]), 0.0};
+	return {Lref_2_*std::cos(q[IR3::v]), Lref_2_*std::sin(q[IR3::v]), 0.0};
 }
 
 IR3 metric_cylindrical::to_covariant(const IR3& B, const IR3& q) const {
-	return {L0_2_*B[IR3::u], L0_2_*B[IR3::v]*q[IR3::u]*q[IR3::u], L0_2_*B[IR3::w]};
+	return {Lref_2_*B[IR3::u], Lref_2_*B[IR3::v]*q[IR3::u]*q[IR3::u], Lref_2_*B[IR3::w]};
 }
 
 IR3 metric_cylindrical::to_contravariant(const IR3& B, const IR3& q) const {
-	return {iL0_2_*B[IR3::u], iL0_2_*B[IR3::v]/(q[IR3::u]*q[IR3::u]), iL0_2_*B[IR3::w]};
+	return {iLref_2_*B[IR3::u], iLref_2_*B[IR3::v]/(q[IR3::u]*q[IR3::u]), iLref_2_*B[IR3::w]};
 }
 
 ddIR3 metric_cylindrical::christoffel_first_kind(const IR3& q) const {
 	return {
-		0, 0, 0, -L0_2_*q[IR3::u], 0, 0,
-		0,  L0_2_*q[IR3::u], 0, 0, 0, 0,
+		0, 0, 0, -Lref_2_*q[IR3::u], 0, 0,
+		0,  Lref_2_*q[IR3::u], 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0
 	};
 }
