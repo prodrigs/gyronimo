@@ -20,13 +20,13 @@
 #ifndef GYRONIMO_METRIC_CYLINDRICAL
 #define GYRONIMO_METRIC_CYLINDRICAL
 
-#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/metric_connected.hh>
 #include <gyronimo/metrics/morphism_cylindrical.hh>
 
 namespace gyronimo {
 
 //! Trivial covariant metric for cylindrical space.
-class metric_cylindrical : public metric_nexus {
+class metric_cylindrical : public metric_connected {
 public:
 	metric_cylindrical(const morphism_cylindrical *morph);
 	virtual ~metric_cylindrical() override {};

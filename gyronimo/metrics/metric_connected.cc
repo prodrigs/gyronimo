@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @metric_nexus.cc, this file is part of ::gyronimo::
+// @metric_connected.cc, this file is part of ::gyronimo::
 
-#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/metric_connected.hh>
 
 namespace gyronimo {
 
-metric_nexus::metric_nexus(const morphism *morph) 
+metric_connected::metric_connected(const morphism *morph) 
 		: morph_(morph) {
 	
 	if(morph_ == nullptr)
@@ -33,7 +33,7 @@ metric_nexus::metric_nexus(const morphism *morph)
 	Implemented the rule
 	@f$ g_{\alpha\beta} = \textbf{e}_\alpha \cdot \textbf{e}_\beta @f$
 */
-SM3 metric_nexus::operator()(const IR3& r) const {
+SM3 metric_connected::operator()(const IR3& r) const {
 	dIR3 e = morph_->del(r);
 	IR3 e1 = {e[dIR3::uu], e[dIR3::vu], e[dIR3::wu]};
 	IR3 e2 = {e[dIR3::uv], e[dIR3::vv], e[dIR3::wv]};
@@ -43,12 +43,12 @@ SM3 metric_nexus::operator()(const IR3& r) const {
 	return g;
 }
 
-//! General implementation of `metric_nexus` derivatives
+//! General implementation of `metric_connected` derivatives
 /*!
 	Implemented the rule
 	@f$ \partial_\gamma \, g_{\alpha\beta} = \Gamma_{\alpha\beta\gamma} + \Gamma_{\beta\alpha\gamma} @f$
 */
-dSM3 metric_nexus::del(const IR3& r) const {
+dSM3 metric_connected::del(const IR3& r) const {
 	ddIR3 CF = christoffel_first_kind(r);
 	return {
 		CF[ddIR3::uuu] + CF[ddIR3::uuu], // uuu
@@ -73,7 +73,7 @@ dSM3 metric_nexus::del(const IR3& r) const {
 }
 
 //! General-purpose implementation of the Jacobian.
-double metric_nexus::jacobian(const IR3& r) const {
+double metric_connected::jacobian(const IR3& r) const {
 	return morph_->jacobian(r);
 }
 
@@ -84,7 +84,7 @@ double metric_nexus::jacobian(const IR3& r) const {
 		\Gamma^1_{\alpha 1} + \Gamma^2_{\alpha 2} + \Gamma^3_{\alpha 3}
 	\right) @f$
 */
-IR3 metric_nexus::del_jacobian(const IR3& r) const {
+IR3 metric_connected::del_jacobian(const IR3& r) const {
 	double J = jacobian(r);
 	dIR3 ee = morph_->del_inverse(r);
 	ddIR3 de = morph_->ddel(r);
@@ -108,7 +108,7 @@ IR3 metric_nexus::del_jacobian(const IR3& r) const {
     @f$ \Gamma_{\alpha\beta\gamma} = \textbf{e}_\alpha \cdot 
 	\frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\gamma} @f$
 */
-ddIR3 metric_nexus::christoffel_first_kind(const IR3& r) const {
+ddIR3 metric_connected::christoffel_first_kind(const IR3& r) const {
 	dIR3 e = morph_->del(r);
 	ddIR3 ddR = morph_->ddel(r);
 	return contraction<first, first>(e, ddR);
@@ -120,7 +120,7 @@ ddIR3 metric_nexus::christoffel_first_kind(const IR3& r) const {
     @f$ \Gamma^\alpha_{\beta\gamma} = \textbf{e}^\alpha \cdot 
 	\frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\gamma} @f$
 */
-ddIR3 metric_nexus::christoffel_second_kind(const IR3& r) const {
+ddIR3 metric_connected::christoffel_second_kind(const IR3& r) const {
 	dIR3 ee = morph_->del_inverse(r);
 	ddIR3 ddR = morph_->ddel(r);
 	return contraction<second, first>(ee, ddR);

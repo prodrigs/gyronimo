@@ -20,7 +20,7 @@
 #ifndef GYRONIMO_METRIC_SPHERICAL
 #define GYRONIMO_METRIC_SPHERICAL
 
-#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/metric_connected.hh>
 #include <gyronimo/metrics/morphism_spherical.hh>
 
 namespace gyronimo {
@@ -33,7 +33,7 @@ namespace gyronimo {
     (`w`, also in rads) measured clockwise when looking from the origin along
     the z-axis. Some inherited methods are overriden for efficiency.
 */
-class metric_spherical : public metric_nexus {
+class metric_spherical : public metric_connected {
  public:
   metric_spherical(const morphism_spherical *morph);
   virtual ~metric_spherical() override {};

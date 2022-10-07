@@ -23,7 +23,7 @@
 namespace gyronimo {
 
 metric_spherical::metric_spherical(const morphism_spherical *morph)
-    : metric_nexus(morph),
+    : metric_connected(morph),
 	  Lref_(morph->Lref()),
       Lref_squared_(Lref_*Lref_),
       Lref_cube_(Lref_*Lref_*Lref_), 

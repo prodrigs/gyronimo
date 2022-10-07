@@ -20,7 +20,7 @@
 #ifndef GYRONIMO_METRIC_HELENA
 #define GYRONIMO_METRIC_HELENA
 
-#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/metric_connected.hh>
 #include <gyronimo/metrics/morphism_helena.hh>
 #include <gyronimo/interpolators/interpolator2d.hh>
 
@@ -43,7 +43,7 @@ namespace gyronimo{
     @todo override to_contravariant to use the contravariant metric (it is
     available, right?) instead of the more costly default inversion.
 */
-class metric_helena : public metric_nexus {
+class metric_helena : public metric_connected {
  public:
   metric_helena(const morphism_helena *morph);
   virtual ~metric_helena() override;

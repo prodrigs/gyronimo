@@ -23,7 +23,7 @@
 namespace gyronimo {
 
 metric_cylindrical::metric_cylindrical(const morphism_cylindrical *morph) 
-		: metric_nexus(morph),
+		: metric_connected(morph),
 		Lref_(morph->Lref()), Lref_2_(Lref_*Lref_), 
 		iLref_2_(1/Lref_2_), Lref_3_(Lref_*Lref_*Lref_) {
 	

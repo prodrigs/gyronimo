@@ -15,10 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @metric_nexus.hh, this file is part of ::gyronimo::
+// @metric_connected.hh, this file is part of ::gyronimo::
 
-#ifndef GYRONIMO_METRIC_NEXUS
-#define GYRONIMO_METRIC_NEXUS
+#ifndef GYRONIMO_METRIC_CONNECTED
+#define GYRONIMO_METRIC_CONNECTED
 
 #include <gyronimo/core/error.hh>
 #include <gyronimo/metrics/morphism.hh>
@@ -26,20 +26,12 @@
 
 namespace gyronimo {
 
-// Naming options: 
-// metric_nexus 	// because of the connection between metric and morphism
-// metric_generator // because it is generated from morphism
-// metric_creator	// because it is created from morphism
-// metric_founder	// because it is founded from morphism
-// metric_calculator	// because it is calculated from morphism
-// metric_accessory	// because it is an accessory of morphism
-
 //! Covariant metric that is connected to its respective `morphism`.
-class metric_nexus : public metric_covariant {
+class metric_connected : public metric_covariant {
 
 public:
-	metric_nexus(const morphism *morph);
-	virtual ~metric_nexus() override {};
+	metric_connected(const morphism *morph);
+	virtual ~metric_connected() override {};
 
 	virtual SM3 operator()(const IR3& r) const override;
 	virtual dSM3 del(const IR3& r) const override;
@@ -57,4 +49,4 @@ private:
 
 } // end namespace gyronimo.
 
-#endif // GYRONIMO_METRIC_NEXUS
+#endif // GYRONIMO_METRIC_CONNECTED

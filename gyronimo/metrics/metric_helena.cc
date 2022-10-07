@@ -24,7 +24,7 @@
 namespace gyronimo{
 
 metric_helena::metric_helena(const morphism_helena *morph)
-    : metric_nexus(morph),
+    : metric_connected(morph),
 	  parser_(morph->parser()), ifactory_(morph->ifactory()), 
 	  R0_(parser_->rmag()), 
 	  squaredR0_(parser_->rmag()*parser_->rmag()),
