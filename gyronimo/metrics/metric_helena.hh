@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@
 #ifndef GYRONIMO_METRIC_HELENA
 #define GYRONIMO_METRIC_HELENA
 
-#include <gyronimo/parsers/parser_helena.hh>
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/morphism_helena.hh>
 #include <gyronimo/interpolators/interpolator2d.hh>
 
 namespace gyronimo{
@@ -43,10 +43,9 @@ namespace gyronimo{
     @todo override to_contravariant to use the contravariant metric (it is
     available, right?) instead of the more costly default inversion.
 */
-class metric_helena : public metric_covariant {
+class metric_helena : public metric_nexus {
  public:
-  metric_helena(
-      const parser_helena *parser, const interpolator2d_factory *ifactory);
+  metric_helena(const morphism_helena *morph);
   virtual ~metric_helena() override;
 
   virtual SM3 operator()(const IR3& position) const override;
@@ -57,6 +56,7 @@ class metric_helena : public metric_covariant {
 
  private:
   const parser_helena* parser_;
+  const interpolator2d_factory *ifactory_;
   interpolator2d *guu_, *guv_, *gvv_, *gww_;
   double R0_, squaredR0_;
 };

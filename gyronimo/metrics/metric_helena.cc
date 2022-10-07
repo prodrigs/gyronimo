@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,19 +23,21 @@
 
 namespace gyronimo{
 
-metric_helena::metric_helena(
-    const parser_helena *p, const interpolator2d_factory *ifactory)
-    : parser_(p), R0_(p->rmag()), squaredR0_(p->rmag()*p->rmag()),
+metric_helena::metric_helena(const morphism_helena *morph)
+    : metric_nexus(morph),
+	  parser_(morph->parser()), ifactory_(morph->ifactory()), 
+	  R0_(parser_->rmag()), 
+	  squaredR0_(parser_->rmag()*parser_->rmag()),
       guu_(nullptr), guv_(nullptr), gvv_(nullptr), gww_(nullptr) {
-  dblock_adapter s_range(p->s()), chi_range(p->chi());
-  guu_ = ifactory->interpolate_data(
-      s_range, chi_range, dblock_adapter(p->covariant_g11()));
-  guv_ = ifactory->interpolate_data(
-      s_range, chi_range, dblock_adapter(p->covariant_g12()));
-  gvv_ = ifactory->interpolate_data(
-      s_range, chi_range, dblock_adapter(p->covariant_g22()));
-  gww_ = ifactory->interpolate_data(
-      s_range, chi_range, dblock_adapter(p->covariant_g33()));
+  dblock_adapter s_range(parser_->s()), chi_range(parser_->chi());
+  guu_ = ifactory_->interpolate_data(
+      s_range, chi_range, dblock_adapter(parser_->covariant_g11()));
+  guv_ = ifactory_->interpolate_data(
+      s_range, chi_range, dblock_adapter(parser_->covariant_g12()));
+  gvv_ = ifactory_->interpolate_data(
+      s_range, chi_range, dblock_adapter(parser_->covariant_g22()));
+  gww_ = ifactory_->interpolate_data(
+      s_range, chi_range, dblock_adapter(parser_->covariant_g33()));
 }
 metric_helena::~metric_helena() {
   if(guu_) delete guu_;
