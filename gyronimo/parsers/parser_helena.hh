@@ -97,6 +97,7 @@ class parser_helena {
   const narray_type& covariant_B3() const {return covariant_B3_;};
   const narray_type& contravariant_B2() const {return contravariant_B2_;};
   const narray_type& contravariant_B3() const {return contravariant_B3_;};
+  double reduce_chi(double chi) const;
 
  private:
   bool is_symmetric_;

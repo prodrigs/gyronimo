@@ -47,14 +47,14 @@ metric_helena::~metric_helena() {
 }
 SM3 metric_helena::operator()(const IR3& position) const {
   double s = position[IR3::u];
-  double chi = this->reduce_chi(position[IR3::v]);
+  double chi = parser_->reduce_chi(position[IR3::v]);
   return {
       squaredR0_*(*guu_)(s, chi), squaredR0_*(*guv_)(s, chi), 0.0,
       squaredR0_*(*gvv_)(s, chi), 0.0, squaredR0_*(*gww_)(s, chi)};
 }
 dSM3 metric_helena::del(const IR3& position) const {
   double s = position[IR3::u];
-  double chi = this->reduce_chi(position[IR3::v]);
+  double chi = parser_->reduce_chi(position[IR3::v]);
   return {
       squaredR0_*(*guu_).partial_u(s, chi),
       squaredR0_*(*guu_).partial_v(s, chi), 0.0, // d_i g_uu
@@ -66,14 +66,6 @@ dSM3 metric_helena::del(const IR3& position) const {
       0.0, 0.0, 0.0, // d_i g_vw
       squaredR0_*(*gww_).partial_u(s, chi),
       squaredR0_*(*gww_).partial_v(s, chi), 0.0}; // d_i g_ww
-}
-
-//! Reduces an arbitrary angle chi to the interval [0:pi].
-double metric_helena::reduce_chi(double chi) const {
-  chi -= 2*std::numbers::pi*std::floor(chi/(2*std::numbers::pi));
-  if(parser_->is_symmetric() && chi > std::numbers::pi)
-      chi = 2*std::numbers::pi - chi;
-  return chi;
 }
 
 } // end namespace gyronimo

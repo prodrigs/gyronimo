@@ -44,7 +44,7 @@ eigenmode_castor_b::eigenmode_castor_b(
 IR3 eigenmode_castor_b::contravariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double phi = position[IR3::w];
-  double chi = metric_->reduce_chi(position[IR3::v]);
+  double chi = metric_->parser()->reduce_chi(position[IR3::v]);
   std::complex<double> factor = norm_factor_*
       this->exp_wt_nphi(time, phi)/this->metric()->jacobian(position);
   return {
@@ -62,7 +62,7 @@ IR3 eigenmode_castor_b::contravariant(const IR3& position, double time) const {
 dIR3 eigenmode_castor_b::del_contravariant(
     const IR3& position, double time) const {
   double s = position[IR3::u];
-  double chi = metric_->reduce_chi(position[IR3::v]);
+  double chi = metric_->parser()->reduce_chi(position[IR3::v]);
   double phi = position[IR3::w];
   std::complex<double> factor = norm_factor_*this->exp_wt_nphi(time, phi);
   std::valarray epsilon_ijk_partial2_jl_A_k = {
@@ -92,7 +92,7 @@ IR3 eigenmode_castor_b::partial_t_contravariant(
     const IR3& position, double time) const {
   double s = position[IR3::u];
   double phi = position[IR3::w];
-  double chi = metric_->reduce_chi(position[IR3::v]);
+  double chi = metric_->parser()->reduce_chi(position[IR3::v]);
   std::complex<double> factor = norm_factor_*this->exp_wt_nphi(time, phi);
   using namespace std::complex_literals;
   factor *= 1i*w_/this->metric()->jacobian(position);

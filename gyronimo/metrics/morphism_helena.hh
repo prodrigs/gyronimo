@@ -45,8 +45,7 @@ private:
 	const parser_helena *parser_;
 	const interpolator2d_factory *ifactory_;
 	interpolator2d *R_, *z_;
-	static double reduce_2pi(double x);
-	static std::tuple<double, double> reflection_past_axis(double s, double chi);
+	std::tuple<double, double> reflection_past_axis(double s, double chi) const;
 };
 
 }

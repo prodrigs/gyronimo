@@ -52,7 +52,6 @@ class metric_helena : public metric_nexus {
   virtual dSM3 del(const IR3& position) const override;
 
   const parser_helena* parser() const {return parser_;};
-  double reduce_chi(double chi) const;
 
  private:
   const parser_helena* parser_;

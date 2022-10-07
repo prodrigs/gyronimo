@@ -102,7 +102,16 @@ parser_helena::parser_helena(const std::string& filename) {
   rgeo_ = radius_/eps_*rmag_;
   this->build_auxiliar_data();
 }
- 
+
+//! Reduces an arbitrary angle chi to the interval [0:2pi] (or [0:pi] if sym).
+double parser_helena::reduce_chi(double chi) const {
+  double l = 2*std::numbers::pi;
+  chi -= l*std::floor(chi/l);
+  if(is_symmetric_ && chi > std::numbers::pi)
+      chi = l - chi;
+  return chi;
+}
+
 //! Builds up some useful flux-function 2D arrays.
 /*
     Each flux-function value is copied over all poloidal samples along the flux
