@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2022 Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ metric_nexus::metric_nexus(const morphism *morph)
 		: morph_(morph) {
 	
 	if(morph_ == nullptr)
-		error(__func__, __FILE__, __LINE__, " morphism is nullptr.", 1);
+		error(__func__, __FILE__, __LINE__, " morphism cannot be nullptr.", 1);
 }
 
 //! General-purpose implementation of the local metric matrix `SM3`.
@@ -86,12 +86,20 @@ double metric_nexus::jacobian(const IR3& r) const {
 */
 IR3 metric_nexus::del_jacobian(const IR3& r) const {
 	double J = jacobian(r);
-	ddIR3 CF2 = christoffel_second_kind(r);
-	return {
-		J * (CF2[ddIR3::uuu] + CF2[ddIR3::vuv] + CF2[ddIR3::wuw]),
-		J * (CF2[ddIR3::uuv] + CF2[ddIR3::vvv] + CF2[ddIR3::wvw]),
-		J * (CF2[ddIR3::uuw] + CF2[ddIR3::vvw] + CF2[ddIR3::www])
+	dIR3 ee = morph_->del_inverse(r);
+	ddIR3 de = morph_->ddel(r);
+	IR3 con = {
+		ee[dIR3::uu] * de[ddIR3::uuu] + ee[dIR3::uv] * de[ddIR3::vuu] + ee[dIR3::uw] * de[ddIR3::wuu] + 
+		ee[dIR3::vu] * de[ddIR3::uuv] + ee[dIR3::vv] * de[ddIR3::vuv] + ee[dIR3::vw] * de[ddIR3::wuv] + 
+		ee[dIR3::wu] * de[ddIR3::uuw] + ee[dIR3::wv] * de[ddIR3::vuw] + ee[dIR3::ww] * de[ddIR3::wuw],
+		ee[dIR3::uu] * de[ddIR3::uuv] + ee[dIR3::uv] * de[ddIR3::vuv] + ee[dIR3::uw] * de[ddIR3::wuv] + 
+		ee[dIR3::vu] * de[ddIR3::uvv] + ee[dIR3::vv] * de[ddIR3::vvv] + ee[dIR3::vw] * de[ddIR3::wvv] + 
+		ee[dIR3::wu] * de[ddIR3::uvw] + ee[dIR3::wv] * de[ddIR3::vvw] + ee[dIR3::ww] * de[ddIR3::wvw],
+		ee[dIR3::uu] * de[ddIR3::uuw] + ee[dIR3::uv] * de[ddIR3::vuw] + ee[dIR3::uw] * de[ddIR3::wuw] + 
+		ee[dIR3::vu] * de[ddIR3::uvw] + ee[dIR3::vv] * de[ddIR3::vvw] + ee[dIR3::vw] * de[ddIR3::wvw] + 
+		ee[dIR3::wu] * de[ddIR3::uww] + ee[dIR3::wv] * de[ddIR3::vww] + ee[dIR3::ww] * de[ddIR3::www]
 	};
+	return (J * contraction<first>(ee, con));
 }
 
 //! Implementation of Christoffel symbols of the first kind @f$ \Gamma_{\alpha\beta\gamma} @f$
@@ -102,7 +110,7 @@ IR3 metric_nexus::del_jacobian(const IR3& r) const {
 */
 ddIR3 metric_nexus::christoffel_first_kind(const IR3& r) const {
 	dIR3 e = morph_->del(r);
-	ddIR3 ddR = morph_->del2(r);
+	ddIR3 ddR = morph_->ddel(r);
 	return contraction<first, first>(e, ddR);
 }
 
@@ -114,7 +122,7 @@ ddIR3 metric_nexus::christoffel_first_kind(const IR3& r) const {
 */
 ddIR3 metric_nexus::christoffel_second_kind(const IR3& r) const {
 	dIR3 ee = morph_->del_inverse(r);
-	ddIR3 ddR = morph_->del2(r);
+	ddIR3 ddR = morph_->ddel(r);
 	return contraction<second, first>(ee, ddR);
 }
 
