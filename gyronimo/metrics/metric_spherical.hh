@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@
 #ifndef GYRONIMO_METRIC_SPHERICAL
 #define GYRONIMO_METRIC_SPHERICAL
 
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/metric_nexus.hh>
+#include <gyronimo/metrics/morphism_spherical.hh>
 
 namespace gyronimo {
 
@@ -32,9 +33,9 @@ namespace gyronimo {
     (`w`, also in rads) measured clockwise when looking from the origin along
     the z-axis. Some inherited methods are overriden for efficiency.
 */
-class metric_spherical : public metric_covariant {
+class metric_spherical : public metric_nexus {
  public:
-  metric_spherical(double radius_norm);
+  metric_spherical(const morphism_spherical *morph);
   virtual ~metric_spherical() override {};
 
   virtual SM3 operator()(const IR3& r) const override;
@@ -45,6 +46,9 @@ class metric_spherical : public metric_covariant {
   virtual IR3 del_jacobian(const IR3& r) const override;
   virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
+
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
 
   double radius_norm() const {return radius_norm_;};
 

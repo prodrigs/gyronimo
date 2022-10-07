@@ -40,7 +40,7 @@ public:
 	virtual double jacobian(const IR3 &q) const override;
 	virtual dIR3 del_inverse(const IR3 &q) const override;
 
-	double r0() {return r0_;};
+	double r0() const {return r0_;};
 
 private:
 	const double r0_, ir0_, r0_3_;

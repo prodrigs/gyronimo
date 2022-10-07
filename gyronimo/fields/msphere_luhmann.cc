@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,7 +25,8 @@ namespace gyronimo {
 msphere_luhmann::msphere_luhmann(
     double smooth_factor,
     double dipole_factor, double csheet_factor, double m_factor)
-    : IR3field_c1(m_factor, 1.0, new metric_spherical(earth_radius)),
+    : IR3field_c1(m_factor, 1.0, 
+		new metric_spherical(new morphism_spherical(earth_radius))),
       c_bar_(0.001*csheet_factor/(earth_radius*m_factor)),
       d_bar_(dipole_factor/(earth_radius*m_factor)),
       idelta_(1.0/smooth_factor),
@@ -33,7 +34,10 @@ msphere_luhmann::msphere_luhmann(
   metric_ = dynamic_cast<const metric_spherical*>(IR3field::metric());
 }
 msphere_luhmann::~msphere_luhmann() {
-  if (metric_) delete metric_;
+  if (metric_) {
+    if(metric_->morph()) delete metric_->morph();
+    delete metric_;
+  }
 }
 IR3 msphere_luhmann::contravariant(const IR3& position, double time) const {
   double r = position[IR3::u], r3 = r*r*r, r4 = r3*r;
