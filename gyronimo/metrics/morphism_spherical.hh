@@ -28,8 +28,8 @@ class morphism_spherical : public morphism {
 
 public:
 
-	morphism_spherical(const double &r0) 
-		: morphism(), r0_(r0), ir0_(1/r0), r0_3_(r0*r0*r0) {};
+	morphism_spherical(const double &Lref) 
+		: morphism(), Lref_(Lref), iLref_(1/Lref), Lref_3_(Lref*Lref*Lref) {};
 	virtual ~morphism_spherical() override {};
 
 	virtual IR3 operator()(const IR3 &q) const override;
@@ -40,10 +40,10 @@ public:
 	virtual double jacobian(const IR3 &q) const override;
 	virtual dIR3 del_inverse(const IR3 &q) const override;
 
-	double r0() {return r0_;};
+	double Lref() {return Lref_;};
 
 private:
-	const double r0_, ir0_, r0_3_;
+	const double Lref_, iLref_, Lref_3_;
 
 }; // end class morphism_spherical
 

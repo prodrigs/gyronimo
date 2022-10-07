@@ -27,14 +27,14 @@ namespace gyronimo {
 //! Covariant metric for spherical coordinates.
 /*!
     The three contravariant coordinates are the distance to the origin
-    normalized to `radius_norm` (`u`, with `radius_norm` in SI), the polar angle
+    normalized to `Lref` (`u`, with `Lref` in SI), the polar angle
     measured from the z-axis (co-latitude `v`, in rads), and the azimuthal angle
     (`w`, also in rads) measured clockwise when looking from the origin along
     the z-axis. Some inherited methods are overriden for efficiency.
 */
 class metric_spherical : public metric_covariant {
  public:
-  metric_spherical(double radius_norm);
+  metric_spherical(double Lref);
   virtual ~metric_spherical() override {};
 
   virtual SM3 operator()(const IR3& r) const override;
@@ -46,11 +46,11 @@ class metric_spherical : public metric_covariant {
   virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
 
-  double radius_norm() const {return radius_norm_;};
+  double Lref() const {return Lref_;};
 
  private:
-  const double radius_norm_, radius_norm_squared_;
-  const double radius_norm_cube_, iradius_norm_squared_;
+  const double Lref_, Lref_squared_;
+  const double Lref_cube_, iLref_squared_;
 };
 
 } // end namespace gyronimo.

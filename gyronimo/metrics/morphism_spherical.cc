@@ -28,14 +28,14 @@ namespace gyronimo {
 	Implements the coordinate transformation:
 	@f{gather*}{
 		\begin{aligned}
-			x &= r_0 \, r \, \cos \phi \, \sin \theta \\
-			y &= r_0 \, r \, \sin \phi \, \sin \theta \\
-			z &= r_0 \, r \, \cos \theta
+			x &= L_{ref} \, r \, \cos \phi \, \sin \theta \\
+			y &= L_{ref} \, r \, \sin \phi \, \sin \theta \\
+			z &= L_{ref} \, r \, \cos \theta
 		\end{aligned}
     @f}
 */
 IR3 morphism_spherical::operator()(const IR3 &q) const {
-	double r = r0_ * q[IR3::u];
+	double r = Lref_ * q[IR3::u];
 	double cn_theta = std::cos(q[IR3::v]);
 	double sn_theta = std::sin(q[IR3::v]);
 	double cn_phi = std::cos(q[IR3::w]);
@@ -50,7 +50,7 @@ IR3 morphism_spherical::operator()(const IR3 &q) const {
 	Implements the inverse transformation:
 	@f{gather*}{
 		\begin{aligned}
-			r &= \frac{1}{r_0} \sqrt{x^2 + y^2 + z^2} \\
+			r &= \frac{1}{L_{ref}} \sqrt{x^2 + y^2 + z^2} \\
 			\theta &= \arctan \left( \frac{\sqrt{x^2 + y^2}}{z} \right) \\
 			\phi &= \arctan \left( \frac{y}{x} \right)
 		\end{aligned}
@@ -58,7 +58,7 @@ IR3 morphism_spherical::operator()(const IR3 &q) const {
 */
 IR3 morphism_spherical::inverse(const IR3 &x) const {
 	double rho = x[IR3::u] * x[IR3::u] + x[IR3::v] * x[IR3::v];
-	return {ir0_ * std::sqrt(rho + x[IR3::w] * x[IR3::w]), 
+	return {iLref_ * std::sqrt(rho + x[IR3::w] * x[IR3::w]), 
 			std::atan2(sqrt(rho), x[IR3::w]), 
 			std::atan2(x[IR3::v], x[IR3::u])};
 }
@@ -68,16 +68,16 @@ IR3 morphism_spherical::inverse(const IR3 &x) const {
 	Implements the coordinate transformation's first derivatives:
 	@f{gather*}{
 		\begin{aligned}
-			\textbf{e}_r &= \left( r_0 \, \cos \phi \, \sin \theta, r_0 \, \sin \phi \, \sin \theta, r_0 \, \cos \theta \right) \\
-			\textbf{e}_\theta &= \left( r_0 \, r \, \cos \phi \, \cos \theta, r_0 \, r \, \sin \phi \, \cos \theta, - r_0 \, r \, \sin \theta \right) \\
-			\textbf{e}_\phi &= \left( - r_0 \, r \, \sin \phi \, \sin \theta, r_0 \, r\, \cos \phi \, \sin \theta, 0 \right)
+			\textbf{e}_r &= \left( L_{ref} \, \cos \phi \, \sin \theta, L_{ref} \, \sin \phi \, \sin \theta, L_{ref} \, \cos \theta \right) \\
+			\textbf{e}_\theta &= \left( L_{ref} \, r \, \cos \phi \, \cos \theta, L_{ref} \, r \, \sin \phi \, \cos \theta, - L_{ref} \, r \, \sin \theta \right) \\
+			\textbf{e}_\phi &= \left( - L_{ref} \, r \, \sin \phi \, \sin \theta, L_{ref} \, r\, \cos \phi \, \sin \theta, 0 \right)
 		\end{aligned}
     @f}
 */
 dIR3 morphism_spherical::del(const IR3 &q) const {
 	double r = q[IR3::u];
-	double cn_theta = r0_ * std::cos(q[IR3::v]);
-	double sn_theta = r0_ * std::sin(q[IR3::v]);
+	double cn_theta = Lref_ * std::cos(q[IR3::v]);
+	double sn_theta = Lref_ * std::sin(q[IR3::v]);
 	double cn_phi = std::cos(q[IR3::w]);
 	double sn_phi = std::sin(q[IR3::w]);
 	return {
@@ -90,8 +90,8 @@ dIR3 morphism_spherical::del(const IR3 &q) const {
 //! Returns the morphism's second derivatives, calculated in point @f$ q^\alpha @f$.
 ddIR3 morphism_spherical::ddel(const IR3 &q) const {
 	double r = q[IR3::u];
-	double cn_theta = r0_ * std::cos(q[IR3::v]);
-	double sn_theta = r0_ * std::sin(q[IR3::v]);
+	double cn_theta = Lref_ * std::cos(q[IR3::v]);
+	double sn_theta = Lref_ * std::sin(q[IR3::v]);
 	double cn_phi = std::cos(q[IR3::w]);
 	double sn_phi = std::sin(q[IR3::w]);
 	return {
@@ -105,10 +105,10 @@ ddIR3 morphism_spherical::ddel(const IR3 &q) const {
 //! General-purpose implementation of the Jacobian of the transformation in point @f$ q^\alpha @f$.
 /*!
 	Implements the Jacobian in spherical coordinates: 
-	@f$ J = r_0^3 \, r^2 \, \sin \theta @f$
+	@f$ J = L_{ref}^3 \, r^2 \, \sin \theta @f$
 */
 double morphism_spherical::jacobian(const IR3 &q) const {
-	return r0_3_ * q[IR3::u] * q[IR3::u] * std::sin(q[IR3::v]);
+	return Lref_3_ * q[IR3::u] * q[IR3::u] * std::sin(q[IR3::v]);
 }
 
 //! Returns the morphism's inverse derivatives, correspondent to the contravariant basis vectors in point @f$ q^\alpha @f$.
@@ -116,18 +116,18 @@ double morphism_spherical::jacobian(const IR3 &q) const {
 	Implements the inverse transformation's first derivatives:
 	@f{gather*}{
 		\begin{aligned}
-			\textbf{e}^r &= \left( \frac{1}{r_0} \, \cos \phi \, \sin \theta, \frac{1}{r_0} \, \sin \phi \, \sin \theta, \frac{1}{r_0} \, \cos \theta \right) \\
-			\textbf{e}^\theta &= \left( \frac{1}{r_0 \, r} \, \cos \phi \, \cos \theta, \frac{1}{r_0 \, r} \, \sin \phi \, \cos \theta, -\frac{1}{r_0 \, r} \, \sin \theta \right) \\
-			\textbf{e}^\phi &= \left( -\frac{\sin \phi}{r_0 \, r \, \sin \theta}, \frac{\cos \phi}{r_0 \, r \, \sin \theta}, 0 \right)
+			\textbf{e}^r &= \left( \frac{1}{L_{ref}} \, \cos \phi \, \sin \theta, \frac{1}{L_{ref}} \, \sin \phi \, \sin \theta, \frac{1}{L_{ref}} \, \cos \theta \right) \\
+			\textbf{e}^\theta &= \left( \frac{1}{L_{ref} \, r} \, \cos \phi \, \cos \theta, \frac{1}{L_{ref} \, r} \, \sin \phi \, \cos \theta, -\frac{1}{L_{ref} \, r} \, \sin \theta \right) \\
+			\textbf{e}^\phi &= \left( -\frac{\sin \phi}{L_{ref} \, r \, \sin \theta}, \frac{\cos \phi}{L_{ref} \, r \, \sin \theta}, 0 \right)
 		\end{aligned}
     @f}
 */
 dIR3 morphism_spherical::del_inverse(const IR3 &q) const {
 	double ir = 1 / q[IR3::u];
-	double cn_theta = ir0_ * std::cos(q[IR3::v]);
+	double cn_theta = iLref_ * std::cos(q[IR3::v]);
 	double sn_theta = std::sin(q[IR3::v]);
-	double csc_theta = ir0_ / sn_theta;
-	sn_theta *= ir0_;
+	double csc_theta = iLref_ / sn_theta;
+	sn_theta *= iLref_;
 	double cn_phi = std::cos(q[IR3::w]);
 	double sn_phi = std::sin(q[IR3::w]);
 	return {

@@ -28,8 +28,8 @@ class morphism_cylindrical : public morphism {
 
 public:
 
-	morphism_cylindrical(const double &L0) 
-		: morphism(), L0_(L0), iL0_(1/L0), L0_3_(L0*L0*L0) {};
+	morphism_cylindrical(const double &Lref) 
+		: morphism(), Lref_(Lref), iLref_(1/Lref), Lref_3_(Lref*Lref*Lref) {};
 	virtual ~morphism_cylindrical() override {};
 
 	virtual IR3 operator()(const IR3 &q) const override;
@@ -41,7 +41,7 @@ public:
 	virtual dIR3 del_inverse(const IR3 &q) const override;
 
 private:
-	const double L0_, iL0_, L0_3_;
+	const double Lref_, iLref_, Lref_3_;
 
 }; // end class morphism_cylindrical
 

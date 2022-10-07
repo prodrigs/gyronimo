@@ -27,8 +27,8 @@ namespace gyronimo {
 //! Trivial covariant metric for cylindrical space.
 class metric_cylindrical : public metric_covariant {
 public:
-	metric_cylindrical(const double &L0) 
-		: L0_(L0), L0_2_(L0*L0), iL0_2_(1/L0_2_), L0_3_(L0*L0*L0){};
+	metric_cylindrical(const double &Lref) 
+		: Lref_(Lref), Lref_2_(Lref*Lref), iLref_2_(1/Lref_2_), Lref_3_(Lref*Lref*Lref){};
 	virtual ~metric_cylindrical() override {};
 
 	virtual SM3 operator()(const IR3& q) const override;
@@ -40,10 +40,10 @@ public:
 	virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
 	virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
 
-	double L0() {return L0_;};
+	double Lref() {return Lref_;};
 
 private:
-	const double L0_, L0_2_, iL0_2_, L0_3_;
+	const double Lref_, Lref_2_, iLref_2_, Lref_3_;
 
 }; // end class metric_cylindrical
 
