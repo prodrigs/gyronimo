@@ -67,5 +67,11 @@ dSM3 metric_helena::del(const IR3& position) const {
       squaredR0_*(*gww_).partial_u(s, chi),
       squaredR0_*(*gww_).partial_v(s, chi), 0.0}; // d_i g_ww
 }
+ddIR3 metric_helena::christoffel_first_kind(const IR3& r) const {
+	return this->gyronimo::metric_covariant::christoffel_first_kind(r);
+}
+ddIR3 metric_helena::christoffel_second_kind(const IR3& r) const {
+	return this->gyronimo::metric_covariant::christoffel_second_kind(r);
+}
 
 } // end namespace gyronimo

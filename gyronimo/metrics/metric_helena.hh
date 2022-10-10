@@ -51,6 +51,9 @@ class metric_helena : public metric_connected {
   virtual SM3 operator()(const IR3& position) const override;
   virtual dSM3 del(const IR3& position) const override;
 
+  virtual ddIR3 christoffel_first_kind (const IR3& r) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& r) const override;
+
   const parser_helena* parser() const {return parser_;};
 
  private:
