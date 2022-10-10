@@ -95,10 +95,10 @@ ddIR3 morphism_helena::ddel(const IR3 &q) const {
 	double Zuu = z_->partial2_uu(s, chi), Zuv = z_->partial2_uv(s, chi), Zvv = z_->partial2_vv(s, chi);
 	double sn = std::sin(phi), cn = std::cos(phi);
 	return {
-	// 		iuu		iuv			iuw		ivv			ivw		iww
-		Ruu * cn, Ruv * cn, -Ru * sn, Rvv * cn, -Rv * sn, -R * cn,
-		Ruu * sn, Ruv * sn,  Ru * cn, Rvv * sn,  Rv * cn,  R * sn,
-			 Zuu, 	   Zuv, 	   0, 	   Zvv, 	   0,    	0
+	//	   iuu      iuv     iuw      ivv     ivw    iww
+		 Ruu*cn,  Ruv*cn, -Ru*sn,  Rvv*cn, -Rv*sn, -R*cn,
+		-Ruu*sn, -Ruv*sn, -Ru*cn, -Rvv*sn, -Rv*cn,  R*sn,
+		    Zuu,  Zuv   ,    0  ,  Zvv   ,    0  ,   0
 	};
 }
 
@@ -107,7 +107,7 @@ double morphism_helena::jacobian(const IR3 &q) const {
 	double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]);
 	double R = (*R_)(s, chi), Ru = R_->partial_u(s, chi), Rv = R_->partial_v(s, chi);
 	double Zu = z_->partial_u(s, chi), Zv = z_->partial_v(s, chi);
-	return R * (Rv * Zu - Ru * Zv);
+	return R * (Ru * Zv - Rv * Zu);
 }
 
 std::tuple<double, double> morphism_helena::reflection_past_axis(
