@@ -55,8 +55,10 @@ double metric_spherical::jacobian(const IR3& r) const {
 }
 IR3 metric_spherical::del_jacobian(const IR3& r) const {
   double cosv = std::cos(r[IR3::v]), sinv = std::sin(r[IR3::v]);
-  double factor = Lref_cube_*r[IR3::u];
-  return {2.0*factor*sinv, factor*r[IR3::u]*cosv, 0.0};
+  double cosw = std::cos(r[IR3::w]), sinw = std::sin(r[IR3::w]);
+  double r0 = Lref_squared_*r[IR3::u];
+  double factor = (1+sinv*sinv);
+  return {r0*cosw*factor, r0*sinw*factor, r0*sinv*cosv};
 }
 IR3 metric_spherical::to_covariant(const IR3& B, const IR3& r) const {
   double factor = Lref_squared_*r[IR3::u]*r[IR3::u];
