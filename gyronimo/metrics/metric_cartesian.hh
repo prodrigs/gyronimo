@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,35 +20,35 @@
 #ifndef GYRONIMO_METRIC_CARTESIAN
 #define GYRONIMO_METRIC_CARTESIAN
 
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/morphism_cartesian.hh>
+#include <gyronimo/metrics/metric_connected.hh>
 
 namespace gyronimo {
 
 //! Trivial covariant metric for cartesian space.
-class metric_cartesian : public metric_covariant {
- public:
-  metric_cartesian() {};
-  virtual ~metric_cartesian() override {};
+class metric_cartesian : public metric_connected {
+public:
+	metric_cartesian(const morphism_cartesian *morph);
+	virtual ~metric_cartesian() override {};
 
-  virtual SM3 operator()(const IR3& r) const override {
-    return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
-  };
-  virtual dSM3 del(const IR3& r) const override {
-    return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  };
-  virtual double jacobian(const IR3& r) const override {
-    return 1.0;
-  };
-  virtual IR3 del_jacobian(const IR3& r) const override {
-    return {0.0, 0.0, 0.0};
-  };
-  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override {
-    return B;
-  };
-  virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override {
-    return B;
-  };
+	virtual SM3 operator()(const IR3& r) const override;
+	virtual SM3 inverse(const IR3& r) const override;
+	virtual dSM3 del(const IR3& r) const override;
+	virtual dSM3 del_inverse(const IR3& r) const override;
+	virtual double jacobian(const IR3& r) const override;
+	virtual IR3 del_jacobian(const IR3& r) const override;
+
+	virtual ddIR3 christoffel_first_kind(const IR3& r) const override;
+	virtual ddIR3 christoffel_second_kind(const IR3& r) const override;
+
+	virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
+	virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
+
+	double Lref() const {return Lref_;};
+
+private:
+	const morphism_cartesian *morph_;
+	double Lref_, Lref_2_, iLref_2_;
 };
 
 } // end namespace gyronimo.
