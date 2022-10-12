@@ -34,6 +34,8 @@ enum contraction_index {first, second, third};
 
 template<contraction_index>
 IR3 contraction(const dIR3& dA, const IR3& B);
+template<contraction_index, contraction_index>
+IR3 contraction(const ddIR3& ddA, const IR3& B, const IR3& C);
 template<contraction_index>
 dIR3 contraction(const dSM3& dA, const IR3& B);
 template<contraction_index, contraction_index>

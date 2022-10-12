@@ -76,6 +76,83 @@ IR3 contraction<second>(const dIR3& dA, const IR3& B) {
     dA[dIR3::wu]*B[IR3::u] + dA[dIR3::wv]*B[IR3::v] + dA[dIR3::ww]*B[IR3::w]};
 }
 
+//! First and Second index contration of a `ddIR3` object and two `IR3` vectors.
+/*!
+    Returns the object
+    ```
+    C[IR3::k] = ddA[ddIR3::ijk] * B[IR3::i] * C[IR3::j]
+    ```
+    where summation is implicit in the indices `i,j`, with `i,j,k = u, v, w`.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been
+    explicitly performed.
+*/
+template<>
+IR3 contraction<first, second>(const ddIR3& ddA, const IR3& B, const IR3& C) {
+  return {
+    ddA[ddIR3::uuu] * B[IR3::u] * C[IR3::u] +
+    ddA[ddIR3::uuv] * B[IR3::u] * C[IR3::v] +
+    ddA[ddIR3::uuw] * B[IR3::u] * C[IR3::w] +
+    ddA[ddIR3::vuu] * B[IR3::v] * C[IR3::u] +
+    ddA[ddIR3::vuv] * B[IR3::v] * C[IR3::v] +
+    ddA[ddIR3::vuw] * B[IR3::v] * C[IR3::w] +
+    ddA[ddIR3::wuu] * B[IR3::w] * C[IR3::u] +
+    ddA[ddIR3::wuv] * B[IR3::w] * C[IR3::v] +
+    ddA[ddIR3::wuw] * B[IR3::w] * C[IR3::w], // C[IR3::u]
+    ddA[ddIR3::uuv] * B[IR3::u] * C[IR3::u] +
+    ddA[ddIR3::uvv] * B[IR3::u] * C[IR3::v] +
+    ddA[ddIR3::uvw] * B[IR3::u] * C[IR3::w] +
+    ddA[ddIR3::vuv] * B[IR3::v] * C[IR3::u] +
+    ddA[ddIR3::vvv] * B[IR3::v] * C[IR3::v] +
+    ddA[ddIR3::vvw] * B[IR3::v] * C[IR3::w] +
+    ddA[ddIR3::wuv] * B[IR3::w] * C[IR3::u] +
+    ddA[ddIR3::wvv] * B[IR3::w] * C[IR3::v] +
+    ddA[ddIR3::wvw] * B[IR3::w] * C[IR3::w], // C[IR3::v]
+    ddA[ddIR3::uuw] * B[IR3::u] * C[IR3::u] +
+    ddA[ddIR3::uvw] * B[IR3::u] * C[IR3::v] +
+    ddA[ddIR3::uww] * B[IR3::u] * C[IR3::w] +
+    ddA[ddIR3::vuw] * B[IR3::v] * C[IR3::u] +
+    ddA[ddIR3::vvw] * B[IR3::v] * C[IR3::v] +
+    ddA[ddIR3::vww] * B[IR3::v] * C[IR3::w] +
+    ddA[ddIR3::wuw] * B[IR3::w] * C[IR3::u] +
+    ddA[ddIR3::wvw] * B[IR3::w] * C[IR3::v] +
+    ddA[ddIR3::www] * B[IR3::w] * C[IR3::w] // C[IR3::w]
+  };
+}
+
+//! Second and Third index contration of a `ddIR3` object and two `IR3` vectors.
+/*!
+    Returns the object
+    ```
+    C[IR3::i] = ddA[ddIR3::ijk] * B[IR3::j] * C[IR3::k]
+    ```
+    where summation is implicit in the indices `j,k`, with `i,j,k = u, v, w`.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been
+    explicitly performed.
+*/
+template<>
+IR3 contraction<second, third>(const ddIR3& ddA, const IR3& B, const IR3& C) {
+  return {
+    ddA[ddIR3::uuu] *  B[IR3::u] * C[IR3::u] +
+    ddA[ddIR3::uuv] * (B[IR3::u] * C[IR3::v] + B[IR3::v] * C[IR3::u]) +
+    ddA[ddIR3::uuw] * (B[IR3::u] * C[IR3::w] + B[IR3::w] * C[IR3::u]) +
+    ddA[ddIR3::uvv] *  B[IR3::v] * C[IR3::v] +
+    ddA[ddIR3::uvw] * (B[IR3::v] * C[IR3::w] + B[IR3::w] * C[IR3::v]) +
+    ddA[ddIR3::uww] *  B[IR3::w] * C[IR3::w], // C[IR3::u]
+    ddA[ddIR3::vuu] *  B[IR3::u] * C[IR3::u] +
+    ddA[ddIR3::vuv] * (B[IR3::u] * C[IR3::v] + B[IR3::v] * C[IR3::u]) +
+    ddA[ddIR3::vuw] * (B[IR3::u] * C[IR3::w] + B[IR3::w] * C[IR3::u]) +
+    ddA[ddIR3::vvv] *  B[IR3::v] * C[IR3::v] +
+    ddA[ddIR3::vvw] * (B[IR3::v] * C[IR3::w] + B[IR3::w] * C[IR3::v]) +
+    ddA[ddIR3::vww] *  B[IR3::w] * C[IR3::w], // C[IR3::v]
+    ddA[ddIR3::wuu] *  B[IR3::u] * C[IR3::u] +
+    ddA[ddIR3::wuv] * (B[IR3::u] * C[IR3::v] + B[IR3::v] * C[IR3::u]) +
+    ddA[ddIR3::wuw] * (B[IR3::u] * C[IR3::w] + B[IR3::w] * C[IR3::u]) +
+    ddA[ddIR3::wvv] *  B[IR3::v] * C[IR3::v] +
+    ddA[ddIR3::wvw] * (B[IR3::v] * C[IR3::w] + B[IR3::w] * C[IR3::v]) +
+    ddA[ddIR3::www] *  B[IR3::w] * C[IR3::w] // C[IR3::w]
+  };
+}
+
 //! First-index contration of a `dSM3` object and a `IR3` vector.
 /*!
     Returns the object
