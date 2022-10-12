@@ -94,7 +94,7 @@ ddIR3 morphism_cylindrical::ddel(const IR3 &q) const {
 
 //! General-purpose implementation of the Jacobian of the transformation in point @f$ q^\alpha @f$.
 /*!
-	Implements the Jacobian in spherical coordinates: 
+	Implements the Jacobian in cylindrical coordinates: 
 	@f$ J = {L_{ref}}^3 \, R @f$
 */
 double morphism_cylindrical::jacobian(const IR3 &q) const {

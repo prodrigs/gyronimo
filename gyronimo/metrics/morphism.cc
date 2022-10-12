@@ -1,4 +1,5 @@
-// ::gyronimo:: - gyromotion for the people, by the people -, // An object-oriented library for gyromotion applications in plasma physics.
+// ::gyronimo:: - gyromotion for the people, by the people -
+// An object-oriented library for gyromotion applications in plasma physics.
 // Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
