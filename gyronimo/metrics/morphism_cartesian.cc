@@ -21,21 +21,20 @@
 
 namespace gyronimo {
 
-morphism_cartesian::morphism_cartesian(double Lref) 
-	: morphism(), Lref_(Lref), iLref_(1/Lref), Lref_3_(Lref*Lref*Lref) {
-	
+morphism_cartesian::morphism_cartesian() 
+	: morphism() {
 }
 IR3 morphism_cartesian::operator()(const IR3 &q) const {
-	return {Lref_*q[IR3::u], Lref_*q[IR3::v], Lref_*q[IR3::w]};
+	return {q[IR3::u], q[IR3::v], q[IR3::w]};
 }
 IR3 morphism_cartesian::inverse(const IR3 &x) const {
-	return {iLref_*x[IR3::u], iLref_*x[IR3::v], iLref_*x[IR3::w]};
+	return {x[IR3::u], x[IR3::v], x[IR3::w]};
 }
 dIR3 morphism_cartesian::del(const IR3 &q) const {
 	return {
-		Lref_, 0.0, 0.0,
-		0.0, Lref_, 0.0,
-		0.0, 0.0, Lref_
+		1.0, 0.0, 0.0,
+		0.0, 1.0, 0.0,
+		0.0, 0.0, 1.0
 	};
 }
 ddIR3 morphism_cartesian::ddel(const IR3 &q) const {
@@ -46,25 +45,25 @@ ddIR3 morphism_cartesian::ddel(const IR3 &q) const {
 	};
 }
 double morphism_cartesian::jacobian(const IR3 &q) const {
-	return Lref_3_;
+	return 1.0;
 }
 dIR3 morphism_cartesian::del_inverse(const IR3 &q) const {
 	return {
-		iLref_, 0.0, 0.0,
-		0.0, iLref_, 0.0,
-		0.0, 0.0, iLref_
+		1.0, 0.0, 0.0,
+		0.0, 1.0, 0.0,
+		0.0, 0.0, 1.0
 	};
 }
-IR3 morphism_cartesian::to_covariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism_cartesian::to_covariant(const IR3 &A, const IR3 &q) const {
 	return A;
 }
-IR3 morphism_cartesian::to_contravariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism_cartesian::to_contravariant(const IR3 &A, const IR3 &q) const {
 	return A;
 }
-IR3 morphism_cartesian::from_covariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism_cartesian::from_covariant(const IR3 &A, const IR3 &q) const {
 	return A;
 }
-IR3 morphism_cartesian::from_contravariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism_cartesian::from_contravariant(const IR3 &A, const IR3 &q) const {
 	return A;
 }
 

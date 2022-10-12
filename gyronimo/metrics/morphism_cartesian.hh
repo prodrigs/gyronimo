@@ -26,7 +26,7 @@ namespace gyronimo {
 
 class morphism_cartesian : public morphism {
 public:
-	morphism_cartesian(double Lref);
+	morphism_cartesian();
 	virtual ~morphism_cartesian() override {};
 
 	virtual IR3 operator()(const IR3 &q) const override;
@@ -37,15 +37,12 @@ public:
 	virtual double jacobian(const IR3 &q) const override;
 	virtual dIR3 del_inverse(const IR3 &q) const override;
 
-	virtual IR3 to_covariant(const IR3 &q, const IR3 &A) const override;
-	virtual IR3 to_contravariant(const IR3 &q, const IR3 &A) const override;
-	virtual IR3 from_covariant(const IR3 &q, const IR3 &A) const override;
-	virtual IR3 from_contravariant(const IR3 &q, const IR3 &A) const override;
-
-	double Lref() const {return Lref_;};
+	virtual IR3 to_covariant(const IR3 &A, const IR3 &q) const override;
+	virtual IR3 to_contravariant(const IR3 &A, const IR3 &q) const override;
+	virtual IR3 from_covariant(const IR3 &A, const IR3 &q) const override;
+	virtual IR3 from_contravariant(const IR3 &A, const IR3 &q) const override;
 
 private:
-	double Lref_, iLref_, Lref_3_;
 };
 
 } // end namespace gyronimo

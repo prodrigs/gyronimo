@@ -22,14 +22,13 @@
 namespace gyronimo {
 
 metric_cartesian::metric_cartesian(const morphism_cartesian *morph) 
-	: metric_connected(morph), Lref_(morph->Lref()), 
-	Lref_2_(Lref_*Lref_), iLref_2_(1/Lref_2_) {
+	: metric_connected(morph) {
 }
 SM3 metric_cartesian::operator()(const IR3& r) const {
-	return {Lref_2_, 0.0, 0.0, Lref_2_, 0.0, Lref_2_};
+	return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
 }
 SM3 metric_cartesian::inverse(const IR3& r) const {
-	return {iLref_2_, 0.0, 0.0, iLref_2_, 0.0, iLref_2_};
+	return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
 }
 dSM3 metric_cartesian::del(const IR3& r) const {
 	return {
@@ -46,7 +45,7 @@ dSM3 metric_cartesian::del_inverse(const IR3& r) const {
 	};
 }
 double metric_cartesian::jacobian(const IR3& r) const {
-	return morph_->jacobian(r);
+	return 1.0;
 }
 IR3 metric_cartesian::del_jacobian(const IR3& r) const {
 	return {0.0, 0.0, 0.0};

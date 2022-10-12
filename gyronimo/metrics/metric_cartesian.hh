@@ -44,11 +44,8 @@ public:
 	virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
 	virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
 
-	double Lref() const {return Lref_;};
-
 private:
 	const morphism_cartesian *morph_;
-	double Lref_, Lref_2_, iLref_2_;
 };
 
 } // end namespace gyronimo.
