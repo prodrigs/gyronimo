@@ -1,5 +1,4 @@
-// ::gyronimo:: - gyromotion for the people, by the people -
-// An object-oriented library for gyromotion applications in plasma physics.
+// ::gyronimo:: - gyromotion for the people, by the people -, // An object-oriented library for gyromotion applications in plasma physics.
 // Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
@@ -59,7 +58,7 @@ dIR3 morphism::dual_basis(const IR3& q) const {
 	Implements the rule:
 	@f$ A_\alpha = \textbf{A} \cdot \textbf{e}_\alpha @f$
 */
-IR3 morphism::to_covariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism::to_covariant(const IR3 &A, const IR3 &q) const {
 	return contraction<first>(del(q), A);
 }
 
@@ -68,7 +67,7 @@ IR3 morphism::to_covariant(const IR3 &q, const IR3 &A) const {
 	Implements the rule:
 	@f$ A^\alpha = \textbf{A} \cdot \textbf{e}^\alpha @f$
 */
-IR3 morphism::to_contravariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism::to_contravariant(const IR3 &A, const IR3 &q) const {
 	return contraction<second>(del_inverse(q), A);
 }
 
@@ -77,7 +76,7 @@ IR3 morphism::to_contravariant(const IR3 &q, const IR3 &A) const {
 	Implements the rule:
 	@f$ \textbf{A} = A_\alpha \, \textbf{e}^\alpha @f$
 */
-IR3 morphism::from_covariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism::from_covariant(const IR3 &A, const IR3 &q) const {
 	return contraction<first>(del_inverse(q), A);
 }
 
@@ -86,7 +85,7 @@ IR3 morphism::from_covariant(const IR3 &q, const IR3 &A) const {
 	Implements the rule:
 	@f$ \textbf{A} = A^\alpha \, \textbf{e}_\alpha @f$
 */
-IR3 morphism::from_contravariant(const IR3 &q, const IR3 &A) const {
+IR3 morphism::from_contravariant(const IR3 &A, const IR3 &q) const {
 	return contraction<second>(del(q), A);
 }
 

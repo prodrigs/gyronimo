@@ -55,10 +55,10 @@ public:
 	virtual dIR3 tan_basis(const IR3& q) const;
 	virtual dIR3 dual_basis(const IR3& q) const;
 
-	virtual IR3 to_covariant(const IR3 &q, const IR3 &A) const;
-	virtual IR3 to_contravariant(const IR3 &q, const IR3 &A) const;
-	virtual IR3 from_covariant(const IR3 &q, const IR3 &A) const;
-	virtual IR3 from_contravariant(const IR3 &q, const IR3 &A) const;
+	virtual IR3 to_covariant(const IR3 &A, const IR3 &q) const;
+	virtual IR3 to_contravariant(const IR3 &A, const IR3 &q) const;
+	virtual IR3 from_covariant(const IR3 &A, const IR3 &q) const;
+	virtual IR3 from_contravariant(const IR3 &A, const IR3 &q) const;
 
 private:
 
