@@ -68,7 +68,7 @@ guiding_centre::state guiding_centre::operator()(
 // and \partial_t(\vec{B}) = B \partial_t(\vec{b}) + \vec{b}\partial_t B.
   IR3 curlb = inverseB*(
       Lref_*magnetic_field_->curl(position, Btime) -
-      cross_product(gradB, covariant_b, jacobian));
+      cross_product<contravariant>(gradB, covariant_b, jacobian));
   IR3 partial_t_b = inverseB*(
       Bfield_time_factor_*magnetic_field_->partial_t_covariant(
           position, Btime) -
@@ -83,7 +83,7 @@ guiding_centre::state guiding_centre::operator()(
 
   IR3 dot_X = prefactor*(vpp*contravariant_b +
       inverse_omega_tilde*(
-          vpp*vpp*curlb + cross_product(covariant_b, drifter, jacobian)));
+          vpp*vpp*curlb + cross_product<contravariant>(covariant_b, drifter, jacobian)));
   double dot_vpp = -prefactor*inner_product(
       contravariant_b + inverse_omega_tilde*vpp*curlb, drifter);
   return {dot_X[IR3::u], dot_X[IR3::v], dot_X[IR3::w], dot_vpp};

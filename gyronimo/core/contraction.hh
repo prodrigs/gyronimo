@@ -25,7 +25,12 @@
 
 namespace gyronimo {
 
+//! Identifies which component (`covariant` or `contravariant`) of the vector is being considered.
+enum representation {covariant, contravariant};
+
 IR3 contraction(const SM3& g, const IR3& B);
+IR3 cross_product(const IR3& A, const IR3& B);
+template<representation>
 IR3 cross_product(const IR3& A, const IR3& B, double jacobian);
 double inner_product(const IR3& A, const IR3& B);
 
