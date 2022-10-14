@@ -50,6 +50,9 @@ ddIR3 metric_cartesian::christoffel_second_kind(const IR3& r) const {
   return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
+IR3 metric_cartesian::inertial_force(const IR3& r, const IR3& vel) const {
+	return {0.0, 0.0, 0.0};
+}
 IR3 metric_cartesian::to_covariant(const IR3& B, const IR3& r) const {
   return B;
 }

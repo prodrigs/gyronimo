@@ -60,4 +60,13 @@ ddIR3 metric_cylindrical::christoffel_second_kind(const IR3& q) const {
       1 / q[IR3::u], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 }
 
-}  // end namespace gyronimo
+IR3 metric_cylindrical::inertial_force(const IR3& q, const IR3& vel) const {
+  ddIR3 CF2 = christoffel_second_kind(q);
+  return {
+    -CF2[ddIR3::uvv]*vel[IR3::v]*vel[IR3::v],
+    -2*CF2[ddIR3::vuv]*vel[IR3::u]*vel[IR3::v],
+    0.0
+  };
+}
+
+} // end namespace gyronimo

@@ -157,4 +157,15 @@ ddIR3 metric_covariant::christoffel_second_kind(const IR3& r) const {
       this->inverse(r), this->christoffel_first_kind(r));
 }
 
-}  // end namespace gyronimo.
+//! Implementation of the contravariant inertial force
+/*!
+    Implements the rule
+    @f$ F^\alpha = - \Gamma^\alpha_{\beta\gamma} \, v^\beta \, v^\gamma @f$
+    where `vel` must be contravariant
+*/
+IR3 metric_covariant::inertial_force(const IR3& r, const IR3& vel) const {
+  ddIR3 CF2 = christoffel_second_kind(r);
+  return (-1.0)*contraction<second,third>(CF2, vel, vel);
+}
+
+} // end namespace gyronimo.

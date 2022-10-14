@@ -40,6 +40,7 @@ class metric_cartesian : public metric_connected {
 
   virtual ddIR3 christoffel_first_kind(const IR3& r) const override;
   virtual ddIR3 christoffel_second_kind(const IR3& r) const override;
+  virtual IR3 inertial_force(const IR3& r, const IR3& vel) const;
 
   virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
