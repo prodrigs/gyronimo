@@ -42,6 +42,7 @@ class metric_cylindrical : public metric_connected {
 
   virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
   virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
+  virtual IR3 inertial_force(const IR3& q, const IR3& vel) const;
 
   double Lref() { return Lref_; };
 

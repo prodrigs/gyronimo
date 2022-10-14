@@ -86,5 +86,14 @@ ddIR3 metric_spherical::christoffel_second_kind(const IR3& q) const {
   return {0, 0, 0, -r, 0, -r * s * s,
       0, ir, 0, 0, 0, -s * c, 0,  0, ir, 0, c / s, 0};
 }
+IR3 metric_spherical::inertial_force(const IR3& q, const IR3& vel) const {
+	ddIR3 CF2 = christoffel_second_kind(q);
+	double Vu = vel[IR3::u], Vv = vel[IR3::v], Vw = vel[IR3::w];
+	return {
+		-(CF2[ddIR3::uvv]*Vv*Vv + CF2[ddIR3::uww]*Vw*Vw),
+		-(2*CF2[ddIR3::vuv]*Vu*Vv + CF2[ddIR3::vww]*Vw*Vw),
+		-2*(CF2[ddIR3::wuw]*Vu + CF2[ddIR3::wvw]*Vv)*Vw,
+	};
+}
 
 }  // end namespace gyronimo.
