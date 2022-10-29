@@ -20,7 +20,6 @@
 #ifndef GYRONIMO_METRIC_COVARIANT
 #define GYRONIMO_METRIC_COVARIANT
 
-#include <gyronimo/core/contraction.hh>
 #include <gyronimo/core/IR3algebra.hh>
 #include <gyronimo/core/SM3algebra.hh>
 

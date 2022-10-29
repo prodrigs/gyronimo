@@ -24,12 +24,28 @@ namespace gyronimo {
 morphism_cartesian::morphism_cartesian() 
 	: morphism() {
 }
+
+//! Cartesian coordinates map identity transformation @f$ \left( q^1, q^2, q^3 \right) = \left( x, y, z \right) @f$.
 IR3 morphism_cartesian::operator()(const IR3 &q) const {
-	return {q[IR3::u], q[IR3::v], q[IR3::w]};
+	return q;
 }
+
+//! Inverse map is identity transformation.
 IR3 morphism_cartesian::inverse(const IR3 &x) const {
-	return {x[IR3::u], x[IR3::v], x[IR3::w]};
+	return x;
 }
+
+//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ \textbf{x} @f$.
+/*!
+	Implements the coordinate transformation's first derivatives:
+	@f{gather*}{
+		\begin{aligned}
+			\textbf{e}_x &= \left( 1,0,0 \right) \\
+			\textbf{e}_y &= \left( 0,1,0 \right) \\
+			\textbf{e}_Z &= \left( 0,0,1 \right)
+		\end{aligned}
+    @f}
+*/
 dIR3 morphism_cartesian::del(const IR3 &q) const {
 	return {
 		1.0, 0.0, 0.0,
@@ -37,6 +53,8 @@ dIR3 morphism_cartesian::del(const IR3 &q) const {
 		0.0, 0.0, 1.0
 	};
 }
+
+//! Returns the morphism's second derivatives, calculated in point @f$ \textbf{x} @f$.
 ddIR3 morphism_cartesian::ddel(const IR3 &q) const {
 	return {
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -44,9 +62,27 @@ ddIR3 morphism_cartesian::ddel(const IR3 &q) const {
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 	};
 }
+
+//! General-purpose implementation of the Jacobian of the transformation in point @f$ \textbf{x} @f$.
+/*!
+	Implements the Jacobian in cartesian coordinates: 
+	@f$ J = 1 @f$
+*/
 double morphism_cartesian::jacobian(const IR3 &q) const {
 	return 1.0;
 }
+
+//! Returns the morphism's inverse derivatives, correspondent to the contravariant basis vectors in point @f$ \textbf{x} @f$.
+/*!
+	Implements the inverse transformation's first derivatives:
+	@f{gather*}{
+		\begin{aligned}
+			\textbf{e}^x &= \left( 1,0,0 \right) \\
+			\textbf{e}^y &= \left( 0,1,0 \right) \\
+			\textbf{e}^Z &= \left( 0,0,1 \right)
+		\end{aligned}
+    @f}
+*/
 dIR3 morphism_cartesian::del_inverse(const IR3 &q) const {
 	return {
 		1.0, 0.0, 0.0,
@@ -54,6 +90,7 @@ dIR3 morphism_cartesian::del_inverse(const IR3 &q) const {
 		0.0, 0.0, 1.0
 	};
 }
+
 IR3 morphism_cartesian::to_covariant(const IR3 &A, const IR3 &q) const {
 	return A;
 }

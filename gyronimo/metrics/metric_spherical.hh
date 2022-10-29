@@ -49,8 +49,12 @@ class metric_spherical : public metric_connected {
 
   virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
   virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
-
+  
   double Lref() const {return Lref_;};
+
+  virtual const morphism_spherical* morph() const override {
+    return static_cast<const morphism_spherical*>(this->metric_connected::morph());
+  };
 
  private:
   const double Lref_, Lref_squared_;

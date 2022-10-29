@@ -29,11 +29,31 @@ metric_spherical::metric_spherical(const morphism_spherical *morph)
       Lref_cube_(Lref_*Lref_*Lref_), 
 	  iLref_squared_(1/Lref_squared_) {
 }
+
+//! General-purpose implementation of the covariant metric.
+/*!
+	Implements the covariant metric in spherical coordinates: 
+	@f$ g_{\alpha\beta} = \left(\begin{matrix}
+		L_{ref}^2 && 0 && 0 \\
+		0 && L_{ref}^2 \, R^2 && 0 \\
+		0 && 0 && L_{ref}^2 \, R^2 \, \sin^2 \theta
+	\end{matrix}\right) @f$
+*/
 SM3 metric_spherical::operator()(const IR3& r) const {
   double factor = Lref_squared_*r[IR3::u]*r[IR3::u];
   double sinv = std::sin(r[IR3::v]);
   return {Lref_squared_, 0.0, 0.0, factor, 0.0, factor*sinv*sinv};
 }
+
+//! General-purpose implementation of the inverse (i.e., contravariant metric).
+/*!
+	Implements the contravariant metric in spherical coordinates: 
+	@f$ g^{\alpha\beta} = \left(\begin{matrix}
+		\frac{1}{L_{ref}^2} && 0 && 0 \\
+		0 && \frac{1}{L_{ref}^2 \, R^2} && 0 \\
+		0 && 0 && \frac{1}{L_{ref}^2 \, R^2 \, \sin^2 \theta}
+	\end{matrix}\right) @f$
+*/
 SM3 metric_spherical::inverse(const IR3& r) const {
   double ifactor = iLref_squared_/(r[IR3::u]*r[IR3::u]);
   double isinv = 1/std::sin(r[IR3::v]);
@@ -50,9 +70,23 @@ dSM3 metric_spherical::del(const IR3& r) const {
       0.0, 0.0, 0.0, // d_i g_vw
       factor*sinv*sinv, factor*r[IR3::u]*sinv*cosv, 0.0}; // d_i g_ww
 }
+
+//! General-purpose implementation of the Jacobian of the transformation in point @f$ q^\alpha @f$.
+/*!
+	Implements the Jacobian in spherical coordinates: 
+	@f$ J = L_{ref}^3 \, R^2 \, \sin \theta @f$
+*/
 double metric_spherical::jacobian(const IR3& r) const {
   return Lref_cube_*r[IR3::u]*r[IR3::u]*std::sin(r[IR3::v]);
 }
+
+//! General-purpose implementation of the Jacobian gradient in point @f$ q^\alpha @f$.
+/*!
+	Implements the Jacobian gradient in spherical coordinates: 
+	@f$ \nabla J = \left( L_{ref}\,r\,\cos\phi\,(1+\sin^2\theta), 
+	L_{ref}\,r\,\sin\phi\,(1+\sin^2\theta), 
+	L_{ref}\,r\,\sin\theta\,\cos\theta \right) @f$
+*/
 IR3 metric_spherical::del_jacobian(const IR3& r) const {
   double cosv = std::cos(r[IR3::v]), sinv = std::sin(r[IR3::v]);
   double cosw = std::cos(r[IR3::w]), sinw = std::sin(r[IR3::w]);
