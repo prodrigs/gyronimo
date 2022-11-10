@@ -46,7 +46,7 @@ public:
 	double Lref() {return Lref_;};
 
 	virtual const morphism_cylindrical* morph() const override {
-		return static_cast<const morphism_cylindrical*>(this->metric_connected::morph());
+		return static_cast<const morphism_cylindrical*>(morph_);
 	};
 
 private:

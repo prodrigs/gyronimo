@@ -99,7 +99,7 @@ IR3 metric_connected::del_jacobian(const IR3& r) const {
 		ee[dIR3::vu] * de[ddIR3::uvw] + ee[dIR3::vv] * de[ddIR3::vvw] + ee[dIR3::vw] * de[ddIR3::wvw] + 
 		ee[dIR3::wu] * de[ddIR3::uww] + ee[dIR3::wv] * de[ddIR3::vww] + ee[dIR3::ww] * de[ddIR3::www]
 	};
-	return (J * contraction<first>(ee, con));
+	return (J * con);
 }
 
 //! Implementation of Christoffel symbols of the first kind @f$ \Gamma_{\alpha\beta\gamma} @f$

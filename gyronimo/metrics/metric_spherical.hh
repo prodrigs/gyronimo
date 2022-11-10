@@ -53,7 +53,7 @@ class metric_spherical : public metric_connected {
   double Lref() const {return Lref_;};
 
   virtual const morphism_spherical* morph() const override {
-    return static_cast<const morphism_spherical*>(this->metric_connected::morph());
+    return static_cast<const morphism_spherical*>(morph_);
   };
 
  private:

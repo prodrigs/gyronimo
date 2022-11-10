@@ -33,42 +33,38 @@ double metric_covariant::jacobian(const IR3& r) const {
 
 //! General-purpose implementation of the Jacobian gradient.
 IR3 metric_covariant::del_jacobian(const IR3& r) const {
-  SM3 g = (*this)(r);
-  dSM3 dg = this->del(r);
-  return {
-      2.0*g[SM3::vw]*(
-          g[SM3::uw]*dg[dSM3::uvu] +
-          g[SM3::uv]*dg[dSM3::uwu] - g[SM3::uu]*dg[dSM3::vwu]) -
-      g[SM3::uv]*g[SM3::uv]*dg[dSM3::wwu] + g[SM3::vv]*(
-          g[SM3::ww]*dg[dSM3::uuu] -
-          2.0*g[SM3::uw]*dg[dSM3::uwu] + g[SM3::uu]*dg[dSM3::wwu]) -
-      g[SM3::vw]*g[SM3::vw]*dg[dSM3::uuu] -
-      2.0*g[SM3::uv]*g[SM3::ww]*dg[dSM3::uvu] - 
-      g[SM3::uw]*g[SM3::uw]*dg[dSM3::vvu] +
-      g[SM3::uu]*g[SM3::ww]*dg[dSM3::vvu] + 
-      2.0*g[SM3::uv]*g[SM3::uw]*dg[dSM3::vwu],
-      2.0*g[SM3::vw]*(
-          g[SM3::uw]*dg[dSM3::uvv] +
-          g[SM3::uv]*dg[dSM3::uwv] - g[SM3::uu]*dg[dSM3::vwv]) -
-      g[SM3::uv]*g[SM3::uv]*dg[dSM3::wwv] + g[SM3::vv]*(
-          g[SM3::ww]*dg[dSM3::uuv] -
-          2.0*g[SM3::uw]*dg[dSM3::uwv] + g[SM3::uu]*dg[dSM3::wwv]) -
-      g[SM3::vw]*g[SM3::vw]*dg[dSM3::uuv] -
-      2.0*g[SM3::uv]*g[SM3::ww]*dg[dSM3::uvv] - 
-      g[SM3::uw]*g[SM3::uw]*dg[dSM3::vvv] +
-      g[SM3::uu]*g[SM3::ww]*dg[dSM3::vvv] + 
-      2.0*g[SM3::uv]*g[SM3::uw]*dg[dSM3::vwv],
-      2.0*g[SM3::vw]*(
-          g[SM3::uw]*dg[dSM3::uvw] +
-          g[SM3::uv]*dg[dSM3::uww] - g[SM3::uu]*dg[dSM3::vww]) -
-      g[SM3::uv]*g[SM3::uv]*dg[dSM3::www] + g[SM3::vv]*(
-          g[SM3::ww]*dg[dSM3::uuw] -
-          2.0*g[SM3::uw]*dg[dSM3::uww] + g[SM3::uu]*dg[dSM3::www]) -
-      g[SM3::vw]*g[SM3::vw]*dg[dSM3::uuw] -
-      2.0*g[SM3::uv]*g[SM3::ww]*dg[dSM3::uvw] - 
-      g[SM3::uw]*g[SM3::uw]*dg[dSM3::vvw] +
-      g[SM3::uu]*g[SM3::ww]*dg[dSM3::vvw] + 
-      2.0*g[SM3::uv]*g[SM3::uw]*dg[dSM3::vww]};
+	SM3 g = (*this)(r);
+	dSM3 dg = this->del(r);
+	double ijacobian = 1.0 / this->jacobian(r);
+	
+	IR3 aux_1a = {g[SM3::uw]*g[SM3::vw], g[SM3::uv]*g[SM3::vw], g[SM3::uv]*g[SM3::uw]};
+	dIR3 aux_1b = {
+		dg[dSM3::uvu], dg[dSM3::uwu], dg[dSM3::vwu],
+		dg[dSM3::uvv], dg[dSM3::uwv], dg[dSM3::vwv],
+		dg[dSM3::uvw], dg[dSM3::uww], dg[dSM3::vww]
+	};
+	IR3 aux_1 = contraction<second>(aux_1b, aux_1a);
+	
+	IR3 aux_2a = {g[SM3::vv]*g[SM3::ww], g[SM3::uu]*g[SM3::ww], g[SM3::uu]*g[SM3::vv]};
+	dIR3 aux_2b = {
+		dg[dSM3::uuu], dg[dSM3::vvu], dg[dSM3::wwu],
+		dg[dSM3::uuv], dg[dSM3::vvv], dg[dSM3::wwv],
+		dg[dSM3::uuw], dg[dSM3::vvw], dg[dSM3::www]
+	};
+	IR3 aux_2 = contraction<second>(aux_2b, aux_2a);
+	
+	IR3 aux_3a = {g[SM3::uu]*g[SM3::vw], g[SM3::vv]*g[SM3::uw], g[SM3::ww]*g[SM3::uv]};
+	dIR3 aux_3b = {
+		dg[dSM3::vwu], dg[dSM3::uwu], dg[dSM3::uvu],
+		dg[dSM3::vwv], dg[dSM3::uwv], dg[dSM3::uvv],
+		dg[dSM3::vww], dg[dSM3::uww], dg[dSM3::uvw]
+	};
+	IR3 aux_3 = contraction<second>(aux_3b, aux_3a);
+	
+	IR3 aux_4a = {g[SM3::vw]*g[SM3::vw], g[SM3::uw]*g[SM3::uw], g[SM3::uv]*g[SM3::uv]};
+	IR3 aux_4 = contraction<second>(aux_2b, aux_4a);
+
+	return ijacobian * (aux_1 + 0.5*aux_2 - aux_3 - 0.5*aux_4);
 }
 
 //! General-purpose product of a covariant metric and a contravariant vector.

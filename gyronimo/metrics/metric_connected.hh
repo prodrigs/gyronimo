@@ -43,7 +43,7 @@ public:
 
 	virtual const morphism* morph() const {return morph_;};
 
-private:
+protected:
 	const morphism *morph_;
 };
 

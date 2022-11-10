@@ -45,11 +45,10 @@ public:
 	virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
 
 	virtual const morphism_cartesian* morph() const override {
-		return static_cast<const morphism_cartesian*>(this->metric_connected::morph());
+		return static_cast<const morphism_cartesian*>(morph_);
 	};
 
 private:
-	const morphism_cartesian *morph_;
 };
 
 } // end namespace gyronimo.

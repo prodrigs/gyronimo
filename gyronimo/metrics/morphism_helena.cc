@@ -115,7 +115,7 @@ std::tuple<double, double> morphism_helena::reflection_past_axis(
 	if(s < 0)
 		return {-s, parser_->reduce_chi(chi + std::numbers::pi)};
 	else
-		return {s, chi};
+		return {s, parser_->reduce_chi(chi)};
 }
 
 } // end namespace gyronimo

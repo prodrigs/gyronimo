@@ -57,7 +57,7 @@ class metric_helena : public metric_connected {
   const parser_helena* parser() const {return parser_;};
 
   virtual const morphism_helena* morph() const override {
-    return static_cast<const morphism_helena*>(this->metric_connected::morph());
+    return static_cast<const morphism_helena*>(morph_);
   };
 
  private:

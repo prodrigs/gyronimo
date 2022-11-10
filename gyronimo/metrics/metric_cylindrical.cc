@@ -75,7 +75,7 @@ double metric_cylindrical::jacobian(const IR3& q) const {
 	@f$ \nabla J = \left( L_{ref}^2\,\cos\phi, L_{ref}^2\,\sin\phi, 0 \right) @f$
 */
 IR3 metric_cylindrical::del_jacobian(const IR3& q) const {
-	return {Lref_2_*std::cos(q[IR3::v]), Lref_2_*std::sin(q[IR3::v]), 0.0};
+	return {Lref_3_, 0.0, 0.0};
 }
 
 IR3 metric_cylindrical::to_covariant(const IR3& B, const IR3& q) const {
