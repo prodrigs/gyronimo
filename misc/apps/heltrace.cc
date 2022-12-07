@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
   gyronimo::bicubic_gsl_factory ifactory(false,
       (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
   gyronimo::morphism_helena m(&hmap, &ifactory);
-  gyronimo::metric_helena g(&m);
+  gyronimo::metric_helena g(&m, &ifactory);
   gyronimo::equilibrium_helena heq(&g, &ifactory);
 
 // Reads parameters from the command line:

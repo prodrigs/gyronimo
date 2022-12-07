@@ -30,8 +30,8 @@ namespace gyronimo {
 //! Morphism from `HELENA` curvilinear coordinates.
 class morphism_helena : public morphism {
 public:
-	morphism_helena(
-		const parser_helena *parser, const interpolator2d_factory *ifactory);
+	morphism_helena(const parser_helena *parser, 
+		const interpolator2d_factory *ifactory);
 	virtual ~morphism_helena() override;
 	virtual IR3 operator()(const IR3& q) const override;
 	virtual IR3 inverse(const IR3& x) const override;
@@ -40,10 +40,8 @@ public:
 
 	virtual double jacobian(const IR3 &q) const override;
 	const parser_helena* parser() const {return parser_;};
-	const interpolator2d_factory* ifactory() const {return ifactory_;};
 private:
 	const parser_helena *parser_;
-	const interpolator2d_factory *ifactory_;
 	interpolator2d *R_, *z_;
 	std::tuple<double, double> reflection_past_axis(double s, double chi) const;
 };

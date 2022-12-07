@@ -45,7 +45,7 @@ namespace gyronimo{
 */
 class metric_helena : public metric_connected {
  public:
-  metric_helena(const morphism_helena *morph);
+  metric_helena(const morphism_helena *morph, const interpolator2d_factory *ifactory);
   virtual ~metric_helena() override;
 
   virtual SM3 operator()(const IR3& position) const override;
@@ -62,7 +62,6 @@ class metric_helena : public metric_connected {
 
  private:
   const parser_helena* parser_;
-  const interpolator2d_factory *ifactory_;
   interpolator2d *guu_, *guv_, *gvv_, *gww_;
   double R0_, squaredR0_;
 };

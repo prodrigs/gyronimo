@@ -25,7 +25,7 @@ namespace gyronimo{
 
 morphism_helena::morphism_helena(
 		const parser_helena *p, const interpolator2d_factory *ifactory)
-		: parser_(p), ifactory_(ifactory), R_(nullptr), z_(nullptr) {
+		: parser_(p), R_(nullptr), z_(nullptr) {
 	double Rgeo = p->rgeo();
 	double a = p->eps()*Rgeo;
 	dblock_adapter s_range(p->s()), chi_range(p->chi());

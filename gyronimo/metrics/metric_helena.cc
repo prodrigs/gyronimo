@@ -23,20 +23,19 @@
 
 namespace gyronimo{
 
-metric_helena::metric_helena(const morphism_helena *morph)
-    : metric_connected(morph),
-	  parser_(morph->parser()), ifactory_(morph->ifactory()), 
-	  R0_(parser_->rmag()), 
-	  squaredR0_(parser_->rmag()*parser_->rmag()),
+metric_helena::metric_helena(const morphism_helena *morph, const interpolator2d_factory *ifactory)
+    : metric_connected(morph), parser_(morph->parser()), 
+      R0_(parser_->rmag()), 
+      squaredR0_(parser_->rmag()*parser_->rmag()),
       guu_(nullptr), guv_(nullptr), gvv_(nullptr), gww_(nullptr) {
   dblock_adapter s_range(parser_->s()), chi_range(parser_->chi());
-  guu_ = ifactory_->interpolate_data(
+  guu_ = ifactory->interpolate_data(
       s_range, chi_range, dblock_adapter(parser_->covariant_g11()));
-  guv_ = ifactory_->interpolate_data(
+  guv_ = ifactory->interpolate_data(
       s_range, chi_range, dblock_adapter(parser_->covariant_g12()));
-  gvv_ = ifactory_->interpolate_data(
+  gvv_ = ifactory->interpolate_data(
       s_range, chi_range, dblock_adapter(parser_->covariant_g22()));
-  gww_ = ifactory_->interpolate_data(
+  gww_ = ifactory->interpolate_data(
       s_range, chi_range, dblock_adapter(parser_->covariant_g33()));
 }
 metric_helena::~metric_helena() {
