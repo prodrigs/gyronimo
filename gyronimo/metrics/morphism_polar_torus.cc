@@ -144,7 +144,7 @@ double morphism_polar_torus::jacobian(const IR3 &q) const {
     @f}
 */
 dIR3 morphism_polar_torus::del_inverse(const IR3 &q) const {
-	double r = q[IR3::u];
+	double r = q[IR3::u], ir = 1.0/q[IR3::u];
 	double cn_theta = std::cos(q[IR3::v]);
 	double sn_theta = std::sin(q[IR3::v]);
 	double cn_phi = std::cos(q[IR3::w]);
@@ -152,9 +152,9 @@ dIR3 morphism_polar_torus::del_inverse(const IR3 &q) const {
 	double R = major_radius_*(1.0 + iaspect_ratio_*r*cn_theta);
 	double iR = 1.0 / R;
 	double ia_cn = iminor_radius_*cn_theta;
-	double iar_cn = r * ia_cn;
+	double iar_cn = ir * ia_cn;
 	double ia_sn = iminor_radius_*sn_theta;
-	double iar_sn = r * ia_sn;
+	double iar_sn = ir * ia_sn;
 	return {
 		  ia_cn * cn_phi, -ia_cn * sn_phi,  ia_sn,
 		-iar_sn * cn_phi, iar_sn * sn_phi, iar_cn,
