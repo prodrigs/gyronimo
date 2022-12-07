@@ -20,7 +20,8 @@
 #ifndef GYRONIMO_METRIC_POLAR_TORUS
 #define GYRONIMO_METRIC_POLAR_TORUS
 
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/metric_connected.hh>
+#include <gyronimo/metrics/morphism_polar_torus.hh>
 
 namespace gyronimo {
 
@@ -34,12 +35,13 @@ namespace gyronimo {
     units. Inherited methods `Jacobian`, `to_covariant`, and `to_contravariant`
     are overriden for efficiency.
 */
-class metric_polar_torus : public metric_covariant {
+class metric_polar_torus : public metric_connected {
  public:
-  metric_polar_torus(const double minor_radius, double major_radius);
+  metric_polar_torus(const morphism_polar_torus *morph);
   virtual ~metric_polar_torus() override {};
 
   virtual SM3 operator()(const IR3& r) const override;
+  virtual SM3 inverse(const IR3& r) const override;
   virtual dSM3 del(const IR3& r) const override;
 
   virtual double jacobian(const IR3& r) const override;
@@ -52,7 +54,8 @@ class metric_polar_torus : public metric_covariant {
 
  private:
   const double minor_radius_, major_radius_;
-  const double minor_radius_squared_, major_radius_squared_, iaspect_ratio_;
+  const double minor_radius_squared_, iminor_radius_squared_;
+  const double major_radius_squared_, iaspect_ratio_;
 };
 
 } // end namespace gyronimo.

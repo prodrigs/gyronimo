@@ -22,13 +22,25 @@
 
 namespace gyronimo {
 
-metric_polar_torus::metric_polar_torus(
-    const double minor_radius, double major_radius)
-    : minor_radius_(minor_radius), major_radius_(major_radius),
+metric_polar_torus::metric_polar_torus(const morphism_polar_torus *morph)
+    : metric_connected(morph),
+      minor_radius_(morph->minor_radius()), 
+      major_radius_(morph->major_radius()),
       minor_radius_squared_(minor_radius_*minor_radius_),
+      iminor_radius_squared_(1.0/minor_radius_squared_),
       major_radius_squared_(major_radius_*major_radius_),
-      iaspect_ratio_(minor_radius_/major_radius_) {
+      iaspect_ratio_(morph->iaspect_ratio()) {
 }
+
+//! General-purpose implementation of the covariant metric.
+/*!
+	Implements the covariant metric in polar torus coordinates: 
+	@f$ g_{\alpha\beta} = \left(\begin{matrix}
+		a^2 && 0 && 0 \\
+		0 && a^2 \, r^2 && 0 \\
+		0 && 0 && \left( R_0 + a \, r \, \cos \theta \right)^2
+	\end{matrix}\right) @f$
+*/
 SM3 metric_polar_torus::operator()(const IR3& r) const {
   double u = r[IR3::u], v = r[IR3::v];
   double R = major_radius_*(1.0 + iaspect_ratio_*u*std::cos(v));
@@ -36,6 +48,23 @@ SM3 metric_polar_torus::operator()(const IR3& r) const {
            minor_radius_squared_*u*u, 0.0,
                                       R*R};
 }
+
+//! General-purpose implementation of the covariant metric.
+/*!
+	Implements the covariant metric in polar torus coordinates: 
+	@f$ g_{\alpha\beta} = \left(\begin{matrix}
+		\frac{1}{a^2} && 0 && 0 \\
+		0 && \frac{1}{a^2 \, r^2} && 0 \\
+		0 && 0 && \frac{1}{\left( R_0 + a \, r \, \cos \theta \right)^2}
+	\end{matrix}\right) @f$
+*/
+SM3 metric_polar_torus::inverse(const IR3& r) const {
+  double u = r[IR3::u], v = r[IR3::v];
+  double R = major_radius_*(1.0 + iaspect_ratio_*u*std::cos(v));
+  return {iminor_radius_squared_, 0.0, 0.0,
+          iminor_radius_squared_/(u*u), 0.0, 1.0/(R*R)};
+}
+
 dSM3 metric_polar_torus::del(const IR3& r) const {
   double u = r[IR3::u];
   double v = r[IR3::v];
