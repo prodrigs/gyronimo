@@ -24,62 +24,60 @@
 // - [boost](https://www.boost.org), the boost library.
 // - [netcdf-c++4] (https://github.com/Unidata/netcdf-cxx4.git).
 
+#include <gyronimo/core/codata.hh>
+#include <gyronimo/dynamics/guiding_centre.hh>
+#include <gyronimo/dynamics/odeint_adapter.hh>
+#include <gyronimo/fields/equilibrium_vmec.hh>
+#include <gyronimo/interpolators/cubic_gsl.hh>
+#include <gyronimo/parsers/parser_vmec.hh>
+#include <gyronimo/version.hh>
+
+#include <boost/numeric/odeint/integrate/integrate_const.hpp>
+#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
+
+#include <argh.h>
 #include <cmath>
 #include <iostream>
 
-#include <argh.h>
-#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
-#include <boost/numeric/odeint/integrate/integrate_const.hpp>
-
-#include <gyronimo/version.hh>
-#include <gyronimo/core/codata.hh>
-#include <gyronimo/parsers/parser_vmec.hh>
-#include <gyronimo/fields/equilibrium_vmec.hh>
-#include <gyronimo/interpolators/cubic_gsl.hh>
-#include <gyronimo/dynamics/guiding_centre.hh>
-#include <gyronimo/dynamics/odeint_adapter.hh>
+using namespace gyronimo;
 
 void print_help() {
-  std::cout << "vmectrace, powered by ::gyronimo::v"
-      << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
-  std::cout << "usage: vmectrace [options] vmec_netcdf_file\n";
-  std::cout <<
-      "reads a vmec output file, prints the required orbit to stdout.\n";
-  std::cout << "options:\n";
-  std::cout << "  -lref=val      Reference length (in si, default 1).\n";
-  std::cout << "  -vref=val      Reference velocity (in si, default 1).\n";
-  std::cout << "  -mass=val      Particle mass (in m_proton, default 1).\n";
-  std::cout << "  -flux=val      Initial toroidal flux (vmec, default 0.5).\n";
-  std::cout << "  -zeta=val      Initial zeta (vmec in rad, default 0).\n";
-  std::cout << "  -theta=val     Initial theta (vmec in rad, default 0).\n";
-  std::cout << "  -energy=val    Energy value (in eV, default 1).\n";
-  std::cout << "  -lambda=val    Lambda value, signed as v_par (default 1).\n";
-  std::cout << "  -tfinal=val    Time limit (in lref/vref, default 1).\n";
-  std::cout << "  -charge=val    Particle charge (in q_proton, default 1).\n";
-  std::cout << "  -nsamples=val  Number of orbit samples (default 512).\n";
-  std::cout << "Note: lambda=magnetic_moment_si*B_axis_si/energy_si.\n";
+  std::cout << "vmectrace, powered by ::gyronimo::v" << gyronimo::version_major
+            << "." << gyronimo::version_minor << ".\n";
+  std::string help_message =
+      "usage: vmectrace [options] vmec_netcdf_file\n"
+      "reads a vmec output file, prints guiding-centre orbit to stdout.\n"
+      "options:\n"
+      "  -lref= Reference length (in si, default 1).\n"
+      "  -vref= Reference velocity (in si, default 1).\n"
+      "  -flux= Initial toroidal flux (vmec, default 0.5).\n"
+      "  -mass= Particle mass (in m_proton, default 1).\n"
+      "  -charge=\n"
+      "         Particle charge (in q_proton, default 1).\n"
+      "  -zeta=, -theta=\n"
+      "         Initial zeta and theta (vmec angles in rad, default 0).\n"
+      "  -energy=, -lambda=\n"
+      "         Energy (eV) and lambda signed as v_parallel (default 1).\n"
+      "  -tfinal=, -samples=\n"
+      "         Time limit (lref/vref, default 1) and samples (default 512).\n"
+      "  Note: lambda=magnetic_moment_si*B_axis_si/energy_si.\n";
+  std::cout << help_message;
   std::exit(0);
 }
 
-// ODEInt observer object to print diagnostics at each time step.
-using namespace gyronimo;
 class orbit_observer {
  public:
-  orbit_observer(
-      const equilibrium_vmec* e, const guiding_centre* g)
-    : eq_pointer_(e), gc_pointer_(g) {};
+  orbit_observer(const equilibrium_vmec* e, const guiding_centre* g)
+      : eq_pointer_(e), gc_pointer_(g) {};
   void operator()(const guiding_centre::state& s, double t) {
     IR3 q = gc_pointer_->get_position(s);
     IR3 c = eq_pointer_->metric()->transform2cylindrical(q);
     double R = c[IR3::u], phi = c[IR3::v], z = c[IR3::w];
-    double x = R*std::cos(phi), y = R*std::sin(phi);
-    std::cout << t << " "
-        << q[IR3::u] << " "
-        << q[IR3::v] << " "
-        << q[IR3::w] << " "
-        << gc_pointer_->energy_perpendicular(s, t) << " "
-        << gc_pointer_->energy_parallel(s) << " " 
-        << x << " " << y << " " << z << "\n";
+    double x = R * std::cos(phi), y = R * std::sin(phi);
+    std::cout << t << " " << q[IR3::u] << " " << q[IR3::v] << " " << q[IR3::w]
+              << " " << gc_pointer_->energy_perpendicular(s, t) << " "
+              << gc_pointer_->energy_parallel(s) << " " << x << " " << y << " "
+              << z << '\n';
   };
  private:
   const equilibrium_vmec* eq_pointer_;
@@ -98,49 +96,48 @@ int main(int argc, char* argv[]) {
   metric_vmec g(&parser, &ifactory);
   equilibrium_vmec veq(&g, &ifactory);
 
-// Reads parameters from the command line:
-  double flux; command_line("flux", 0.5) >> flux;
-  double zeta; command_line("zeta", 0.0) >> zeta;
-  double mass; command_line("mass", 1.0) >> mass;
-  double lref; command_line("lref", 1.0) >> lref;
-  double vref; command_line("vref", 1.0) >> vref;
-  double theta; command_line("theta", 0.0) >> theta;
-  double tfinal; command_line("tfinal", 1.0) >> tfinal;
-  double charge; command_line("charge", 1.0) >> charge;
-  double energy; command_line("energy", 1.0) >> energy;
-  double lambda; command_line("lambda", 1.0) >> lambda;
+  double flux, zeta, mass, lref, vref, theta, tfinal, charge, energy, lambda;
+  command_line("flux", 0.5) >> flux;
+  command_line("zeta", 0.0) >> zeta;
+  command_line("mass", 1.0) >> mass;
+  command_line("lref", 1.0) >> lref;
+  command_line("vref", 1.0) >> vref;
+  command_line("theta", 0.0) >> theta;
+  command_line("tfinal", 1.0) >> tfinal;
+  command_line("charge", 1.0) >> charge;
+  command_line("energy", 1.0) >> energy;
+  command_line("lambda", 1.0) >> lambda;
   double vpp_sign = std::copysign(1.0, lambda);  // lambda carries vpp sign.
   lambda = std::abs(lambda);  // once vpp sign is stored, lambda turns unsigned.
 
-  double energy_ref = 0.5*codata::m_proton*mass*vref*vref;
-  double energy_si = energy*codata::e;
-  guiding_centre gc(lref, vref, charge/mass, lambda*energy_si/energy_ref, &veq);
+  double energy_ref = 0.5 * codata::m_proton * mass * vref * vref;
+  double energy_si = energy * codata::e;
+  guiding_centre gc(
+      lref, vref, charge / mass, lambda * energy_si / energy_ref, &veq);
   guiding_centre::state initial_state = gc.generate_state(
-      {flux, zeta, theta}, energy_si/energy_ref,
-          (vpp_sign > 0 ?  guiding_centre::plus : guiding_centre::minus));
+      {flux, zeta, theta}, energy_si / energy_ref,
+      (vpp_sign > 0 ? guiding_centre::plus : guiding_centre::minus));
 
-// Prints output header:
-  std::cout << "# vmectrace, powered by ::gyronimo::v"
-      << version_major << "." << version_minor << ".\n";
+  std::cout << "# vmectrace, powered by ::gyronimo::v" << version_major << "."
+            << version_minor << ".\n";
   std::cout << "# args: ";
-  for(int i = 1; i < argc; i++) std::cout << argv[i] << " ";
+  for (int i = 1; i < argc; i++) std::cout << argv[i] << " ";
   std::cout << std::endl
-      << "# E_ref: " << energy_ref << " [J]"
-          << " B_axis: " << veq.m_factor() << " [T]"
-              << " mu_tilde: " << gc.mu_tilde() << "\n";
-  std::cout <<
-      "# vars: t flux zeta theta E_perp/E_ref E_parallel/E_ref x y z\n";
+            << "# E_ref: " << energy_ref << " [J]"
+            << " B_axis: " << veq.m_factor() << " [T]"
+            << " mu_tilde: " << gc.mu_tilde() << '\n';
+  std::cout << "# vars: t flux zeta theta E_perp/E_ref E_parallel/E_ref x y "
+               "z\n";
 
-// integrates for t in [0,tfinal], with dt=tfinal/nsamples, using RK4.
   std::cout.precision(16);
   std::cout.setf(std::ios::scientific);
-  orbit_observer observer(&veq, &gc);
-  std::size_t nsamples; command_line("nsamples", 512) >> nsamples;
+  size_t nsamples;
+  command_line("samples", 512) >> nsamples;
   boost::numeric::odeint::runge_kutta4<guiding_centre::state>
       integration_algorithm;
   boost::numeric::odeint::integrate_const(
-      integration_algorithm, odeint_adapter(&gc),
-      initial_state, 0.0, tfinal, tfinal/nsamples, observer);
+      integration_algorithm, odeint_adapter(&gc), initial_state, 0.0, tfinal,
+      tfinal / nsamples, orbit_observer(&veq, &gc));
 
   return 0;
 }
