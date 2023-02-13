@@ -71,7 +71,7 @@ IR3 morphism_helena::inverse(const IR3& X) const {
 			return IR2({(*R_)(s, chi) - R, (*z_)(s, chi) - z});
 		};
 	IR2 guess = {0.5, std::atan2(z, R - parser_->rmag())};
-	IR2 roots = multiroot(1.0e-15, 100)(zero_function, guess);
+	IR2 roots = multiroot(1.0e-13, 100)(zero_function, guess);
 	auto [s, chi] = reflection_past_axis(roots[0], roots[1]);
 	return {s, chi, std::atan2(-y, x)};
 }
@@ -80,10 +80,10 @@ IR3 morphism_helena::inverse(const IR3& X) const {
 dIR3 morphism_helena::del(const IR3& q) const {
 	double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]), phi = q[IR3::w];
 	double R = (*R_)(s, chi),
-		Ru = (*R_).partial_u(s, chi), Rv = (*R_).partial_v(s, chi);
+		Ru = R_->partial_u(s, chi), Rv = R_->partial_v(s, chi);
 	double cos = std::cos(phi), sin = std::sin(phi);
 	return {Ru*cos, Rv*cos, -R*sin, -Ru*sin, -Rv*sin, -R*cos,
-		(*z_).partial_u(s, chi), (*z_).partial_v(s, chi), 0.0};
+		z_->partial_u(s, chi), z_->partial_v(s, chi), 0.0};
 }
 
 //! Returns the morphism's second derivatives, calculated in point @f$ q^\alpha @f$.

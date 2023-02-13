@@ -63,6 +63,7 @@ IR3 morphism_vmec::operator()(const IR3& q) const {
 	double s = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
 	double R = 0.0, Z = 0.0;
 
+	#pragma omp parallel for reduction(+: R, Z)
 	for (size_t i = 0; i < xm_.size(); ++i) {  
 		double m = xm_[i], n = xn_[i];
 		double angle_mn = m*theta - n*zeta;
@@ -93,7 +94,7 @@ IR3 morphism_vmec::inverse(const IR3& X) const {
 	IR3 axis = transform2cylindrical({0, zeta, 0});
 	double R0 = axis[IR3::u], Z0 = axis[IR3::w];
 	IR2 guess = {0.5, std::atan2(z-Z0, r-R0)};
-	IR2 roots = multiroot(1.0e-15, 100)(zero_function, guess);
+	IR2 roots = multiroot(1.0e-13, 100)(zero_function, guess);
 	auto [s, theta] = reflection_past_axis(roots[0], roots[1]);
 	return {s, zeta, theta};
 }
@@ -106,6 +107,7 @@ dIR3 morphism_vmec::del(const IR3& q) const {
 	double sn_zeta = std::sin(zeta);
 	double cn_zeta = std::cos(zeta);
 
+	#pragma omp parallel for reduction(+: R, dR_ds, dR_dtheta, dR_dzeta, dZ_ds, dZ_dtheta, dZ_dzeta)
 	for (size_t i = 0; i < xm_.size(); ++i) {  
 		double m = xm_[i]; double n = xn_[i];
 		double angle_mn = m*theta - n*zeta;
@@ -146,6 +148,7 @@ ddIR3 morphism_vmec::ddel(const IR3& q) const {
 	double d2Z_ds2 = 0.0, d2Z_dsdtheta = 0.0, d2Z_dsdzeta = 0.0;
 	double d2Z_dzeta2 = 0.0, d2Z_dzetadtheta = 0.0, d2Z_dtheta2 = 0.0;
 
+	#pragma omp parallel for reduction(+: R, dR_ds, dR_dtheta, dR_dzeta, d2R_ds2, d2R_dsdtheta, d2R_dsdzeta, d2R_dtheta2, d2R_dthetadzeta, d2R_dzeta2, Z, dZ_ds ,dZ_dtheta, dZ_dzeta, d2Z_ds2, d2Z_dsdtheta, d2Z_dsdzeta, d2Z_dtheta2, d2Z_dthetadzeta, d2Z_dzeta2)
 	for (size_t i = 0; i < xm_.size(); ++i) {  
 		double m = xm_[i]; double n = xn_[i];
 		double cosmn = std::cos( m*theta - n*zeta );
@@ -196,6 +199,7 @@ double morphism_vmec::jacobian(const IR3&q) const {
 	double sn_zeta = std::sin(zeta);
 	double cn_zeta = std::cos(zeta);
 
+	#pragma omp parallel for reduction(+: R, Z, dR_ds, dR_dtheta, dR_dzeta, dZ_ds, dZ_dtheta, dZ_dzeta)
 	for (size_t i = 0; i < xm_.size(); ++i) {  
 		double m = xm_[i]; double n = xn_[i];
 		double angle_mn = m*theta - n*zeta;
@@ -246,16 +250,17 @@ IR3 morphism_vmec::transform2cylindrical(const IR3& position) const {
 	return  {R, v, Z};
 }
 
-double morphism_vmec::reduce_2pi(double angle) const {
-	double l = 2*std::numbers::pi;
-	angle -= l*std::floor(angle/l);
-	return angle;
-}
+// double morphism_vmec::reduce_2pi(double angle) const {
+// 	double l = 2*std::numbers::pi;
+// 	angle -= l*std::floor(angle/l);
+// 	return angle;
+// }
 
 std::tuple<double, double> morphism_vmec::reflection_past_axis(
 		double s, double theta) const {
 	if(s < 0)
-		return {-s, reduce_2pi(theta + std::numbers::pi)};
+		// return {-s, reduce_2pi(theta + std::numbers::pi)};
+		return {-s, theta + std::numbers::pi};
 	else
 		return {s, theta};
 }
