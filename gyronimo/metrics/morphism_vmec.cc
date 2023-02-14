@@ -99,6 +99,32 @@ IR3 morphism_vmec::inverse(const IR3& X) const {
 	return {s, zeta, theta};
 }
 
+//! Translates the curvilinear position `q` by the cartesian vector `delta`
+/*!
+	Implements the rule:
+	@f$ q^\alpha = Q^\alpha \left( \textbf{X}\left(\right) + \Delta \right) @f$
+*/
+IR3 morphism_vmec::translation(const IR3 &q, const IR3 &delta) const {
+	typedef std::array<double, 2> IR2;
+	IR3 X = (*this)(q);
+	double Xt = X[IR3::u] + delta[IR3::u];
+	double Yt = X[IR3::v] + delta[IR3::v];
+	double Zt = X[IR3::w] + delta[IR3::w];
+	double Rt = std::sqrt(Xt*Xt + Yt*Yt);
+	double zeta = std::atan2(Yt, Xt);
+	std::function<IR2(const IR2&)> zero_function =
+		[&](const IR2& args) {
+			auto [s, theta] = reflection_past_axis(args[0], args[1]);
+			IR3 cyl = transform2cylindrical(IR3({s, zeta, theta}));
+			double R = cyl[IR3::u], Z = cyl[IR3::w];
+			return IR2({R-Rt, Z-Zt});
+		};
+	IR2 guess = {q[IR3::u], q[IR3::w]};
+	IR2 roots = multiroot(1.0e-12, 100)(zero_function, guess);
+	auto [s, theta] = reflection_past_axis(roots[0], roots[1]);
+	return {s, zeta, theta};
+}
+
 //! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
 dIR3 morphism_vmec::del(const IR3& q) const {
 	double s = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];

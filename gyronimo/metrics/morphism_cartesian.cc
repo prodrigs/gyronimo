@@ -35,6 +35,15 @@ IR3 morphism_cartesian::inverse(const IR3 &x) const {
 	return x;
 }
 
+//! Translates the curvilinear position `q` by the cartesian vector `delta`
+/*!
+	Implements the rule:
+	@f$ q^\alpha = Q^\alpha \left( \textbf{X}\left(\right) + \Delta \right) @f$
+*/
+IR3 morphism_cartesian::translation(const IR3 &q, const IR3 &delta) const {
+	return q+delta;
+}
+
 //! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ \textbf{x} @f$.
 /*!
 	Implements the coordinate transformation's first derivatives:

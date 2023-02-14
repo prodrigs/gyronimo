@@ -37,6 +37,7 @@ public:
 	virtual IR3 operator()(const IR3 &q) const = 0;
 	//! Inverse transform from cartesian coordinates @f$ \textbf{x} @f$ into curvilinear coordinates @f$ q^\alpha @f$.
 	virtual IR3 inverse(const IR3 &x) const = 0;
+	virtual IR3 translation(const IR3 &q, const IR3 &delta) const;
 	//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
 	/*!
 		Implements the covariant basis vectors:

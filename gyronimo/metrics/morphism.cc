@@ -21,6 +21,15 @@
 
 namespace gyronimo {
 
+//! Translates the curvilinear position `q` by the cartesian vector `delta`
+/*!
+	Implements the rule:
+	@f$ q^\alpha = Q^\alpha \left( \textbf{X}\left(\right) + \Delta \right) @f$
+*/
+IR3 morphism::translation(const IR3 &q, const IR3 &delta) const {
+	return this->inverse((*this)(q) + delta);
+}
+
 //! General-purpose implementation of the Jacobian of the transformation in point @f$ q^\alpha @f$.
 /*!
 	Implements the rule:

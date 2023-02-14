@@ -76,6 +76,29 @@ IR3 morphism_helena::inverse(const IR3& X) const {
 	return {s, chi, std::atan2(-y, x)};
 }
 
+//! Translates the curvilinear position `q` by the cartesian vector `delta`
+/*!
+	Implements the rule:
+	@f$ q^\alpha = Q^\alpha \left( \textbf{X}\left(\right) + \Delta \right) @f$
+*/
+IR3 morphism_helena::translation(const IR3 &q, const IR3 &delta) const {
+	typedef std::array<double, 2> IR2;
+	IR3 X = (*this)(q);
+	double Xt = X[IR3::u] + delta[IR3::u];
+	double Yt = X[IR3::v] + delta[IR3::v];
+	double Zt = X[IR3::w] + delta[IR3::w];
+	double Rt = std::sqrt(Xt*Xt + Yt*Yt);
+	std::function<IR2(const IR2&)> zero_function =
+		[&](const IR2& args) {
+			auto [s, chi] = reflection_past_axis(args[0], args[1]);
+			return IR2({(*R_)(s, chi) - Rt, (*z_)(s, chi) - Zt});
+		};
+	IR2 guess = {q[IR3::u], q[IR3::v]};
+	IR2 roots = multiroot(1.0e-12, 100)(zero_function, guess);
+	auto [s, chi] = reflection_past_axis(roots[0], roots[1]);
+	return {s, chi, std::atan2(-Yt, Xt)};
+}
+
 //! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
 dIR3 morphism_helena::del(const IR3& q) const {
 	double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]), phi = q[IR3::w];
