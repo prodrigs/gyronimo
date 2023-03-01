@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 // @guiding_centre.cc, this file is part of ::gyronimo::
 
 #include <cmath>
-#include <gyronimo/core/error.hh>
 #include <gyronimo/core/codata.hh>
 #include <gyronimo/core/contraction.hh>
 #include <gyronimo/dynamics/guiding_centre.hh>
@@ -43,9 +42,6 @@ guiding_centre::guiding_centre(
       Efield_time_factor_(E ? Lref/(Vref*E->t_factor()) : 0.0) {
   Oref_tilde_ = qom*codata::e/codata::m_proton*B->m_factor()*Tref_;
   iOref_tilde_ = 1.0/Oref_tilde_;
-  if (E ?
-      std::fabs(1.0 - E->m_factor()/(Vref_*B->m_factor())) > 1.0e-14 : false)
-          error(__func__, __FILE__, __LINE__, "inconsistent E field.", 1);
 }
 
 //! Evaluates the time derivative `dxdt` of the dynamical state `x` at time `t`.
