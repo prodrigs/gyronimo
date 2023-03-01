@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,9 +39,10 @@ namespace gyronimo {
     @f]
     Each @f$ \tilde{A}_k^m(s) @f$ is a `fourier_complex` object with underlying
     `interpolator1d` type set by `ifactory`. The time normalisation `t_factor`
-    is the ratio @f$v_A(0)/R_0@f$ of the on-axis Alfven velocity to the axis
-    radius. The field is normalised to its maximum magnitude over the low-field
-    side (@f$\chi = 0@f$), its actual amplitude being set by `m_factor` (SI).
+    is the ratio @f$R_0/v_A(0)@f$ of the axis radius to the on-axis Alfven
+    velocity. The field is normalised to its maximum magnitude over the
+    low-field side (@f$\chi = 0@f$), its actual amplitude being set by
+    `m_factor` (SI).
 
     @todo higher-order derivatives from the interpolators seem to produce noisy
     magnetic fields; implement derivatives produced by castor itself (from the
