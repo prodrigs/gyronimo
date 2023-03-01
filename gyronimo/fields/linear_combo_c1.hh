@@ -26,6 +26,14 @@
 namespace gyronimo {
 
 //! Linear combination of `N` differentiable IR3 fields (*shared* coordinates).
+/*!
+    Combines a collection of `IR3field_c1` objects into a single differentiable
+    IR3 field. The resulting object has its magnitude normalised to `m_factor`
+    and its time normalised to `t_factor`. Therefore, the weighting factor
+    corresponding to the k-th field `field_set_[k]` is
+    `field_set_[k]->m_factor()/m_factor`. Combinations of fields with different
+    time normalisations are supported.
+*/
 template<size_t N>
 class linear_combo_c1 : public IR3field_c1 {
  public:

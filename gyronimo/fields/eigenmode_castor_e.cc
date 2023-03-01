@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,13 +23,13 @@ namespace gyronimo{
 
 IR3 eigenmode_castor_e::covariant(const IR3& position, double time) const {
   IR3 A = A_.covariant(position, time);
-  return {std::real(-iw_*A[IR3::u]),
-      std::real(-iw_*A[IR3::v]), std::real(-iw_*A[IR3::w])};
+  return {std::real(eigenvalue_*A[IR3::u]),
+      std::real(eigenvalue_*A[IR3::v]), std::real(eigenvalue_*A[IR3::w])};
 }
 IR3 eigenmode_castor_e::contravariant(const IR3& position, double time) const {
   IR3 A = A_.contravariant(position, time);
-  return {std::real(-iw_*A[IR3::u]),
-      std::real(-iw_*A[IR3::v]), std::real(-iw_*A[IR3::w])};
+  return {std::real(eigenvalue_*A[IR3::u]),
+      std::real(eigenvalue_*A[IR3::v]), std::real(eigenvalue_*A[IR3::w])};
 }
 
 } // end namespace gyronimo.

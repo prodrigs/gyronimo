@@ -37,10 +37,17 @@ namespace gyronimo {
     @f]
     Each @f$ \tilde{A}_k^m(s) @f$ is a `fourier_complex` object with underlying
     `interpolator1d` type set by `ifactory`. The time normalisation `t_factor`
-    is the ratio @f$R_0/v_A(0)@f$ of the axis radius to the on-axis Alfven
-    velocity. The field is normalised to its maximum magnitude over the
-    low-field side (@f$\chi = 0@f$), its actual amplitude being set by
-    `m_factor` (SI).
+    **must** be set to the ratio @f$R_0/v_A(0)@f$ of the axis radius to the
+    on-axis Alfven velocity. The field is normalised internally by setting its
+    maximum magnitude over the poloidal cross section (@f$\phi = 0@f$) to the
+    value `m_factor` (SI).
+
+    @todo higher-order derivatives from the interpolators seem to produce noisy
+    magnetic fields; implement derivatives produced by castor itself (from the
+    internal hermite elements, not yet available in parser_castor).
+
+    @todo move the normalisation done in the constructor into a code block
+    common with all elements of the `eigenmode_castor_x` family.
 */
 class eigenmode_castor_a : public IR3field {
  public:
