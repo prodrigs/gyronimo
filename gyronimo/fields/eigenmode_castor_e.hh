@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,10 +27,12 @@ namespace gyronimo {
 //! Electric-field eigenvector from `CASTOR` ceig output file.
 /*!
     The electric-field **covariant** components are extracted as @f$\mathbf{E} =
-    - \partial_t \mathbf{A} = i \omega \mathbf{A} @f$ from the vector potential
-    stored in a `eigenmode_castor_a`, with a similar normalisation to the
-    on-axis Alfven time. The normalisation of the electric-field magnitude is
-    set by `m_factor` (SI).
+    - \partial_t \mathbf{A}@f$ from the vector potential stored in a
+    `eigenmode_castor_a` object. The time normalisation `t_factor` **must** be
+    set to the ratio @f$R_0/v_A(0)@f$ of the axis radius to the on-axis Alfven
+    velocity. The field is normalised internally by setting its maximum
+    magnitude over the poloidal cross section (@f$\phi = 0@f$) to the value
+    `m_factor` (SI).
 */
 class eigenmode_castor_e : public IR3field {
  public:
@@ -39,7 +41,7 @@ class eigenmode_castor_e : public IR3field {
       const parser_castor *p, const metric_helena *g,
       const interpolator1d_factory* ifactory)
       : IR3field(m_factor, t_factor, g),
-        iw_(-p->w_imag(), p->w_real()),
+        eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()),
         A_(m_factor*t_factor, t_factor, p, g, ifactory) {};
   virtual ~eigenmode_castor_e() override {};
 
@@ -49,7 +51,7 @@ class eigenmode_castor_e : public IR3field {
   const parser_castor* parser() const {return A_.parser();};
 
  private:
-  std::complex<double> iw_;
+  std::complex<double> eigenvalue_;
   eigenmode_castor_a A_;
 };
 

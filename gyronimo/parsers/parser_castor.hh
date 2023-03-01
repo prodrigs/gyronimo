@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ class parser_castor {
   size_t n_psi() const {return n_psi_;};
   size_t n_harm() const {return n_harm_;};
   double n_tor() const {return n_tor_;};
-  double w_real() const {return w_real_;};
-  double w_imag() const {return w_imag_;};
+  double eigenvalue_real() const {return eigenvalue_real_;};
+  double eigenvalue_imag() const {return eigenvalue_imag_;};
   const narray_type& s() const {return s_;};
   const narray_type& m() const {return m_;};
   const narray_type& t_real() const {return t_real_;};
@@ -69,7 +69,7 @@ class parser_castor {
  private:
   double n_tor_;
   size_t n_psi_, n_harm_;
-  double w_real_, w_imag_;
+  double eigenvalue_real_, eigenvalue_imag_;
   narray_type s_, m_;
   narray_type rho_real_, rho_imag_, t_real_, t_imag_;
   narray_type v1_real_, v1_imag_, v2_real_, v2_imag_, v3_real_, v3_imag_;
