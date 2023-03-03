@@ -39,9 +39,9 @@ guiding_centre::guiding_centre(
       electric_field_(E), magnetic_field_(B),
       Lref_(Lref), Vref_(Vref), Tref_(Lref/Vref),
       Bfield_time_factor_(Lref/(Vref*B->t_factor())),
-      Efield_time_factor_(E ? Lref/(Vref*E->t_factor()) : 0.0) {
-  Oref_tilde_ = qom*codata::e/codata::m_proton*B->m_factor()*Tref_;
-  iOref_tilde_ = 1.0/Oref_tilde_;
+      Efield_time_factor_(E ? Lref/(Vref*E->t_factor()) : 0) {
+  iOref_tilde_ = 1.0/(qom*codata::e/codata::m_proton*B->m_factor()*Tref_);
+  Eref_tilde_ = (E ? E->m_factor() : 0)/(Vref_*B->m_factor()*iOref_tilde_);
 }
 
 //! Evaluates the time derivative `dxdt` of the dynamical state `x` at time `t`.
@@ -75,7 +75,7 @@ guiding_centre::state guiding_centre::operator()(
       1.0 + inverse_omega_tilde*vpp*inner_product(covariant_b, curlb));
   IR3 drifter = 0.5*mu_tilde_*gradB + vpp*partial_t_b;
   if (electric_field_)
-      drifter -= Oref_tilde_*electric_field_->covariant(position, Etime);
+      drifter -= Eref_tilde_*electric_field_->covariant(position, Etime);
 
   IR3 dot_X = prefactor*(vpp*contravariant_b +
       inverse_omega_tilde*(
