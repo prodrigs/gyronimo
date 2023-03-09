@@ -34,25 +34,32 @@ namespace gyronimo {
     magnitude over the poloidal cross section (@f$\phi = 0@f$) to the value
     `m_factor` (SI).
 */
+
 class eigenmode_castor_e : public IR3field {
  public:
   eigenmode_castor_e(
       double m_factor, double t_factor,
       const parser_castor *p, const metric_helena *g,
-      const interpolator1d_factory* ifactory)
-      : IR3field(m_factor, t_factor, g),
-        eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()),
-        A_(m_factor*t_factor, t_factor, p, g, ifactory) {};
+      const interpolator1d_factory* ifactory);
+  eigenmode_castor_e(
+      double m_factor, double t_factor,
+      const parser_castor *p, const metric_helena *g,
+      const interpolator1d_factory* ifactory, 
+      double norm_factor);
   virtual ~eigenmode_castor_e() override {};
 
   virtual IR3 covariant(const IR3& position, double time) const override;
   virtual IR3 contravariant(const IR3& position, double time) const override;
 
-  const parser_castor* parser() const {return A_.parser();};
+  const parser_castor* parser() const {return parser_;};
+  double get_norm_factor(){return norm_factor_;};
 
  private:
-  std::complex<double> eigenvalue_;
-  eigenmode_castor_a A_;
+  double norm_factor_;
+  const parser_castor *parser_;
+  const metric_helena *metric_;
+  std::complex<double> w_, i_n_tor_;
+  fourier_complex tildeA1_, tildeA2_, tildeA3_;
 };
 
 } // end namespace gyronimo.

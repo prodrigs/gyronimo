@@ -18,18 +18,61 @@
 // @eigenmode_castor_e.cc, this file is part of ::gyronimo::
 
 #include <gyronimo/fields/eigenmode_castor_e.hh>
+#include <gyronimo/fields/eigenmode_castor_b.hh>
 
 namespace gyronimo{
 
+eigenmode_castor_e::eigenmode_castor_e(
+    double m_factor, double t_factor,
+    const parser_castor *p, const metric_helena *g,
+    const interpolator1d_factory* ifactory)
+    : IR3field(m_factor, t_factor, g),
+      norm_factor_(1.0), parser_(p), metric_(g),
+      w_(p->eigenvalue_real(), p->eigenvalue_imag()), i_n_tor_(0.0, p->n_tor()),
+      tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
+      tildeA2_(p->s(), p->a2_real(), p->a2_imag(), p->m(), ifactory),
+      tildeA3_(p->s(), p->a3_real(), p->a3_imag(), p->m(), ifactory) {
+  using namespace std;
+  auto max_magnitude_at_radius = [this](double s) {
+    auto highest_harmonic = ranges::max(views::transform(
+        this->parser_->m(), [](auto m) {return abs(m);}));
+    size_t chi_range_size = (size_t)(8*highest_harmonic);
+    double delta_chi = 2*numbers::pi/chi_range_size;
+    auto chi_range = views::transform(
+        views::iota(0u, chi_range_size), bind_front(multiplies{}, delta_chi));
+    return ranges::max(views::transform(
+        chi_range,
+        [this, s](double chi){return this->magnitude({s, chi, 0}, 0);}));
+  };
+  norm_factor_ = 1.0/ranges::max(
+      views::transform(parser_->s(), max_magnitude_at_radius));
+}
+
+eigenmode_castor_e::eigenmode_castor_e(
+    double m_factor, double t_factor,
+    const parser_castor *p, const metric_helena *g,
+    const interpolator1d_factory* ifactory, double norm_factor)
+    : IR3field(m_factor, t_factor, g),
+      norm_factor_(norm_factor), parser_(p), metric_(g),
+      w_(p->eigenvalue_real(), p->eigenvalue_imag()), i_n_tor_(0.0, p->n_tor()),
+      tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
+      tildeA2_(p->s(), p->a2_real(), p->a2_imag(), p->m(), ifactory),
+      tildeA3_(p->s(), p->a3_real(), p->a3_imag(), p->m(), ifactory) {
+}
+
 IR3 eigenmode_castor_e::covariant(const IR3& position, double time) const {
-  IR3 A = A_.covariant(position, time);
-  return {std::real(eigenvalue_*A[IR3::u]),
-      std::real(eigenvalue_*A[IR3::v]), std::real(eigenvalue_*A[IR3::w])};
+  double s = position[IR3::u];
+  double phi = position[IR3::w];
+  double chi = metric_->reduce_chi(position[IR3::v]);
+  std::complex<double> factor = -w_*norm_factor_*std::exp(w_*time + i_n_tor_*phi);
+  return {
+      std::real(factor*(this->tildeA1_(s, chi))),
+          std::real(factor*(this->tildeA2_(s, chi))),
+              std::real(factor*(this->tildeA3_(s, chi)))};
 }
 IR3 eigenmode_castor_e::contravariant(const IR3& position, double time) const {
-  IR3 A = A_.contravariant(position, time);
-  return {std::real(eigenvalue_*A[IR3::u]),
-      std::real(eigenvalue_*A[IR3::v]), std::real(eigenvalue_*A[IR3::w])};
+  return this->metric()->
+      to_contravariant(this->covariant(position, time), position);
 }
 
 } // end namespace gyronimo.

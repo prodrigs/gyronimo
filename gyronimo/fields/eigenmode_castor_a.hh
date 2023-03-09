@@ -55,12 +55,18 @@ class eigenmode_castor_a : public IR3field {
       double m_factor, double t_factor,
       const parser_castor *p, const metric_helena *g,
       const interpolator1d_factory* ifactory);
+  eigenmode_castor_a(
+      double m_factor, double t_factor,
+      const parser_castor *p, const metric_helena *g,
+      const interpolator1d_factory* ifactory, 
+      double norm_factor);
   virtual ~eigenmode_castor_a() override {};
 
   virtual IR3 covariant(const IR3& position, double time) const override;
   virtual IR3 contravariant(const IR3& position, double time) const override;
 
   const parser_castor* parser() const {return parser_;};
+  double get_norm_factor(){return norm_factor_;};
 
  private:
   double norm_factor_;
