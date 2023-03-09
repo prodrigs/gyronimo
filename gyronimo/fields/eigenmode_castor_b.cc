@@ -51,6 +51,21 @@ eigenmode_castor_b::eigenmode_castor_b(
       views::transform(parser_->s(), max_magnitude_at_radius));
 }
 
+eigenmode_castor_b::eigenmode_castor_b(
+    double m_factor, double t_factor,
+    const parser_castor *p, const metric_helena *g,
+    const interpolator1d_factory* ifactory, double norm_factor)
+    : IR3field_c1(m_factor, t_factor, g),
+      norm_factor_(norm_factor),
+      parser_(p), metric_(g),
+      w_(p->eigenvalue_real(), p->eigenvalue_imag()),
+      n_tor_squared_(p->n_tor()*p->n_tor()),
+      i_n_tor_(0.0, p->n_tor()),
+      tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
+      tildeA2_(p->s(), p->a2_real(), p->a2_imag(), p->m(), ifactory),
+      tildeA3_(p->s(), p->a3_real(), p->a3_imag(), p->m(), ifactory) {
+}
+
 //! Magnetic field \f$B^i = \epsilon^{ijk}/\sqrt{g} \partial_j A_k\f$.
 IR3 eigenmode_castor_b::contravariant(const IR3& position, double time) const {
   double s = position[IR3::u];
