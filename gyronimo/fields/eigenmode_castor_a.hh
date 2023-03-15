@@ -72,7 +72,7 @@ class eigenmode_castor_a : public IR3field {
   double norm_factor_;
   const parser_castor *parser_;
   const metric_helena *metric_;
-  std::complex<double> w_, i_n_tor_;
+  std::complex<double> eigenvalue_, i_n_tor_;
   fourier_complex tildeA1_, tildeA2_, tildeA3_;
 };
 

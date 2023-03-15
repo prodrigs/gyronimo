@@ -28,7 +28,7 @@ eigenmode_castor_e::eigenmode_castor_e(
     const interpolator1d_factory* ifactory)
     : IR3field(m_factor, t_factor, g),
       norm_factor_(1.0), parser_(p), metric_(g),
-      w_(p->eigenvalue_real(), p->eigenvalue_imag()), i_n_tor_(0.0, p->n_tor()),
+      eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()), i_n_tor_(0.0, p->n_tor()),
       tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
       tildeA2_(p->s(), p->a2_real(), p->a2_imag(), p->m(), ifactory),
       tildeA3_(p->s(), p->a3_real(), p->a3_imag(), p->m(), ifactory) {
@@ -54,7 +54,7 @@ eigenmode_castor_e::eigenmode_castor_e(
     const interpolator1d_factory* ifactory, double norm_factor)
     : IR3field(m_factor, t_factor, g),
       norm_factor_(norm_factor), parser_(p), metric_(g),
-      w_(p->eigenvalue_real(), p->eigenvalue_imag()), i_n_tor_(0.0, p->n_tor()),
+      eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()), i_n_tor_(0.0, p->n_tor()),
       tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
       tildeA2_(p->s(), p->a2_real(), p->a2_imag(), p->m(), ifactory),
       tildeA3_(p->s(), p->a3_real(), p->a3_imag(), p->m(), ifactory) {
@@ -64,7 +64,7 @@ IR3 eigenmode_castor_e::covariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double phi = position[IR3::w];
   double chi = metric_->reduce_chi(position[IR3::v]);
-  std::complex<double> factor = -w_*norm_factor_*std::exp(w_*time + i_n_tor_*phi);
+  std::complex<double> factor = -eigenvalue_*norm_factor_*std::exp(eigenvalue_*time + i_n_tor_*phi);
   return {
       std::real(factor*(this->tildeA1_(s, chi))),
           std::real(factor*(this->tildeA2_(s, chi))),

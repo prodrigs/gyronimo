@@ -93,7 +93,7 @@ IR3 linear_combo_c1<N>::partial_t_contravariant(
     const IR3& position, double time) const {
   IR3 acc = {0, 0, 0};
   for (size_t i = 0; i < N; i++) acc +=
-      m_ratio_[i]*field_set_[i]->partial_t_contravariant(
+      m_ratio_[i]*t_ratio_[i]*field_set_[i]->partial_t_contravariant(
           position, t_ratio_[i]*time);
   return acc;
 }

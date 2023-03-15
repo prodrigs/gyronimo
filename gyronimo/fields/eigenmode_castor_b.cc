@@ -29,7 +29,7 @@ eigenmode_castor_b::eigenmode_castor_b(
     : IR3field_c1(m_factor, t_factor, g),
       norm_factor_(1.0),
       parser_(p), metric_(g),
-      w_(p->eigenvalue_real(), p->eigenvalue_imag()),
+      eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()),
       n_tor_squared_(p->n_tor()*p->n_tor()),
       i_n_tor_(0.0, p->n_tor()),
       tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
@@ -58,7 +58,7 @@ eigenmode_castor_b::eigenmode_castor_b(
     : IR3field_c1(m_factor, t_factor, g),
       norm_factor_(norm_factor),
       parser_(p), metric_(g),
-      w_(p->eigenvalue_real(), p->eigenvalue_imag()),
+      eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()),
       n_tor_squared_(p->n_tor()*p->n_tor()),
       i_n_tor_(0.0, p->n_tor()),
       tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
@@ -120,8 +120,7 @@ IR3 eigenmode_castor_b::partial_t_contravariant(
   double phi = position[IR3::w];
   double chi = metric_->reduce_chi(position[IR3::v]);
   std::complex<double> factor = norm_factor_*this->exp_wt_nphi(time, phi);
-  using namespace std::complex_literals;
-  factor *= 1i*w_/this->metric()->jacobian(position);
+  factor *= eigenvalue_/this->metric()->jacobian(position);
   return {
       std::real(factor*(this->d2A3(s, chi) - this->d3A2(s, chi))),
       std::real(factor*(this->d3A1(s, chi) - this->d1A3(s, chi))),
@@ -132,7 +131,7 @@ inline
 std::complex<double> eigenmode_castor_b::exp_wt_nphi(
     double time, double phi) const {
   using namespace std::complex_literals;
-  return std::exp(w_*time + 1i*parser_->n_tor()*phi);
+  return std::exp(eigenvalue_*time + 1i*parser_->n_tor()*phi);
 }
 inline
 std::complex<double> eigenmode_castor_b::d1A2(double s, double chi) const {
