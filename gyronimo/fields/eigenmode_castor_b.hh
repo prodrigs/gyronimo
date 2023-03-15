@@ -78,7 +78,7 @@ class eigenmode_castor_b : public IR3field_c1 {
   const parser_castor *parser_;
   const metric_helena *metric_;
   double n_tor_squared_;
-  std::complex<double> w_, i_n_tor_;
+  std::complex<double> eigenvalue_, i_n_tor_;
   fourier_complex tildeA1_, tildeA2_, tildeA3_;
 
   std::complex<double> exp_wt_nphi(double time, double phi) const;
