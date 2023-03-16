@@ -17,17 +17,18 @@
 
 // @metric_helena.cc, this file is part of ::gyronimo::
 
-#include <numbers>
 #include <gyronimo/core/transpose.hh>
 #include <gyronimo/metrics/metric_helena.hh>
 
-namespace gyronimo{
+#include <numbers>
 
-metric_helena::metric_helena(const morphism_helena *morph, const interpolator2d_factory *ifactory)
-    : metric_connected(morph), parser_(morph->parser()), 
-      R0_(parser_->rmag()), 
-      squaredR0_(parser_->rmag()*parser_->rmag()),
-      guu_(nullptr), guv_(nullptr), gvv_(nullptr), gww_(nullptr) {
+namespace gyronimo {
+
+metric_helena::metric_helena(
+    const morphism_helena* morph, const interpolator2d_factory* ifactory)
+    : metric_connected(morph), parser_(morph->parser()), R0_(parser_->rmag()),
+      squaredR0_(parser_->rmag() * parser_->rmag()), guu_(nullptr),
+      guv_(nullptr), gvv_(nullptr), gww_(nullptr) {
   dblock_adapter s_range(parser_->s()), chi_range(parser_->chi());
   guu_ = ifactory->interpolate_data(
       s_range, chi_range, dblock_adapter(parser_->covariant_g11()));
@@ -39,38 +40,38 @@ metric_helena::metric_helena(const morphism_helena *morph, const interpolator2d_
       s_range, chi_range, dblock_adapter(parser_->covariant_g33()));
 }
 metric_helena::~metric_helena() {
-  if(guu_) delete guu_;
-  if(guv_) delete guv_;
-  if(gvv_) delete gvv_;
-  if(gww_) delete gww_;
+  if (guu_) delete guu_;
+  if (guv_) delete guv_;
+  if (gvv_) delete gvv_;
+  if (gww_) delete gww_;
 }
 SM3 metric_helena::operator()(const IR3& position) const {
   double s = position[IR3::u];
   double chi = parser_->reduce_chi(position[IR3::v]);
   return {
-      squaredR0_*(*guu_)(s, chi), squaredR0_*(*guv_)(s, chi), 0.0,
-      squaredR0_*(*gvv_)(s, chi), 0.0, squaredR0_*(*gww_)(s, chi)};
+      squaredR0_ * (*guu_)(s, chi), squaredR0_ * (*guv_)(s, chi), 0.0,
+      squaredR0_ * (*gvv_)(s, chi), 0.0, squaredR0_ * (*gww_)(s, chi)};
 }
 dSM3 metric_helena::del(const IR3& position) const {
   double s = position[IR3::u];
   double chi = parser_->reduce_chi(position[IR3::v]);
   return {
-      squaredR0_*(*guu_).partial_u(s, chi),
-      squaredR0_*(*guu_).partial_v(s, chi), 0.0, // d_i g_uu
-      squaredR0_*(*guv_).partial_u(s, chi),
-      squaredR0_*(*guv_).partial_v(s, chi), 0.0, // d_i g_uv
-      0.0, 0.0, 0.0, // d_i g_uw
-      squaredR0_*(*gvv_).partial_u(s, chi),
-      squaredR0_*(*gvv_).partial_v(s, chi), 0.0, //d_i g_vv
-      0.0, 0.0, 0.0, // d_i g_vw
-      squaredR0_*(*gww_).partial_u(s, chi),
-      squaredR0_*(*gww_).partial_v(s, chi), 0.0}; // d_i g_ww
+      squaredR0_ * (*guu_).partial_u(s, chi),
+      squaredR0_ * (*guu_).partial_v(s, chi), 0.0,  // d_i g_uu
+      squaredR0_ * (*guv_).partial_u(s, chi),
+      squaredR0_ * (*guv_).partial_v(s, chi), 0.0,  // d_i g_uv
+      0.0, 0.0, 0.0,  // d_i g_uw
+      squaredR0_ * (*gvv_).partial_u(s, chi),
+      squaredR0_ * (*gvv_).partial_v(s, chi), 0.0,  // d_i g_vv
+      0.0, 0.0, 0.0,  // d_i g_vw
+      squaredR0_ * (*gww_).partial_u(s, chi),
+      squaredR0_ * (*gww_).partial_v(s, chi), 0.0};  // d_i g_ww
 }
 ddIR3 metric_helena::christoffel_first_kind(const IR3& r) const {
-	return this->gyronimo::metric_covariant::christoffel_first_kind(r);
+  return this->gyronimo::metric_covariant::christoffel_first_kind(r);
 }
 ddIR3 metric_helena::christoffel_second_kind(const IR3& r) const {
-	return this->gyronimo::metric_covariant::christoffel_second_kind(r);
+  return this->gyronimo::metric_covariant::christoffel_second_kind(r);
 }
 
-} // end namespace gyronimo
+}  // end namespace gyronimo

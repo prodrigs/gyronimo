@@ -20,45 +20,42 @@
 #ifndef GYRONIMO_MORPHISM_VMEC
 #define GYRONIMO_MORPHISM_VMEC
 
-#include <gyronimo/parsers/parser_vmec.hh>
 #include <gyronimo/interpolators/interpolator1d.hh>
 #include <gyronimo/metrics/morphism.hh>
+#include <gyronimo/parsers/parser_vmec.hh>
 
-namespace gyronimo{
+namespace gyronimo {
 
 //! Morphism in `VMEC` curvilinear coordinates.
 class morphism_vmec : public morphism {
-public:
-	typedef std::valarray<double> narray_type;
+ public:
+  typedef std::valarray<double> narray_type;
 
-	morphism_vmec(
-		const parser_vmec *parser, const interpolator1d_factory *ifactory);
-	virtual ~morphism_vmec() override;
+  morphism_vmec(
+      const parser_vmec* parser, const interpolator1d_factory* ifactory);
+  virtual ~morphism_vmec() override;
 
-	virtual IR3 operator()(const IR3 &q) const override;
-	virtual IR3 inverse(const IR3 &x) const override;
-	virtual IR3 translation(const IR3 &q, const IR3 &delta) const override;
-	virtual dIR3 del(const IR3 &q) const override;
-	virtual ddIR3 ddel(const IR3 &q) const override;
+  virtual IR3 operator()(const IR3& q) const override;
+  virtual IR3 inverse(const IR3& x) const override;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-	virtual double jacobian(const IR3 &q) const override;
-	// double jacobian_vmec(const IR3& position) const;
+  virtual double jacobian(const IR3& q) const override;
 
-	const parser_vmec* parser() const {return parser_;};
-private:
+  const parser_vmec* parser() const { return parser_; };
+ private:
+  const parser_vmec* parser_;
+  narray_type xm_, xn_;
 
-	const parser_vmec* parser_;
-	narray_type xm_, xn_;
+  interpolator1d** Rmnc_;
+  interpolator1d** Zmns_;
+  interpolator1d** gmnc_;
 
-	interpolator1d **Rmnc_;
-	interpolator1d **Zmns_;
-	interpolator1d **gmnc_;
-
-	virtual IR3 transform2cylindrical(const IR3& position) const;
-	double reduce_2pi(double angle) const;
-	std::tuple<double, double> reflection_past_axis(double s, double theta) const;
+  std::pair<double, double> get_rz(const IR3& position) const;
+  std::pair<double, double> reflection_past_axis(double s, double theta) const;
 };
 
-} // end namespace gyronimo
+}  // end namespace gyronimo
 
-#endif // GYRONIMO_MORPHISM_VMEC
+#endif  // GYRONIMO_MORPHISM_VMEC

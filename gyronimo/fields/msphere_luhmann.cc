@@ -26,7 +26,7 @@ msphere_luhmann::msphere_luhmann(
     double smooth_factor,
     double dipole_factor, double csheet_factor, double m_factor)
     : IR3field_c1(m_factor, 1.0, 
-		new metric_spherical(new morphism_spherical(earth_radius))),
+      new metric_spherical(new morphism_spherical(earth_radius))),
       c_bar_(0.001*csheet_factor/(earth_radius*m_factor)),
       d_bar_(dipole_factor/(earth_radius*m_factor)),
       idelta_(1.0/smooth_factor),
@@ -35,7 +35,7 @@ msphere_luhmann::msphere_luhmann(
 }
 msphere_luhmann::~msphere_luhmann() {
   if (metric_) {
-    if(metric_->morph()) delete metric_->morph();
+    if(metric_->my_morphism()) delete metric_->my_morphism();
     delete metric_;
   }
 }

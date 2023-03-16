@@ -24,32 +24,38 @@
 
 namespace gyronimo {
 
+//! Morphism for toroidal coordinates with polar cross section.
+/*!
+    The three contravariant coordinates are the distance to the magnetic axis
+    normalized to the `minor_radius` (`u`), the angle measured counterclockwise
+    on the poloidal cross section from the low-field side midplane (`v`, in
+    rads), and the toroidal angle (`w`, in rads) measured clockwise when looking
+    from the torus' top. The lengths `minor_radius` and `major_radius` are in SI
+    units.
+*/
 class morphism_polar_torus : public morphism {
+ public:
+  morphism_polar_torus(const double minor_radius, double major_radius);
+  virtual ~morphism_polar_torus() override {};
 
-public:
+  virtual IR3 operator()(const IR3& q) const override;
+  virtual IR3 inverse(const IR3& x) const override;
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-	morphism_polar_torus(const double minor_radius, double major_radius);
-	virtual ~morphism_polar_torus() override {};
+  virtual double jacobian(const IR3& q) const override;
+  virtual dIR3 del_inverse(const IR3& q) const override;
 
-	virtual IR3 operator()(const IR3 &q) const override;
-	virtual IR3 inverse(const IR3 &x) const override;
-	virtual dIR3 del(const IR3 &q) const override;
-	virtual ddIR3 ddel(const IR3 &q) const override;
+  double minor_radius() const { return minor_radius_; };
+  double major_radius() const { return major_radius_; };
+  double iaspect_ratio() const { return iaspect_ratio_; };
 
-	virtual double jacobian(const IR3 &q) const override;
-	virtual dIR3 del_inverse(const IR3 &q) const override;
+ private:
+  const double minor_radius_, major_radius_;
+  const double iaspect_ratio_, volume_factor_;
+  const double iminor_radius_;
+};
 
-	double minor_radius() const {return minor_radius_;};
-	double major_radius() const {return major_radius_;};
-	double iaspect_ratio() const {return iaspect_ratio_;};
+}  // end namespace gyronimo
 
-private:
-	const double minor_radius_, major_radius_;
-	const double iaspect_ratio_, volume_factor_;
-	const double iminor_radius_;
-
-}; // end class morphism_polar_torus
-
-} // end namespace gyronimo
-
-#endif // GYRONIMO_MORPHISM_POLAR_TORUS
+#endif  // GYRONIMO_MORPHISM_POLAR_TORUS

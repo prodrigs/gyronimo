@@ -35,7 +35,7 @@ namespace gyronimo {
 */
 class metric_spherical : public metric_connected {
  public:
-  metric_spherical(const morphism_spherical *morph);
+  metric_spherical(const morphism_spherical* morph);
   virtual ~metric_spherical() override {};
 
   virtual SM3 operator()(const IR3& r) const override;
@@ -49,18 +49,18 @@ class metric_spherical : public metric_connected {
 
   virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
   virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
-  
-  double Lref() const {return Lref_;};
 
-  virtual const morphism_spherical* morph() const override {
-    return static_cast<const morphism_spherical*>(morph_);
+  double Lref() const { return Lref_; };
+
+  virtual const morphism_spherical* my_morphism() const override {
+    return static_cast<const morphism_spherical*>(
+        metric_connected::my_morphism());
   };
-
  private:
   const double Lref_, Lref_squared_;
   const double Lref_cube_, iLref_squared_;
 };
 
-} // end namespace gyronimo.
+}  // end namespace gyronimo.
 
-#endif // GYRONIMO_METRIC_SPHERICAL
+#endif  // GYRONIMO_METRIC_SPHERICAL

@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -103,12 +103,11 @@ parser_helena::parser_helena(const std::string& filename) {
   this->build_auxiliar_data();
 }
 
-//! Reduces an arbitrary angle chi to the interval [0:2pi] (or [0:pi] if sym).
+//! Reduces `chi` to the interval [0:2pi] (or [0:pi] if sym).
 double parser_helena::reduce_chi(double chi) const {
   double l = 2*std::numbers::pi;
   chi -= l*std::floor(chi/l);
-  if(is_symmetric_ && chi > std::numbers::pi)
-      chi = l - chi;
+  if(is_symmetric_ && chi > std::numbers::pi) chi = l - chi;
   return chi;
 }
 

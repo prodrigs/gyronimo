@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,46 +25,38 @@
 
 namespace gyronimo {
 
-//! Abstract morphism class from curvilinear @f$ q^\alpha @f$ into cartesian @f$ \textbf{x} @f$ coordinates.
+//! Abstract morphism from curvilinear `q` into *cartesian* `x` coordinates.
+/*!
+    Derived classes must implement the map @f$ \mathbf{x}(q^\alpha) @f$ from the
+    curvilinear coordinates @f$ q^\alpha @f$ into the cartesian space and its
+    inverse, along with the first-order and second-order partial derivatives of
+    the former. The default implementation provides the inverse derivative and
+    the transformation jacobian, dual and tangent-space basis, and conversion
+    between covariant and contravariant components. These methods are left
+    virtual to allow more efficient reimplementations in derived classes, if
+    needed.
+*/
 class morphism {
+ public:
+  morphism() {};
+  virtual ~morphism() {};
 
-public:
+  virtual IR3 operator()(const IR3& q) const = 0;
+  virtual IR3 inverse(const IR3& x) const = 0;
+  virtual dIR3 del(const IR3& q) const = 0;
+  virtual ddIR3 ddel(const IR3& q) const = 0;
 
-	morphism() {};
-	virtual ~morphism() {};
+  virtual double jacobian(const IR3& q) const;
+  virtual dIR3 del_inverse(const IR3& q) const;
+  virtual dIR3 tan_basis(const IR3& q) const;
+  virtual dIR3 dual_basis(const IR3& q) const;
+  virtual IR3 to_covariant(const IR3& A, const IR3& q) const;
+  virtual IR3 to_contravariant(const IR3& A, const IR3& q) const;
+  virtual IR3 from_covariant(const IR3& A, const IR3& q) const;
+  virtual IR3 from_contravariant(const IR3& A, const IR3& q) const;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const;
+};
 
-	//! Maps curvilinear coordinates @f$ q^\alpha @f$ into cartesian coordinates @f$ \textbf{x} @f$.
-	virtual IR3 operator()(const IR3 &q) const = 0;
-	//! Inverse transform from cartesian coordinates @f$ \textbf{x} @f$ into curvilinear coordinates @f$ q^\alpha @f$.
-	virtual IR3 inverse(const IR3 &x) const = 0;
-	virtual IR3 translation(const IR3 &q, const IR3 &delta) const;
-	//! Returns the morphism's first derivatives, correspondent to the covariant basis vectors in point @f$ q^\alpha @f$.
-	/*!
-		Implements the covariant basis vectors:
-		@f$ \textbf{e}_\alpha = \frac{\partial \textbf{x}}{\partial q^\alpha} @f$
-	*/
-	virtual dIR3 del(const IR3 &q) const = 0;
-	//! Returns the morphism's second derivatives, calculated in point `q`.
-	/*!
-		Implements the derivatives of the covariant basis vectors:
-		@f$ \partial_\beta \, \textbf{e}_\alpha = \frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\alpha} @f$
-	*/
-	virtual ddIR3 ddel(const IR3 &q) const = 0;
+}  // end namespace gyronimo
 
-	virtual double jacobian(const IR3 &q) const;
-	virtual dIR3 del_inverse(const IR3 &q) const;
-	virtual dIR3 tan_basis(const IR3& q) const;
-	virtual dIR3 dual_basis(const IR3& q) const;
-
-	virtual IR3 to_covariant(const IR3 &A, const IR3 &q) const;
-	virtual IR3 to_contravariant(const IR3 &A, const IR3 &q) const;
-	virtual IR3 from_covariant(const IR3 &A, const IR3 &q) const;
-	virtual IR3 from_contravariant(const IR3 &A, const IR3 &q) const;
-
-private:
-
-}; // end class morphism
-
-} // end namespace gyronimo
-
-#endif // GYRONIMO_MORPHISM
+#endif  // GYRONIMO_MORPHISM

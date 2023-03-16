@@ -59,7 +59,7 @@ IR3 contraction<first>(const dIR3& dA, const IR3& B) {
     dA[dIR3::uw]*B[IR3::u] + dA[dIR3::vw]*B[IR3::v] + dA[dIR3::ww]*B[IR3::w]};
 }
 
-//! Second-index contration of a `dIR3` object and a `IR3` vector.
+//! Second-index contraction of a `dIR3` object and a `IR3` vector.
 /*!
     Returns the object
     ```
@@ -76,15 +76,14 @@ IR3 contraction<second>(const dIR3& dA, const IR3& B) {
     dA[dIR3::wu]*B[IR3::u] + dA[dIR3::wv]*B[IR3::v] + dA[dIR3::ww]*B[IR3::w]};
 }
 
-//! First and Second index contration of a `ddIR3` object and two `IR3` vectors.
+//! First and second index contraction of a `ddIR3` and two `IR3` vectors.
 /*!
     Returns the object
     ```
     C[IR3::k] = ddA[ddIR3::ijk] * B[IR3::i] * C[IR3::j]
     ```
     where summation is implicit in the indices `i,j`, with `i,j,k = u, v, w`.
-    Replacements ddIR3::ikj -> ddIR3::ijk have been
-    explicitly performed.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been explicitly performed.
 */
 template<>
 IR3 contraction<first, second>(const ddIR3& ddA, const IR3& B, const IR3& C) {
@@ -119,15 +118,14 @@ IR3 contraction<first, second>(const ddIR3& ddA, const IR3& B, const IR3& C) {
   };
 }
 
-//! Second and Third index contration of a `ddIR3` object and two `IR3` vectors.
+//! Second and third index contraction of a `ddIR3` and two `IR3` vectors.
 /*!
     Returns the object
     ```
     C[IR3::i] = ddA[ddIR3::ijk] * B[IR3::j] * C[IR3::k]
     ```
     where summation is implicit in the indices `j,k`, with `i,j,k = u, v, w`.
-    Replacements ddIR3::ikj -> ddIR3::ijk have been
-    explicitly performed.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been explicitly performed.
 */
 template<>
 IR3 contraction<second, third>(const ddIR3& ddA, const IR3& B, const IR3& C) {
@@ -153,14 +151,13 @@ IR3 contraction<second, third>(const ddIR3& ddA, const IR3& B, const IR3& C) {
   };
 }
 
-//! One index contraction of `SM3` object and First index of `ddIR3` object.
+//! First-index contraction of a `ddIR3` by second index of a `SM3` matrix.
 /*!
     Returns the object
     ```
-    ddC[ddIR3::ijk] = g[SM3::iu] * ddA[ddIR3::ujk] +
-			+ g[SM3::iv] * ddA[ddIR3::vjk] + g[SM3::iw] * ddA[ddIR3::wjk]
+    ddC[ddIR3::ijk] = g[SM3::im] * ddA[ddIR3::mjk]
     ```
-    with `i,j,k = u, v, w`.
+    where summation is implicit in the index `m`, with `m,i,j,k = u, v, w`.
     Replacements SM3::ij -> SM3::ji and ddIR3::ikj -> ddIR3::ijk have been
     explicitly performed.
 */
@@ -188,16 +185,14 @@ ddIR3 contraction<second, first>(const SM3& g, const ddIR3& ddA) {
   };
 }
 
-//! First-index contraction of `dIR3` object with First index of `ddIR3` object.
+//! First-by-first index contraction of `dIR3` and `ddIR3` objects.
 /*!
     Returns the object
     ```
-    ddC[ddIR3::ijk] = dA[dIR3::ui] * ddB[ddIR3::ujk] +
-			+ dA[dIR3::vi] * ddB[ddIR3::vjk] + dA[dIR3::wi] * ddB[ddIR3::wjk]
+    ddC[ddIR3::ijk] = dA[dIR3::mi] * ddB[ddIR3::mjk]
     ```
-    with `i,j,k = u, v, w`.
-    Replacements ddIR3::ikj -> ddIR3::ijk have been
-    explicitly performed.
+    where summation is implicit in the index `m`, with `m,i,j,k = u, v, w`.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been explicitly performed.
 */
 template<>
 ddIR3 contraction<first, first>(const dIR3& dA, const ddIR3& ddB) {
@@ -223,16 +218,14 @@ ddIR3 contraction<first, first>(const dIR3& dA, const ddIR3& ddB) {
   };
 }
 
-//! Second-index contraction of `dIR3` object with First index of `ddIR3` object.
+//! Second-by-first index contraction of `dIR3` and `ddIR3` objects.
 /*!
     Returns the object
     ```
-    ddC[ddIR3::ijk] = dA[dIR3::iu] * ddB[ddIR3::ujk] +
-			+ dA[dIR3::iv] * ddB[ddIR3::vjk] + dA[dIR3::iw] * ddB[ddIR3::wjk]
+    ddC[ddIR3::ijk] = dA[dIR3::im] * ddB[ddIR3::mjk]
     ```
-    with `i,j,k = u, v, w`.
-    Replacements ddIR3::ikj -> ddIR3::ijk have been
-    explicitly performed.
+    where summation is implicit in the index `m`, with `m,i,j,k = u, v, w`.
+    Replacements ddIR3::ikj -> ddIR3::ijk have been explicitly performed.
 */
 template<>
 ddIR3 contraction<second, first>(const dIR3& dA, const ddIR3& ddB) {
@@ -258,7 +251,7 @@ ddIR3 contraction<second, first>(const dIR3& dA, const ddIR3& ddB) {
   };
 }
 
-//! First-index contration of a `dSM3` object and a `IR3` vector.
+//! First-index contraction of a `dSM3` object and a `IR3` vector.
 /*!
     Returns the object
     ```
@@ -283,7 +276,7 @@ dIR3 contraction<first>(const dSM3& dA, const IR3& B) {
   };
 }
 
-//! Second-index contration of a `dSM3` object and a `IR3` vector.
+//! Second-index contraction of a `dSM3` object and a `IR3` vector.
 /*!
     Returns the object
     ```
@@ -311,7 +304,7 @@ dIR3 contraction<second>(const dSM3& dA, const IR3& B) {
   };
 }
 
-//! Third-index contration of a `dSM3` object and a `IR3` vector.
+//! Third-index contraction of a `dSM3` object and a `IR3` vector.
 /*!
     Returns the object
     ```
@@ -336,7 +329,7 @@ dIR3 contraction<third>(const dSM3& dA, const IR3& B) {
   };
 }
 
-//! Second-by-first-index contration of `dSM3` and `dIR3` objects.
+//! Second-by-first-index contraction of `dSM3` and `dIR3` objects.
 /*!
     Returns the object
     ```

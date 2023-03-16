@@ -21,87 +21,40 @@
 
 namespace gyronimo {
 
-metric_cartesian::metric_cartesian(const morphism_cartesian *morph) 
-	: metric_connected(morph) {
-}
+metric_cartesian::metric_cartesian(const morphism_cartesian* morph)
+    : metric_connected(morph) {}
 
-//! General-purpose implementation of the covariant metric.
-/*!
-	Implements the covariant metric in cartesian coordinates: 
-	@f$ g_{\alpha\beta} = \left(\begin{matrix}
-		1 && 0 && 0 \\
-		0 && 1 && 0 \\
-		0 && 0 && 1
-	\end{matrix}\right) @f$
-*/
 SM3 metric_cartesian::operator()(const IR3& r) const {
-	return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
+  return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
 }
-
-//! General-purpose implementation of the inverse (i.e., contravariant metric).
-/*!
-	Implements the contravariant metric in cartesian coordinates: 
-	@f$ g^{\alpha\beta} = \left(\begin{matrix}
-		1 && 0 && 0 \\
-		0 && 1 && 0 \\
-		0 && 0 && 1
-	\end{matrix}\right) @f$
-*/
 SM3 metric_cartesian::inverse(const IR3& r) const {
-	return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
+  return {1.0, 0.0, 0.0, 1.0, 0.0, 1.0};
 }
 dSM3 metric_cartesian::del(const IR3& r) const {
-	return {
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-	};
+  return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
 dSM3 metric_cartesian::del_inverse(const IR3& r) const {
-	return {
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-	};
+  return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
-
-//! General-purpose implementation of the Jacobian of the transformation in point @f$ \textbf{x} @f$.
-/*!
-	Implements the Jacobian in cartesian coordinates: 
-	@f$ J = 1 @f$
-*/
-double metric_cartesian::jacobian(const IR3& r) const {
-	return 1.0;
-}
-
-//! General-purpose implementation of the Jacobian gradient in point @f$ \textbf{x} @f$.
-/*!
-	Implements the Jacobian gradient in cartesian coordinates: 
-	@f$ \nabla J = \left( 0,0,0 \right) @f$
-*/
+double metric_cartesian::jacobian(const IR3& r) const { return 1.0; }
 IR3 metric_cartesian::del_jacobian(const IR3& r) const {
-	return {0.0, 0.0, 0.0};
+  return {0.0, 0.0, 0.0};
 }
-
 ddIR3 metric_cartesian::christoffel_first_kind(const IR3& r) const {
-	return {
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-	};
+  return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
 ddIR3 metric_cartesian::christoffel_second_kind(const IR3& r) const {
-	return {
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-	};
+  return {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
 IR3 metric_cartesian::to_covariant(const IR3& B, const IR3& r) const {
-	return B;
+  return B;
 }
 IR3 metric_cartesian::to_contravariant(const IR3& B, const IR3& r) const {
-	return B;
+  return B;
 }
 
-}
+}  // namespace gyronimo

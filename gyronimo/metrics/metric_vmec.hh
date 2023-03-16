@@ -41,8 +41,8 @@ class metric_vmec : public metric_connected {
   const parser_vmec* parser() const {return parser_;};
   const double signgs() const {return signsgs_;};
 
-  virtual const morphism_vmec* morph() const override {
-    return static_cast<const morphism_vmec*>(morph_);
+  virtual const morphism_vmec* my_morphism() const override {
+    return static_cast<const morphism_vmec*>(metric_connected::my_morphism());
   };
 
  private:

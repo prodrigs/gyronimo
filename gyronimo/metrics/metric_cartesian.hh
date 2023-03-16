@@ -20,37 +20,36 @@
 #ifndef GYRONIMO_METRIC_CARTESIAN
 #define GYRONIMO_METRIC_CARTESIAN
 
-#include <gyronimo/metrics/morphism_cartesian.hh>
 #include <gyronimo/metrics/metric_connected.hh>
+#include <gyronimo/metrics/morphism_cartesian.hh>
 
 namespace gyronimo {
 
 //! Trivial covariant metric for cartesian space.
 class metric_cartesian : public metric_connected {
-public:
-	metric_cartesian(const morphism_cartesian *morph);
-	virtual ~metric_cartesian() override {};
+ public:
+  metric_cartesian(const morphism_cartesian* morph);
+  virtual ~metric_cartesian() override {};
 
-	virtual SM3 operator()(const IR3& r) const override;
-	virtual SM3 inverse(const IR3& r) const override;
-	virtual dSM3 del(const IR3& r) const override;
-	virtual dSM3 del_inverse(const IR3& r) const override;
-	virtual double jacobian(const IR3& r) const override;
-	virtual IR3 del_jacobian(const IR3& r) const override;
+  virtual SM3 operator()(const IR3& r) const override;
+  virtual SM3 inverse(const IR3& r) const override;
+  virtual dSM3 del(const IR3& r) const override;
+  virtual dSM3 del_inverse(const IR3& r) const override;
+  virtual double jacobian(const IR3& r) const override;
+  virtual IR3 del_jacobian(const IR3& r) const override;
 
-	virtual ddIR3 christoffel_first_kind(const IR3& r) const override;
-	virtual ddIR3 christoffel_second_kind(const IR3& r) const override;
+  virtual ddIR3 christoffel_first_kind(const IR3& r) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& r) const override;
 
-	virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
-	virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
+  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
 
-	virtual const morphism_cartesian* morph() const override {
-		return static_cast<const morphism_cartesian*>(morph_);
-	};
-
-private:
+  virtual const morphism_cartesian* my_morphism() const override {
+    return static_cast<const morphism_cartesian*>(
+        metric_connected::my_morphism());
+  };
 };
 
-} // end namespace gyronimo.
+}  // end namespace gyronimo.
 
-#endif // GYRONIMO_METRIC_CARTESIAN
+#endif  // GYRONIMO_METRIC_CARTESIAN

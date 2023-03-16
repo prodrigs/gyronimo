@@ -45,6 +45,8 @@ namespace gyronimo {
           \mathbf{u}_x
     @f}
     where the versor @f$\mathbf{u}_x@f$ is directed towards the Sun.
+
+    @todo: get rid of the self-built metric and related pointer wizardry.
 */
 class msphere_luhmann : public IR3field_c1 {
  public:

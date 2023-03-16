@@ -51,8 +51,8 @@ dIR3 equilibrium_helena::del_contravariant(
   double chi = this->metric_->parser()->reduce_chi(position[IR3::v]);
   return {
       0.0, 0.0, 0.0, 
-	  Bchi_->partial_u(s, chi), Bchi_->partial_v(s, chi) , 0.0, 
-	  Bphi_->partial_u(s, chi), Bphi_->partial_v(s, chi) , 0.0};
+      Bchi_->partial_u(s, chi), Bchi_->partial_v(s, chi) , 0.0, 
+      Bphi_->partial_u(s, chi), Bphi_->partial_v(s, chi) , 0.0};
 }
 
 }// end namespace gyronimo.

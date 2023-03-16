@@ -25,27 +25,24 @@
 namespace gyronimo {
 
 class morphism_cartesian : public morphism {
-public:
-	morphism_cartesian();
-	virtual ~morphism_cartesian() override {};
+ public:
+  morphism_cartesian() : morphism() {};
+  virtual ~morphism_cartesian() override {};
 
-	virtual IR3 operator()(const IR3 &q) const override;
-	virtual IR3 inverse(const IR3 &x) const override;
-	virtual IR3 translation(const IR3 &q, const IR3 &delta) const override;
-	virtual dIR3 del(const IR3 &q) const override;
-	virtual ddIR3 ddel(const IR3 &q) const override;
+  virtual IR3 operator()(const IR3& q) const override;
+  virtual IR3 inverse(const IR3& x) const override;
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-	virtual double jacobian(const IR3 &q) const override;
-	virtual dIR3 del_inverse(const IR3 &q) const override;
-
-	virtual IR3 to_covariant(const IR3 &A, const IR3 &q) const override;
-	virtual IR3 to_contravariant(const IR3 &A, const IR3 &q) const override;
-	virtual IR3 from_covariant(const IR3 &A, const IR3 &q) const override;
-	virtual IR3 from_contravariant(const IR3 &A, const IR3 &q) const override;
-
-private:
+  virtual double jacobian(const IR3& q) const override;
+  virtual dIR3 del_inverse(const IR3& q) const override;
+  virtual IR3 to_covariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 from_covariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 from_contravariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
 };
 
-} // end namespace gyronimo
+}  // end namespace gyronimo
 
-#endif // GYRONIMO_MORPHISM_CARTESIAN
+#endif  // GYRONIMO_MORPHISM_CARTESIAN
