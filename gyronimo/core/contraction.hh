@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,10 +34,14 @@ enum contraction_index {first, second, third};
 
 template<contraction_index>
 IR3 contraction(const dIR3& dA, const IR3& B);
-template<contraction_index, contraction_index>
-IR3 contraction(const ddIR3& ddA, const IR3& B, const IR3& C);
 template<contraction_index>
 dIR3 contraction(const dSM3& dA, const IR3& B);
+template<contraction_index, contraction_index>
+IR3 contraction(const ddIR3& ddA, const IR3& B, const IR3& C);
+template<contraction_index, contraction_index>
+ddIR3 contraction(const SM3& g, const ddIR3& ddA);
+template<contraction_index, contraction_index>
+ddIR3 contraction(const dIR3& dA, const ddIR3& ddB);
 template<contraction_index, contraction_index>
 dIR3 contraction(const SM3& g, const dIR3& dB);
 dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h);

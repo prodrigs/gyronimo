@@ -93,7 +93,7 @@ dIR3 equilibrium_vmec::del_contravariant(
   };
   return {
       0.0, 0.0, 0.0, 
-	    dB_zeta_ds, dB_zeta_dzeta, dB_zeta_dtheta,
+      dB_zeta_ds, dB_zeta_dzeta, dB_zeta_dtheta,
       dB_theta_ds, dB_theta_dzeta, dB_theta_dtheta
   };
 }

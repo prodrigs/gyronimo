@@ -21,30 +21,33 @@
 #define GYRONIMO_METRIC_VMEC
 
 #include <gyronimo/parsers/parser_vmec.hh>
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/morphism_vmec.hh>
+#include <gyronimo/metrics/metric_connected.hh>
 #include <gyronimo/interpolators/interpolator1d.hh>
 
 namespace gyronimo{
 
 //! Covariant metric in `VMEC` curvilinear coordinates.
-class metric_vmec : public metric_covariant {
+class metric_vmec : public metric_connected {
  public:
   typedef std::valarray<double> narray_type;
   typedef std::vector<interpolator1d> spectralarray_type;
 
-  metric_vmec(
-    const parser_vmec *parser, const interpolator1d_factory *ifactory);
+  metric_vmec(const morphism_vmec* morph, 
+    const interpolator1d_factory *ifactory);
   virtual ~metric_vmec() override;
   virtual SM3 operator()(const IR3& position) const override;
   virtual dSM3 del(const IR3& position) const override;
-  virtual IR3 transform2cylindrical(const IR3& position) const;
-  double jacobian_vmec(const IR3& position) const;
   const parser_vmec* parser() const {return parser_;};
   const double signgs() const {return signsgs_;};
 
+  virtual const morphism_vmec* my_morphism() const override {
+    return static_cast<const morphism_vmec*>(metric_connected::my_morphism());
+  };
+
  private:
   const parser_vmec* parser_;
-  double b0_;
+  const interpolator1d_factory *ifactory_;
   int mnmax_, mnmax_nyq_, ns_, mpol_, ntor_, nfp_, signsgs_; 
   narray_type xm_, xn_, xm_nyq_, xn_nyq_; 
   interpolator1d **Rmnc_;

@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,41 +15,33 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @metric_cartesian.hh, this file is part of ::gyronimo::
+// @metric_connected.hh, this file is part of ::gyronimo::
 
-#ifndef GYRONIMO_METRIC_CARTESIAN
-#define GYRONIMO_METRIC_CARTESIAN
+#ifndef GYRONIMO_METRIC_CONNECTED
+#define GYRONIMO_METRIC_CONNECTED
 
-#include <gyronimo/metrics/metric_connected.hh>
-#include <gyronimo/metrics/morphism_cartesian.hh>
+#include <gyronimo/core/error.hh>
+#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/morphism.hh>
 
 namespace gyronimo {
 
-//! Trivial covariant metric for cartesian space.
-class metric_cartesian : public metric_connected {
+//! Covariant metric connected to a defining `morphism`.
+class metric_connected : public metric_covariant {
  public:
-  metric_cartesian(const morphism_cartesian* morph);
-  virtual ~metric_cartesian() override {};
-
+  metric_connected(const morphism* m) : my_morphism_(m) {};
+  virtual ~metric_connected() override {};
   virtual SM3 operator()(const IR3& r) const override;
-  virtual SM3 inverse(const IR3& r) const override;
   virtual dSM3 del(const IR3& r) const override;
-  virtual dSM3 del_inverse(const IR3& r) const override;
   virtual double jacobian(const IR3& r) const override;
   virtual IR3 del_jacobian(const IR3& r) const override;
-
   virtual ddIR3 christoffel_first_kind(const IR3& r) const override;
   virtual ddIR3 christoffel_second_kind(const IR3& r) const override;
-
-  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
-
-  virtual const morphism_cartesian* my_morphism() const override {
-    return static_cast<const morphism_cartesian*>(
-        metric_connected::my_morphism());
-  };
+  virtual const morphism* my_morphism() const { return my_morphism_; };
+ private:
+  const morphism* my_morphism_;
 };
 
 }  // end namespace gyronimo.
 
-#endif  // GYRONIMO_METRIC_CARTESIAN
+#endif  // GYRONIMO_METRIC_CONNECTED

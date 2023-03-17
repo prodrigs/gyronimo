@@ -17,59 +17,68 @@
 
 // @metric_polar_torus.cc, this file is part of ::gyronimo::
 
-#include <cmath>
 #include <gyronimo/metrics/metric_polar_torus.hh>
+
+#include <cmath>
 
 namespace gyronimo {
 
-metric_polar_torus::metric_polar_torus(
-    const double minor_radius, double major_radius)
-    : minor_radius_(minor_radius), major_radius_(major_radius),
-      minor_radius_squared_(minor_radius_*minor_radius_),
-      major_radius_squared_(major_radius_*major_radius_),
-      iaspect_ratio_(minor_radius_/major_radius_) {
-}
+metric_polar_torus::metric_polar_torus(const morphism_polar_torus* morph)
+    : metric_connected(morph), minor_radius_(morph->minor_radius()),
+      major_radius_(morph->major_radius()),
+      minor_radius_squared_(minor_radius_ * minor_radius_),
+      iminor_radius_squared_(1.0 / minor_radius_squared_),
+      major_radius_squared_(major_radius_ * major_radius_),
+      iaspect_ratio_(morph->iaspect_ratio()) {}
 SM3 metric_polar_torus::operator()(const IR3& r) const {
   double u = r[IR3::u], v = r[IR3::v];
-  double R = major_radius_*(1.0 + iaspect_ratio_*u*std::cos(v));
+  double R = major_radius_ * (1.0 + iaspect_ratio_ * u * std::cos(v));
   return {minor_radius_squared_, 0.0, 0.0,
-           minor_radius_squared_*u*u, 0.0,
-                                      R*R};
+      minor_radius_squared_ * u * u, 0.0, R * R};
+}
+SM3 metric_polar_torus::inverse(const IR3& r) const {
+  double u = r[IR3::u], v = r[IR3::v];
+  double R = major_radius_ * (1.0 + iaspect_ratio_ * u * std::cos(v));
+  return {iminor_radius_squared_, 0.0, 0.0,
+      iminor_radius_squared_ / (u * u), 0.0, 1.0 / (R * R)};
 }
 dSM3 metric_polar_torus::del(const IR3& r) const {
   double u = r[IR3::u];
   double v = r[IR3::v];
   double cosv = std::cos(v), sinv = std::sin(v);
-  double R = major_radius_*(1.0 + iaspect_ratio_*u*cosv);
-  double factor = 2.0*R*minor_radius_;
+  double R = major_radius_ * (1.0 + iaspect_ratio_ * u * cosv);
+  double factor = 2.0 * R * minor_radius_;
   return {
-      0.0, 0.0, 0.0, // d_i g_uu
-      0.0, 0.0, 0.0, // d_i g_uv
-      0.0, 0.0, 0.0, // d_i g_uw
-      2.0 * u * minor_radius_squared_, 0.0, 0.0, //d_i g_vv
-      0.0, 0.0, 0.0, // d_i g_vw
-      factor * cosv, - factor * u * sinv, 0.0}; // d_i g_ww
+      0.0, 0.0, 0.0,  // d_i g_uu
+      0.0, 0.0, 0.0,  // d_i g_uv
+      0.0, 0.0, 0.0,  // d_i g_uw
+      2.0 * u * minor_radius_squared_, 0.0, 0.0,  // d_i g_vv
+      0.0, 0.0, 0.0,  // d_i g_vw
+      factor * cosv, -factor * u * sinv, 0.0};  // d_i g_ww
 }
 double metric_polar_torus::jacobian(const IR3& r) const {
   double u = r[IR3::u], v = r[IR3::v];
-  return minor_radius_squared_*major_radius_*
-      u*(1.0 + iaspect_ratio_*u*std::cos(v));
+  return minor_radius_squared_ * major_radius_ * u *
+      (1.0 + iaspect_ratio_ * u * std::cos(v));
 }
 IR3 metric_polar_torus::to_covariant(const IR3& B, const IR3& r) const {
   double u = r[IR3::u];
   double v = r[IR3::v];
   return {
-    minor_radius_squared_*B[IR3::u],
-    minor_radius_squared_*u*u*B[IR3::v],
-    std::pow(major_radius_*(1.0 + iaspect_ratio_*u*std::cos(v)), 2)*B[IR3::w]};
+      minor_radius_squared_ * B[IR3::u],
+      minor_radius_squared_ * u * u * B[IR3::v],
+      std::pow(major_radius_ * (1.0 + iaspect_ratio_ * u * std::cos(v)), 2) *
+          B[IR3::w]};
 }
 IR3 metric_polar_torus::to_contravariant(const IR3& B, const IR3& r) const {
   double u = r[IR3::u];
   double v = r[IR3::v];
   return {
-    B[IR3::u]/minor_radius_squared_,
-    B[IR3::v]/(minor_radius_squared_*u*u),
-    B[IR3::w]/std::pow(major_radius_*(1.0 + iaspect_ratio_*u*std::cos(v)), 2)};
+      B[IR3::u] / minor_radius_squared_,
+      B[IR3::v] / (minor_radius_squared_ * u * u),
+      B[IR3::w] /
+          std::pow(
+              major_radius_ * (1.0 + iaspect_ratio_ * u * std::cos(v)), 2)};
 }
 
-} // end namespace gyronimo.
+}  // end namespace gyronimo.

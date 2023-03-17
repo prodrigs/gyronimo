@@ -39,7 +39,7 @@ eigenmode_castor_a::eigenmode_castor_a(
 IR3 eigenmode_castor_a::covariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double phi = position[IR3::w];
-  double chi = metric_->reduce_chi(position[IR3::v]);
+  double chi = metric_->parser()->reduce_chi(position[IR3::v]);
   std::complex<double> factor = norm_factor_*std::exp(w_*time + i_n_tor_*phi);
   return {
       std::real(factor*(this->tildeA1_(s, chi))),
@@ -47,7 +47,7 @@ IR3 eigenmode_castor_a::covariant(const IR3& position, double time) const {
               std::real(factor*(this->tildeA3_(s, chi)))};
 }
 IR3 eigenmode_castor_a::contravariant(const IR3& position, double time) const {
-  return this->metric()->
+  return metric_->
       to_contravariant(this->covariant(position, time), position);
 }
 

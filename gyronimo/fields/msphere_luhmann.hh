@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues.
+// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,6 +45,8 @@ namespace gyronimo {
           \mathbf{u}_x
     @f}
     where the versor @f$\mathbf{u}_x@f$ is directed towards the Sun.
+
+    @todo: get rid of the self-built metric and related pointer wizardry.
 */
 class msphere_luhmann : public IR3field_c1 {
  public:

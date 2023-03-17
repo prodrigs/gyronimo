@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2022 Paulo Rodrigues.
+// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -113,21 +113,21 @@ class dIR3 {
   std::array<double, 9> data_;
 };
 
-//! Double partial derivatives of a @f$\mathbb{R}^3@f$ vector.
+//! Second partial derivatives of a @f$\mathbb{R}^3@f$ vector.
 /*!
     **Aggregate** type supporting list initialization. Unlike `IR3`, no
     vectorised algebraic operations are supported. The index operator
-    `B[ddIR3::ijk]` returns the value @f$\partial_k\partial_j B^i@f$ (for contravariant
-    vectors) or @f$\partial_k\partial_j B_i@f$ (for covariant vectors) with `i,j,k = u, v,
-    w`.
+    `B[ddIR3::ijk]` returns the value @f$\partial_j\partial_k B^i@f$ (for
+    contravariant vectors) or @f$\partial_j\partial_k B_i@f$ (for covariant
+    vectors) with `i,j,k = u, v, w`.
 */
 class ddIR3 {
  public:
   enum index {
     uuu = 0, uuv = 1, uuw = 2, uvv = 3, uvw = 4, uww = 5,
     vuu = 6, vuv = 7, vuw = 8, vvv = 9, vvw = 10, vww = 11,
-    wuu = 12, wuv = 13, wuw = 14, wvv = 15, wvw = 16, www = 17,
-	};
+    wuu = 12, wuv = 13, wuw = 14, wvv = 15, wvw = 16, www = 17
+  };
 
   double& operator[](index i) {return data_[i];}
   const double& operator[](index i) const {return data_[i];}

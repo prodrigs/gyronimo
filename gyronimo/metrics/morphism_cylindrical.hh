@@ -24,27 +24,33 @@
 
 namespace gyronimo {
 
+//! Morphism for cylindrical coordinates.
+/*!
+    The three contravariant coordinates are the distance to the axis (`u`,
+    normalised to `Lref` in SI units), the angle measured counterclockwise when
+    seen from the top of the axis (`v`), and the length measured along the
+    latter (`w`, normalised also to `Lref`).
+*/
 class morphism_cylindrical : public morphism {
+ public:
+  morphism_cylindrical(const double& Lref)
+      : morphism(), Lref_(Lref), iLref_(1 / Lref),
+        Lref3_(Lref * Lref * Lref) {};
+  virtual ~morphism_cylindrical() override {};
 
-public:
+  virtual IR3 operator()(const IR3& q) const override;
+  virtual IR3 inverse(const IR3& x) const override;
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-	morphism_cylindrical(const double &Lref) 
-		: morphism(), Lref_(Lref), iLref_(1/Lref), Lref_3_(Lref*Lref*Lref) {};
-	virtual ~morphism_cylindrical() override {};
+  virtual double jacobian(const IR3& q) const override;
+  virtual dIR3 del_inverse(const IR3& q) const override;
 
-	virtual IR3 operator()(const IR3 &q) const override;
-	virtual IR3 inverse(const IR3 &x) const override;
-	virtual dIR3 del(const IR3 &q) const override;
-	virtual ddIR3 ddel(const IR3 &q) const override;
+  double Lref() const { return Lref_; };
+ private:
+  const double Lref_, iLref_, Lref3_;
+};
 
-	virtual double jacobian(const IR3 &q) const override;
-	virtual dIR3 del_inverse(const IR3 &q) const override;
+}  // end namespace gyronimo
 
-private:
-	const double Lref_, iLref_, Lref_3_;
-
-}; // end class morphism_cylindrical
-
-} // end namespace gyronimo
-
-#endif // GYRONIMO_MORPHISM_CYLINDRICAL
+#endif  // GYRONIMO_MORPHISM_CYLINDRICAL

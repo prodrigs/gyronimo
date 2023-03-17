@@ -15,28 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @morphism_spherical.hh, this file is part of ::gyronimo::
+// @morphism_cartesian.hh, this file is part of ::gyronimo::
 
-#ifndef GYRONIMO_MORPHISM_SPHERICAL
-#define GYRONIMO_MORPHISM_SPHERICAL
+#ifndef GYRONIMO_MORPHISM_CARTESIAN
+#define GYRONIMO_MORPHISM_CARTESIAN
 
 #include <gyronimo/metrics/morphism.hh>
 
 namespace gyronimo {
 
-//! Morphism for spherical coordinates.
-/*!
-    The three contravariant coordinates are the distance to the origin
-    normalised to `Lref` in SI units, the angle measured from the `z` axis
-    (i.e., co-latitude measured from the north pole), and the angle measured
-    from the `x` axis counterclockwise when seen from the north pole.
-*/
-class morphism_spherical : public morphism {
+class morphism_cartesian : public morphism {
  public:
-  morphism_spherical(const double& Lref)
-      : morphism(), Lref_(Lref), iLref_(1 / Lref),
-        Lref3_(Lref * Lref * Lref) {};
-  virtual ~morphism_spherical() override {};
+  morphism_cartesian() : morphism() {};
+  virtual ~morphism_cartesian() override {};
 
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
@@ -45,12 +36,13 @@ class morphism_spherical : public morphism {
 
   virtual double jacobian(const IR3& q) const override;
   virtual dIR3 del_inverse(const IR3& q) const override;
-
-  double Lref() const { return Lref_; };
- private:
-  const double Lref_, iLref_, Lref3_;
+  virtual IR3 to_covariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 from_covariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 from_contravariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
 };
 
 }  // end namespace gyronimo
 
-#endif  // GYRONIMO_MORPHISM_SPHERICAL
+#endif  // GYRONIMO_MORPHISM_CARTESIAN

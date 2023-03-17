@@ -15,28 +15,28 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @morphism_spherical.hh, this file is part of ::gyronimo::
+// @morphism_polar_torus.hh, this file is part of ::gyronimo::
 
-#ifndef GYRONIMO_MORPHISM_SPHERICAL
-#define GYRONIMO_MORPHISM_SPHERICAL
+#ifndef GYRONIMO_MORPHISM_POLAR_TORUS
+#define GYRONIMO_MORPHISM_POLAR_TORUS
 
 #include <gyronimo/metrics/morphism.hh>
 
 namespace gyronimo {
 
-//! Morphism for spherical coordinates.
+//! Morphism for toroidal coordinates with polar cross section.
 /*!
-    The three contravariant coordinates are the distance to the origin
-    normalised to `Lref` in SI units, the angle measured from the `z` axis
-    (i.e., co-latitude measured from the north pole), and the angle measured
-    from the `x` axis counterclockwise when seen from the north pole.
+    The three contravariant coordinates are the distance to the magnetic axis
+    normalized to the `minor_radius` (`u`), the angle measured counterclockwise
+    on the poloidal cross section from the low-field side midplane (`v`, in
+    rads), and the toroidal angle (`w`, in rads) measured clockwise when looking
+    from the torus' top. The lengths `minor_radius` and `major_radius` are in SI
+    units.
 */
-class morphism_spherical : public morphism {
+class morphism_polar_torus : public morphism {
  public:
-  morphism_spherical(const double& Lref)
-      : morphism(), Lref_(Lref), iLref_(1 / Lref),
-        Lref3_(Lref * Lref * Lref) {};
-  virtual ~morphism_spherical() override {};
+  morphism_polar_torus(const double minor_radius, double major_radius);
+  virtual ~morphism_polar_torus() override {};
 
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
@@ -46,11 +46,16 @@ class morphism_spherical : public morphism {
   virtual double jacobian(const IR3& q) const override;
   virtual dIR3 del_inverse(const IR3& q) const override;
 
-  double Lref() const { return Lref_; };
+  double minor_radius() const { return minor_radius_; };
+  double major_radius() const { return major_radius_; };
+  double iaspect_ratio() const { return iaspect_ratio_; };
+
  private:
-  const double Lref_, iLref_, Lref3_;
+  const double minor_radius_, major_radius_;
+  const double iaspect_ratio_, volume_factor_;
+  const double iminor_radius_;
 };
 
 }  // end namespace gyronimo
 
-#endif  // GYRONIMO_MORPHISM_SPHERICAL
+#endif  // GYRONIMO_MORPHISM_POLAR_TORUS

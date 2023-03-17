@@ -20,33 +20,39 @@
 #ifndef GYRONIMO_METRIC_CYLINDRICAL
 #define GYRONIMO_METRIC_CYLINDRICAL
 
-#include <gyronimo/metrics/metric_covariant.hh>
+#include <gyronimo/metrics/metric_connected.hh>
+#include <gyronimo/metrics/morphism_cylindrical.hh>
 
 namespace gyronimo {
 
 //! Trivial covariant metric for cylindrical space.
-class metric_cylindrical : public metric_covariant {
-public:
-	metric_cylindrical(const double &Lref) 
-		: Lref_(Lref), Lref_2_(Lref*Lref), iLref_2_(1/Lref_2_), Lref_3_(Lref*Lref*Lref){};
-	virtual ~metric_cylindrical() override {};
+class metric_cylindrical : public metric_connected {
+ public:
+  metric_cylindrical(const morphism_cylindrical* morph);
+  virtual ~metric_cylindrical() override {};
 
-	virtual SM3 operator()(const IR3& q) const override;
-	virtual SM3 inverse(const IR3& q) const override;
+  virtual SM3 operator()(const IR3& q) const override;
+  virtual SM3 inverse(const IR3& q) const override;
 
-	virtual dSM3 del(const IR3& q) const override;
-	virtual double jacobian(const IR3& q) const override;
-	virtual IR3 del_jacobian(const IR3& q) const override;
-	virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
-	virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
+  virtual dSM3 del(const IR3& q) const override;
+  virtual double jacobian(const IR3& q) const override;
+  virtual IR3 del_jacobian(const IR3& q) const override;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
 
-	double Lref() {return Lref_;};
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
 
-private:
-	const double Lref_, Lref_2_, iLref_2_, Lref_3_;
+  double Lref() { return Lref_; };
 
-}; // end class metric_cylindrical
+  virtual const morphism_cylindrical* my_morphism() const override {
+    return static_cast<const morphism_cylindrical*>(
+        metric_connected::my_morphism());
+  };
+ private:
+  const double Lref_, Lref_2_, iLref_2_, Lref_3_;
+};
 
-} // end namespace gyronimo.
+}  // end namespace gyronimo.
 
-#endif // GYRONIMO_METRIC_CARTESIAN
+#endif  // GYRONIMO_METRIC_CYLINDRICAL

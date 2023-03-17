@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,6 +53,8 @@ class metric_covariant {
   virtual IR3 to_contravariant(const IR3& B, const IR3& r) const;
   virtual SM3 inverse(const IR3& r) const;
   virtual dSM3 del_inverse(const IR3& r) const;
+  virtual ddIR3 christoffel_first_kind(const IR3& r) const;
+  virtual ddIR3 christoffel_second_kind(const IR3& r) const;
 };
 
 }

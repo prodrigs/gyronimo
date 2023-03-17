@@ -15,42 +15,47 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @morphism_spherical.hh, this file is part of ::gyronimo::
+// @morphism_vmec.hh, this file is part of ::gyronimo::
 
-#ifndef GYRONIMO_MORPHISM_SPHERICAL
-#define GYRONIMO_MORPHISM_SPHERICAL
+#ifndef GYRONIMO_MORPHISM_VMEC
+#define GYRONIMO_MORPHISM_VMEC
 
+#include <gyronimo/interpolators/interpolator1d.hh>
 #include <gyronimo/metrics/morphism.hh>
+#include <gyronimo/parsers/parser_vmec.hh>
 
 namespace gyronimo {
 
-//! Morphism for spherical coordinates.
-/*!
-    The three contravariant coordinates are the distance to the origin
-    normalised to `Lref` in SI units, the angle measured from the `z` axis
-    (i.e., co-latitude measured from the north pole), and the angle measured
-    from the `x` axis counterclockwise when seen from the north pole.
-*/
-class morphism_spherical : public morphism {
+//! Morphism in `VMEC` curvilinear coordinates.
+class morphism_vmec : public morphism {
  public:
-  morphism_spherical(const double& Lref)
-      : morphism(), Lref_(Lref), iLref_(1 / Lref),
-        Lref3_(Lref * Lref * Lref) {};
-  virtual ~morphism_spherical() override {};
+  typedef std::valarray<double> narray_type;
+
+  morphism_vmec(
+      const parser_vmec* parser, const interpolator1d_factory* ifactory);
+  virtual ~morphism_vmec() override;
 
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
   virtual dIR3 del(const IR3& q) const override;
   virtual ddIR3 ddel(const IR3& q) const override;
 
   virtual double jacobian(const IR3& q) const override;
-  virtual dIR3 del_inverse(const IR3& q) const override;
 
-  double Lref() const { return Lref_; };
+  const parser_vmec* parser() const { return parser_; };
  private:
-  const double Lref_, iLref_, Lref3_;
+  const parser_vmec* parser_;
+  narray_type xm_, xn_;
+
+  interpolator1d** Rmnc_;
+  interpolator1d** Zmns_;
+  interpolator1d** gmnc_;
+
+  std::pair<double, double> get_rz(const IR3& position) const;
+  std::pair<double, double> reflection_past_axis(double s, double theta) const;
 };
 
 }  // end namespace gyronimo
 
-#endif  // GYRONIMO_MORPHISM_SPHERICAL
+#endif  // GYRONIMO_MORPHISM_VMEC
