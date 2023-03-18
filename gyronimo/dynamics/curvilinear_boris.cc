@@ -42,7 +42,7 @@ curvilinear_boris::curvilinear_boris(const double &Lref, const double &Vref,
 		iEfield_time_factor_(Efield ? Tref_ / Efield->t_factor() : 1.0),
 		iBfield_time_factor_(Bfield ? Tref_ / Bfield->t_factor() : 1.0),
 		metric_(Bfield ? dynamic_cast<const metric_connected*>(Bfield->metric()) : nullptr),
-		morph_(metric_ ? metric_->morph() : nullptr) {
+		my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
 
 	// test if fields exist
 	// if(!Efield) error(__func__, __FILE__, __LINE__, 
@@ -79,7 +79,7 @@ curvilinear_boris::state curvilinear_boris::do_step(
 	// extract position and velocity from state
 	IR3 q_old = {in[0], in[1], in[2]};
 	IR3 v_old = {in[3], in[4], in[5]};
-	dIR3 e_old = morph_->del(q_old);
+	dIR3 e_old = my_morphism_->del(q_old);
 
 	// calculate fields
 	IR3 Efield = {0.0, 0.0, 0.0};
@@ -98,9 +98,9 @@ curvilinear_boris::state curvilinear_boris::do_step(
 		boris_push(v_old, Oref_, Efield, Bmag, Bversor, dt) :
 		boris_push(v_old, Oref_, Bmag, Bversor, dt);
 
-	IR3 u_half = morph_->to_contravariant(v_new, q_old);
+	IR3 u_half = my_morphism_->to_contravariant(v_new, q_old);
 	IR3 q_half = q_old + (0.5*Lref_*dt) * u_half;
-	IR3 u_new = morph_->to_contravariant(v_new, q_half);
+	IR3 u_new = my_morphism_->to_contravariant(v_new, q_half);
 	IR3 q_new = q_old + (Lref_*dt) * u_new;
 
 	return {q_new[IR3::u], q_new[IR3::v], q_new[IR3::w],
@@ -122,7 +122,7 @@ IR3 curvilinear_boris::get_position(const state &s) const {
 IR3 curvilinear_boris::get_velocity(const state &s) const {
 	IR3 q_pos = {s[0], s[1], s[2]};
 	IR3 vel_cartesian = {s[3], s[4], s[5]};
-	IR3 vel_contravariant = morph_->to_contravariant(vel_cartesian, q_pos);
+	IR3 vel_contravariant = my_morphism_->to_contravariant(vel_cartesian, q_pos);
 	return vel_contravariant;
 }
 
@@ -137,7 +137,7 @@ double curvilinear_boris::energy_parallel(const state &s, double &time) const {
 	IR3 vel = {s[3], s[4], s[5]};
 	double Btime = time * iBfield_time_factor_;
 	IR3 b_contravariant = magnetic_field_->contravariant_versor(q_pos, Btime);
-	IR3 b_cartesian = morph_->from_contravariant(b_contravariant, q_pos);
+	IR3 b_cartesian = my_morphism_->from_contravariant(b_contravariant, q_pos);
 	double vpar = inner_product(vel, b_cartesian);
 	return vpar*vpar;
 }
@@ -148,21 +148,17 @@ double curvilinear_boris::energy_perpendicular(const state &s, double &time) con
 	IR3 vel = {s[3], s[4], s[5]};
 	double Btime = time * iBfield_time_factor_;
 	IR3 Bversor_con = magnetic_field_->contravariant_versor(q_pos, Btime);
-	IR3 Bversor = morph_->from_contravariant(Bversor_con, q_pos);
+	IR3 Bversor = my_morphism_->from_contravariant(Bversor_con, q_pos);
 	IR3 vperp = cross_product(vel, Bversor);
 	return inner_product(vperp, vperp);
 }
 
-//! Creates the first `curvilinear_boris::state` from a point in cartesian phase-space.
 curvilinear_boris::state curvilinear_boris::generate_initial_state(
-		const IR3 &cartesian_position, const IR3 &cartesian_velocity, 
-		const double &time, const double &dt) const {
+		const IR3 &pos, const IR3 &vel, const double &time, const double &dt) const {
 
-	IR3 q = morph_->inverse(cartesian_position);
-	IR3 v = cartesian_velocity;
 	state s0 = {
-		q[IR3::u], q[IR3::v], q[IR3::w],
-		v[IR3::u], v[IR3::v], v[IR3::w]
+		pos[IR3::u], pos[IR3::v], pos[IR3::w],
+		vel[IR3::u], vel[IR3::v], vel[IR3::w]
 	};
 	state s1 = do_step(s0, time, -0.5*dt);
 
