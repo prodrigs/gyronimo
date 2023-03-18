@@ -53,13 +53,12 @@ public:
 	double energy_parallel(const state &s, double &time) const;
 	double energy_perpendicular(const state &s, double &time) const;
 
-	state generate_initial_state(
-		const IR3 &cartesian_position, const IR3 &cartesian_velocity, 
+	state generate_initial_state(const IR3 &pos, const IR3 &vel, 
 		const double &t, const double &dt) const;
 
 	const IR3field* electric_field() const {return electric_field_;};
 	const IR3field* magnetic_field() const {return magnetic_field_;};
-	const morphism_cartesian* morph() const {return morph_;};
+	const morphism_cartesian* my_morphism() const {return my_morphism_;};
 
 	//! Returns the reference length scale `Lref`.
 	double Lref() const {return Lref_;};
@@ -78,7 +77,7 @@ private:
 	const IR3field *electric_field_, *magnetic_field_;
 	const double iEfield_time_factor_, iBfield_time_factor_;
 	const metric_cartesian *metric_;
-	const morphism_cartesian *morph_;
+	const morphism_cartesian *my_morphism_;
 
 }; // end class classical_boris
 

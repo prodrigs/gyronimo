@@ -41,7 +41,7 @@ classical_boris::classical_boris(const double &Lref, const double &Vref,
 		iEfield_time_factor_(Efield ? Tref_ / Efield->t_factor() : 1.0),
 		iBfield_time_factor_(Bfield ? Tref_ / Bfield->t_factor() : 1.0),
 		metric_(Bfield ? dynamic_cast<const metric_connected*>(Bfield->metric()) : nullptr),
-		morph_(metric_ ? metric_->morph() : nullptr) {
+		my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
 
 	// test if fields exist
 	// if(!Efield) error(__func__, __FILE__, __LINE__, 
@@ -78,7 +78,7 @@ classical_boris::state classical_boris::do_step(
 	// extract position and velocity from state
 	IR3 q_old = {in[0], in[1], in[2]};
 	IR3 v_old = {in[3], in[4], in[5]};
-	dIR3 e_old = morph_->del(q_old);
+	dIR3 e_old = my_morphism_->del(q_old);
 
 	// calculate fields
 	IR3 Efield = {0.0, 0.0, 0.0};
@@ -98,10 +98,10 @@ classical_boris::state classical_boris::do_step(
 		boris_push(v_old, Oref_, Bmag, Bversor, dt);
 	// IR3 x_new = x_old + (Lref_*dt) * v_new;
 
-	// IR3 q_new = morph_->inverse(x_new);
-	// IR3 u_new = morph_->to_contravariant(v_new, q_new);
+	// IR3 q_new = my_morphism_->inverse(x_new);
+	// IR3 u_new = my_morphism_->to_contravariant(v_new, q_new);
 
-	IR3 q_new = morph_->translation(q_old, (Lref_*dt) * v_new);
+	IR3 q_new = my_morphism_->translation(q_old, (Lref_*dt) * v_new);
 
 	return {q_new[IR3::u], q_new[IR3::v], q_new[IR3::w],
 			v_new[IR3::u], v_new[IR3::v], v_new[IR3::w]};
@@ -122,7 +122,7 @@ IR3 classical_boris::get_position(const state &s) const {
 IR3 classical_boris::get_velocity(const state &s) const {
 	IR3 q = {s[0], s[1], s[2]};
 	IR3 v = {s[3], s[4], s[5]};
-	return morph_->to_contravariant(v, q);
+	return my_morphism_->to_contravariant(v, q);
 }
 
 //! Returns the kinetic energy of the state, normalized to `Uref`.
@@ -136,7 +136,7 @@ double classical_boris::energy_parallel(const state &s, double &time) const {
 	IR3 v = {s[3], s[4], s[5]};
 	double Btime = time * iBfield_time_factor_;
 	IR3 Bversor_con = magnetic_field_->contravariant_versor(q, Btime);
-	IR3 Bversor = morph_->from_contravariant(Bversor_con, q);
+	IR3 Bversor = my_morphism_->from_contravariant(Bversor_con, q);
 	double vpar = inner_product(v, Bversor);
 	return vpar*vpar;
 }
@@ -147,29 +147,22 @@ double classical_boris::energy_perpendicular(const state &s, double &time) const
 	IR3 v = {s[3], s[4], s[5]};
 	double Btime = time * iBfield_time_factor_;
 	IR3 Bversor_con = magnetic_field_->contravariant_versor(q, Btime);
-	IR3 Bversor = morph_->from_contravariant(Bversor_con, q);
+	IR3 Bversor = my_morphism_->from_contravariant(Bversor_con, q);
 	IR3 vperp = cross_product(v, Bversor);
 	return inner_product(vperp, vperp);
 }
 
-//! Creates the first `classical_boris::state` from a point in cartesian phase-space.
 classical_boris::state classical_boris::generate_initial_state(
-		const IR3 &cartesian_position, const IR3 &cartesian_velocity, 
+		const IR3 &pos, const IR3 &vel, 
 		const double &time, const double &dt) const {
 
-	IR3 q = morph_->inverse(cartesian_position);
 	state s0 = {
-		q[IR3::u], q[IR3::v], q[IR3::w],
-		cartesian_velocity[IR3::u],
-		cartesian_velocity[IR3::v],
-		cartesian_velocity[IR3::w]
+		pos[IR3::u], pos[IR3::v], pos[IR3::w],
+		vel[IR3::u], vel[IR3::v], vel[IR3::w]
 	};
 	state s1 = do_step(s0, time, -0.5*dt);
 
-	return {
-		q[IR3::u], q[IR3::v], q[IR3::w],
-		s1[3], s1[4], s1[5]
-	};
+	return {s0[0], s0[1], s0[2], s1[3], s1[4], s1[5]};
 }
 
 } // end namespace gyronimo

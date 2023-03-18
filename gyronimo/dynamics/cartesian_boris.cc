@@ -41,7 +41,7 @@ cartesian_boris::cartesian_boris(const double &Lref, const double &Vref,
 		iEfield_time_factor_(Efield ? Tref_ / Efield->t_factor() : 1.0),
 		iBfield_time_factor_(Bfield ? Tref_ / Bfield->t_factor() : 1.0),
 		metric_(Bfield ? dynamic_cast<const metric_cartesian*>(Bfield->metric()) : nullptr),
-		morph_(metric_ ? metric_->morph() : nullptr) {
+		my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
 
 	// test if fields exist
 	// if(!Efield) error(__func__, __FILE__, __LINE__, 
@@ -139,19 +139,13 @@ double cartesian_boris::energy_perpendicular(const state &s, double &time) const
 	return inner_product(vperp, vperp);
 }
 
-//! Creates the first `cartesian_boris::state` from a point in cartesian phase-space.
 cartesian_boris::state cartesian_boris::generate_initial_state(
-		const IR3 &cartesian_position, const IR3 &cartesian_velocity, 
-		const double &time, const double &dt) const {
+		const IR3 &pos, const IR3 &vel, const double &time, const double &dt) const {
 
-	state s0 = {
-		cartesian_position[IR3::u],
-		cartesian_position[IR3::v],
-		cartesian_position[IR3::w],
-		cartesian_velocity[IR3::u],
-		cartesian_velocity[IR3::v],
-		cartesian_velocity[IR3::w]
-	};
+    state s0 = {
+        pos[IR3::u], pos[IR3::v], pos[IR3::w], 
+        vel[IR3::u], vel[IR3::v], vel[IR3::w]
+    };
 	state s1 = do_step(s0, time, -0.5*dt);
 
 	return {s0[0], s0[1], s0[2], s1[3], s1[4], s1[5]};

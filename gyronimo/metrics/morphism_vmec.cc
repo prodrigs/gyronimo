@@ -112,10 +112,10 @@ dIR3 morphism_vmec::del(const IR3& q) const {
     double cosmn = std::cos(angle_mn), sinmn = std::sin(angle_mn);
     double rmnc_i = (*Rmnc_[i])(s), zmns_i = (*Zmns_[i])(s);
     R += rmnc_i * cosmn; // assuming stellarator symmetry
-    dR_ds += (*Rmnc_[i]).derivative(s) * cosmn;
+    dR_ds += Rmnc_[i]->derivative(s) * cosmn;
     dR_dtheta += m * rmnc_i * sinmn;
     dR_dzeta += n * rmnc_i * sinmn;
-    dZ_ds += (*Zmns_[i]).derivative(s) * sinmn;
+    dZ_ds += Zmns_[i]->derivative(s) * sinmn;
     dZ_dtheta += m * zmns_i * cosmn;
     dZ_dzeta += n * zmns_i * cosmn;
   }
@@ -135,16 +135,16 @@ ddIR3 morphism_vmec::ddel(const IR3& q) const {
   double d2Z_ds2 = 0.0, d2Z_dsdtheta = 0.0, d2Z_dsdzeta = 0.0;
   double d2Z_dzeta2 = 0.0, d2Z_dzetadtheta = 0.0, d2Z_dtheta2 = 0.0;
 
-#pragma omp parallel for reduction(+: R, dR_ds, dR_dtheta, dR_dzeta, d2R_ds2, d2R_dsdtheta, d2R_dsdzeta, d2R_dtheta2, d2R_dthetadzeta, d2R_dzeta2, Z, dZ_ds ,dZ_dtheta, dZ_dzeta, d2Z_ds2, d2Z_dsdtheta, d2Z_dsdzeta, d2Z_dtheta2, d2Z_dthetadzeta, d2Z_dzeta2)
+#pragma omp parallel for reduction(+: R, dR_ds, dR_dtheta, dR_dzeta, d2R_ds2, d2R_dsdtheta, d2R_dsdzeta, d2R_dtheta2, d2R_dzetadtheta, d2R_dzeta2, dZ_ds ,dZ_dtheta, dZ_dzeta, d2Z_ds2, d2Z_dsdtheta, d2Z_dsdzeta, d2Z_dtheta2, d2Z_dzetadtheta, d2Z_dzeta2)
   for (size_t i = 0; i < xm_.size(); ++i) {
     double m = xm_[i], n = xn_[i];
     double cosmn = std::cos(m * theta - n * zeta);
     double sinmn = std::sin(m * theta - n * zeta);
     double rmnc_i = (*Rmnc_[i])(s), zmns_i = (*Zmns_[i])(s);
-    double d_rmnc_i = (*Rmnc_[i]).derivative(s);
-    double d_zmns_i = (*Zmns_[i]).derivative(s);
-    double d2_rmnc_i = (*Rmnc_[i]).derivative2(s);
-    double d2_zmns_i = (*Zmns_[i]).derivative2(s);
+    double d_rmnc_i = Rmnc_[i]->derivative(s);
+    double d_zmns_i = Zmns_[i]->derivative(s);
+    double d2_rmnc_i = Rmnc_[i]->derivative2(s);
+    double d2_zmns_i = Zmns_[i]->derivative2(s);
     R += rmnc_i * cosmn; // assuming stellarator symmetry
     dR_ds += d_rmnc_i * cosmn;
     dR_dzeta += n * rmnc_i * sinmn;
@@ -180,16 +180,16 @@ double morphism_vmec::jacobian(const IR3& q) const {
   double dZ_ds = 0.0, dZ_dtheta = 0.0;
   double sn_zeta = std::sin(zeta), cn_zeta = std::cos(zeta);
 
-#pragma omp parallel for reduction(+: R, Z, dR_ds, dR_dtheta, dR_dzeta, dZ_ds, dZ_dtheta, dZ_dzeta)
+#pragma omp parallel for reduction(+: R, dR_ds, dR_dtheta, dZ_ds, dZ_dtheta)
   for (size_t i = 0; i < xm_.size(); ++i) {
     double m = xm_[i], n = xn_[i];
     double angle_mn = m * theta - n * zeta;
     double cosmn = std::cos(angle_mn), sinmn = std::sin(angle_mn);
     double rmnc_i = (*Rmnc_[i])(s), zmns_i = (*Zmns_[i])(s);
     R += rmnc_i * cosmn; // assuming stellarator symmetry
-    dR_ds += (*Rmnc_[i]).derivative(s) * cosmn;
+    dR_ds += Rmnc_[i]->derivative(s) * cosmn;
     dR_dtheta += m * rmnc_i * sinmn;
-    dZ_ds += (*Zmns_[i]).derivative(s) * sinmn;
+    dZ_ds += Zmns_[i]->derivative(s) * sinmn;
     dZ_dtheta += m * zmns_i * cosmn;
   }
   dR_dtheta = -dR_dtheta;
