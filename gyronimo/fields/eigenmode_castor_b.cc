@@ -23,11 +23,11 @@
 namespace gyronimo{
 
 eigenmode_castor_b::eigenmode_castor_b(
-    double m_factor, double t_factor,
+    double m_factor, double v_alfven,
     const parser_castor *p, const metric_helena *g,
     const interpolator1d_factory* ifactory)
-    : IR3field_c1(m_factor, t_factor, g),
-      norm_factor_(1.0),
+    : IR3field_c1(m_factor, g->parser()->rmag()/v_alfven, g),
+      native_factor_(1.0),
       parser_(p), metric_(g),
       eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()),
       n_tor_squared_(p->n_tor()*p->n_tor()),
@@ -47,31 +47,20 @@ eigenmode_castor_b::eigenmode_castor_b(
         chi_range,
         [this, s](double chi){return this->magnitude({s, chi, 0}, 0);}));
   };
-  norm_factor_ = 1.0/ranges::max(
+  native_factor_ = 1.0/ranges::max(
       views::transform(parser_->s(), max_magnitude_at_radius));
 }
 
-eigenmode_castor_b::eigenmode_castor_b(
-    double m_factor, double t_factor,
-    const parser_castor *p, const metric_helena *g,
-    const interpolator1d_factory* ifactory, double norm_factor)
-    : IR3field_c1(m_factor, t_factor, g),
-      norm_factor_(norm_factor),
-      parser_(p), metric_(g),
-      eigenvalue_(p->eigenvalue_real(), p->eigenvalue_imag()),
-      n_tor_squared_(p->n_tor()*p->n_tor()),
-      i_n_tor_(0.0, p->n_tor()),
-      tildeA1_(p->s(), p->a1_real(), p->a1_imag(), p->m(), ifactory),
-      tildeA2_(p->s(), p->a2_real(), p->a2_imag(), p->m(), ifactory),
-      tildeA3_(p->s(), p->a3_real(), p->a3_imag(), p->m(), ifactory) {
-}
-
-//! Magnetic field \f$B^i = \epsilon^{ijk}/\sqrt{g} \partial_j A_k\f$.
+//! Magnetic-field @f$\mathbf{B} = \tilde{\nabla} \times\mathbf{A} @f$.
+/*!
+    Implements the formula
+    @f[ B^i = R_0 \frac{\epsilon^{ijk}}{\sqrt{g}} \partial_j A_k. @f]
+*/
 IR3 eigenmode_castor_b::contravariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double phi = position[IR3::w];
   double chi = metric_->reduce_chi(position[IR3::v]);
-  std::complex<double> factor = norm_factor_*
+  std::complex<double> factor = metric_->parser()->rmag()*native_factor_*
       this->exp_wt_nphi(time, phi)/this->metric()->jacobian(position);
   return {
       std::real(factor*(this->d2A3(s, chi) - this->d3A2(s, chi))),
@@ -79,19 +68,36 @@ IR3 eigenmode_castor_b::contravariant(const IR3& position, double time) const {
       std::real(factor*(this->d1A2(s, chi) - this->d2A1(s, chi)))};
 }
 
-//! Magnetic-field spatial derivatives.
+//! Time derivative @f$\partial_t \mathbf{B} = \lambda \mathbf{B}@f$.
+IR3 eigenmode_castor_b::partial_t_contravariant(
+    const IR3& position, double time) const {
+  double s = position[IR3::u];
+  double phi = position[IR3::w];
+  double chi = metric_->reduce_chi(position[IR3::v]);
+  std::complex<double> factor = this->eigenvalue_*
+      metric_->parser()->rmag()*native_factor_*
+          this->exp_wt_nphi(time, phi)/this->metric()->jacobian(position);
+  return {
+      std::real(factor*(this->d2A3(s, chi) - this->d3A2(s, chi))),
+      std::real(factor*(this->d3A1(s, chi) - this->d1A3(s, chi))),
+      std::real(factor*(this->d1A2(s, chi) - this->d2A1(s, chi)))};
+}
+
+//! Magnetic-field space derivatives.
 /*!
     Implements the formula
-    \f[ \partial_l B^i = \frac{1}{\sqrt{g}} \bigl[
-        \epsilon^{ijk} \partial^2_{jl} A_k - B^i \partial_l \sqrt{g} \bigr] \f]
+    @f[ \partial_l B^i = \frac{1}{\sqrt{g}} \bigl[
+        R_0 \epsilon^{ijk} \partial^2_{jl} A_k - B^i \partial_l \sqrt{g} \bigr]
+    @f]
 */
 dIR3 eigenmode_castor_b::del_contravariant(
     const IR3& position, double time) const {
   double s = position[IR3::u];
   double chi = metric_->reduce_chi(position[IR3::v]);
   double phi = position[IR3::w];
-  std::complex<double> factor = norm_factor_*this->exp_wt_nphi(time, phi);
-  std::valarray epsilon_ijk_partial2_jl_A_k = {
+  std::complex<double> factor =
+      metric_->parser()->rmag()*native_factor_*this->exp_wt_nphi(time, phi);
+  std::valarray R0_epsilon_ijk_partial2_jl_A_k = {
       std::real(factor*(this->d21A3(s, chi) - this->d31A2(s, chi))),
       std::real(factor*(this->d22A3(s, chi) - this->d32A2(s, chi))),
       std::real(factor*(this->d23A3(s, chi) - this->d33A2(s, chi))),
@@ -109,22 +115,8 @@ dIR3 eigenmode_castor_b::del_contravariant(
       B[IR3::w]*dg[IR3::u],B[IR3::w]*dg[IR3::v],B[IR3::w]*dg[IR3::w]};
   double ijacobian = 1.0/this->metric()->jacobian(position);
   dIR3 result;
-  result = ijacobian*(epsilon_ijk_partial2_jl_A_k - B_i_partial_l_sqrt_g);
+  result = ijacobian*(R0_epsilon_ijk_partial2_jl_A_k - B_i_partial_l_sqrt_g);
   return result;
-}
-
-//! Time derivative \f$\partial_t\mathbf{B} = i\omega\nabla\times\mathbf{A}\f$.
-IR3 eigenmode_castor_b::partial_t_contravariant(
-    const IR3& position, double time) const {
-  double s = position[IR3::u];
-  double phi = position[IR3::w];
-  double chi = metric_->reduce_chi(position[IR3::v]);
-  std::complex<double> factor = norm_factor_*this->exp_wt_nphi(time, phi);
-  factor *= eigenvalue_/this->metric()->jacobian(position);
-  return {
-      std::real(factor*(this->d2A3(s, chi) - this->d3A2(s, chi))),
-      std::real(factor*(this->d3A1(s, chi) - this->d1A3(s, chi))),
-      std::real(factor*(this->d1A2(s, chi) - this->d2A1(s, chi)))};
 }
 
 inline
