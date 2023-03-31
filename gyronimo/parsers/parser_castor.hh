@@ -25,14 +25,13 @@
 
 namespace gyronimo {
 
-//! Parsing object for `CASTOR` ceig output files.
+//! Parsing object for `CASTOR` output files.
 /*!
-    Reads and parses a ceig output file produced by the MHD eigenvalue code
-    `CASTOR` [K. Kerner *et al*., J. Comput. Phys. **142**, 271 (1998)]. The
-    variables v1, v2, v3, a2, a3, t, and rho are provided as defined in the
-    published paper. As an exception, a1 is provided as the true first covariant
-    component of the potential vector, not the product -i*a1 stored in the ceig
-    file.
+    Reads and parses an output file produced by the MHD eigenvalue code `CASTOR`
+    [K. Kerner *et al*., J. Comput. Phys. **142**, 271 (1998)]. The variables
+    v1, v2, v3, a2, a3, t, and rho are provided as defined in the published
+    paper. As an exception, a1 is provided as the true first covariant component
+    of the vector potential, not the product -i*a1 stored in the ceig file.
 */
 
 class parser_castor {

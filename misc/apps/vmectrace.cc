@@ -171,7 +171,8 @@ int main(int argc, char* argv[]) {
 
 // Prints output header:
   std::cout << "# vmectrace, powered by ::gyronimo:: v"
-      << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
+      << gyronimo::version_major << "." << gyronimo::version_minor << "."
+      << gyronimo::version_patch << ".\n";
   std::cout << "# args: ";
   for(int i = 1; i < argc; i++) std::cout << argv[i] << " ";
   std::cout << std::endl;
