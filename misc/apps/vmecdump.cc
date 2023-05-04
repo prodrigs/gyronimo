@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
+// Copyright (C) 2022-2023 Jorge Ferreira and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,7 +37,8 @@
 
 void print_help() {
   std::cout << "vmecdump, powered by ::gyronimo:: v"
-      << gyronimo::version_major << "." << gyronimo::version_minor << ".\n";
+      << gyronimo::version_major << "." << gyronimo::version_minor << "."
+      << gyronimo::version_patch << ".\n";
   std::cout <<
       "usage: vmecdump [options] vmec_netcdf_file\n";
   std::cout <<

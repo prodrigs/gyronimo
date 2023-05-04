@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,16 +52,16 @@ namespace gyronimo {
     All variables are adimensional: the position `X` of the guiding centre is
     normalised to a reference length `Lref`, the time to `Tref`, and the
     parallel velocity to `Vref`=`Lref`/`Tref`. Reference length and velocity are
-    supplied to the constructor in SI units, other normalisations are done
+    supplied to the constructor in SI units, further normalisations are done
     internally assuming *bona-fide* electromagnetic fields derived from
-    `IR3field`, with @f$\tilde{B} = B/B_{ref}@f$ whilst Faraday's law demands
-    the ratio between the reference magnitudes of the electric and magnetic
-    fields to match `Vref`. Other normalisations are @f$\tilde{\Omega} = \Omega
-    T_{ref} = \tilde{\Omega}_{ref} \tilde{B}@f$, @f$\tilde{\mathbf{E}} =
-    \tilde{\Omega}_{ref} (\mathbf{E}/E_{ref})@f$, and the magnetic moment is
-    normalised to the ratio `Uref`/`Bref`, where `Uref` is the kinetic energy
-    corresponding to `Vref`. Moreover, @f$\tilde{\nabla} = L_{ref} \nabla@f$ and
-    @f$\mathbf{b} = \mathbf{B}/B@f$.
+    `IR3field`: @f$\tilde{B} = B/B_{ref}@f$ and @f$\tilde{\mathbf{E}} =
+    \tilde{E}_{ref} (\mathbf{E}/E_{ref})@f$, with @f$\tilde{E}_{ref} =
+    \tilde{\Omega}_{ref} (E_{ref} V_{ref}^{-1} B_{ref}^{-1})@f$ an adimensional
+    constant. Other normalisations are @f$\tilde{\Omega} = \Omega T_{ref} =
+    \tilde{\Omega}_{ref} \tilde{B}@f$, while the magnetic moment is normalised
+    to the ratio `Uref`/`Bref` and `Uref` is the kinetic energy corresponding to
+    `Vref`.  Moreover, @f$\tilde{\nabla} = L_{ref} \nabla@f$ and @f$\mathbf{b} =
+    \mathbf{B}/B@f$.
 
     The equations are implemented in a coordinate-invariant form and will work
     out-of-the-box with any coordinates defined in the `metric_covariant` object
@@ -101,7 +101,8 @@ class guiding_centre {
   double Vref() const {return Vref_;};
   double mu_tilde() const {return mu_tilde_;};
   double qom_tilde() const {return qom_tilde_;};
-  double Oref_tilde() const {return Oref_tilde_;};
+  double Eref_tilde() const {return Eref_tilde_;};
+  double Oref_tilde() const {return 1.0/iOref_tilde_;};
   const IR3field* electric_field() const {return electric_field_;};
   const IR3field_c1* magnetic_field() const {return magnetic_field_;};
 
@@ -111,7 +112,7 @@ class guiding_centre {
   const double qom_tilde_, mu_tilde_;
   const double Lref_, Vref_, Tref_;
   const double Bfield_time_factor_, Efield_time_factor_;
-  double Oref_tilde_, iOref_tilde_;
+  double iOref_tilde_, Eref_tilde_;
 };
 
 } // end namespace gyronimo.

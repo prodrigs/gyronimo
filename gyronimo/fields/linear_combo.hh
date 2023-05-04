@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,6 +26,13 @@
 namespace gyronimo {
 
 //! Linear combination of `N` IR3 fields (*shared* coordinates).
+/*!
+    Combines a collection of `IR3field` objects into a single IR3 field. The
+    resulting object has its magnitude normalised to `m_factor` and its time
+    normalised to `t_factor`. Therefore, the weighting factor corresponding to
+    the k-th field `field_set_[k]` is `field_set_[k]->m_factor()/m_factor`.
+    Combinations of fields with different time normalisations are supported.
+*/
 template<size_t N>
 class linear_combo : public IR3field {
  public:
