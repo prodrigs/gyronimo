@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ class dIR3 {
   const double& operator[](index i) const {return data_[i];}
   template <typename T>
   dIR3& operator=(const T& expr) {
-    for(size_t i = 0;i < 3;i++) data_[i] = expr[i];
+    for(size_t i = 0;i < 9;i++) data_[i] = expr[i];
     return *this;
   }
 

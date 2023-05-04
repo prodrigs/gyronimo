@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,33 +24,52 @@
 
 namespace gyronimo {
 
-//! Electric-field eigenvector from `CASTOR` ceig output file.
+//! Electric-field eigenvector from a `CASTOR` output file.
 /*!
-    The electric-field **covariant** components are extracted as @f$\mathbf{E} =
-    - \partial_t \mathbf{A} = i \omega \mathbf{A} @f$ from the vector potential
-    stored in a `eigenmode_castor_a`, with a similar normalisation to the
-    on-axis Alfven time. The normalisation of the electric-field magnitude is
-    set by `m_factor` (SI).
+    The electric field, divided by `m_factor` (SI), is the adimensional
+    perturbation that `CASTOR` relates with the vector-potential via
+    @f$\mathbf{E}_\mathrm{cas} = - \lambda \mathbf{A}_\mathrm{cas}@f$, i.e., the
+    adimensional equation 2.18 in [W. Kerner *et al*., J. Comput. Phys. **142**,
+    271 (1998)], where @f$\lambda@f$ is the MHD eigenvalue. Vector-potential
+    covariant components are represented as:
+    @f[
+      A_k^\mathrm{cas}(s, \chi, \phi, t) = e^{\lambda t + i n \phi}
+          \sum_m \hat{A}_{k,m}^\mathrm{cas}(s) e^{i m \chi}.
+    @f]
+    Each @f$ \hat{A}^\mathrm{cas}_{k,m}(s) @f$ is a `fourier_complex` object
+    with underlying `interpolator1d` type set by `ifactory`. The time
+    normalisation is set to the Alfven time @f$R_0/v_A^0@f$, with @f$v_A^0@f$
+    the Alfven velocity on axis that is supplied to the constructor via
+    `v_alfven` (SI). At construction, the field @f$\mathbf{E}_\mathrm{cas}@f$ is
+    multiplied by a given constant (returned by `native_factor()`) devised in
+    order to set its maximum magnitude over the poloidal cross section (i.e.,
+    @f$\phi = 0, t = 0@f$) to unity. An alternative constructor allows the
+    normalisation factors to be automatically deduced in order to enforce
+    compatibility with a parent `eigenmode_castor_b` object.
 */
 class eigenmode_castor_e : public IR3field {
  public:
   eigenmode_castor_e(
-      double m_factor, double t_factor,
+      double m_factor, double v_alfven,
       const parser_castor *p, const metric_helena *g,
-      const interpolator1d_factory* ifactory)
-      : IR3field(m_factor, t_factor, g),
-        iw_(-p->w_imag(), p->w_real()),
-        A_(m_factor*t_factor, t_factor, p, g, ifactory) {};
+      const interpolator1d_factory* ifactory);
+  eigenmode_castor_e(
+      const eigenmode_castor_b* parent, const interpolator1d_factory* ifactory);
   virtual ~eigenmode_castor_e() override {};
 
   virtual IR3 covariant(const IR3& position, double time) const override;
   virtual IR3 contravariant(const IR3& position, double time) const override;
 
-  const parser_castor* parser() const {return A_.parser();};
+  const parser_castor* parser() const {return parser_;};
+  double native_factor() const {return native_factor_;};
+  double v_alfven() const {return metric_->parser()->rmag()/this->t_factor();};
 
  private:
-  std::complex<double> iw_;
-  eigenmode_castor_a A_;
+  double native_factor_;
+  const parser_castor *parser_;
+  const metric_helena *metric_;
+  std::complex<double> eigenvalue_, i_n_tor_;
+  fourier_complex tildeA1_, tildeA2_, tildeA3_;
 };
 
 } // end namespace gyronimo.

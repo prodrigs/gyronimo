@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,7 +30,8 @@ parser_castor::parser_castor(const std::string &filename) {
   input_stream.open(filename);
   if (input_stream.rdstate() != std::ios_base::goodbit)
     error(__func__, __FILE__, __LINE__, "cannot open input file.", 1);
-  input_stream >> n_psi_ >> n_harm_ >> n_tor_ >> w_imag_ >> w_real_;
+  input_stream >> n_psi_ >> n_harm_ >> n_tor_
+      >> eigenvalue_real_ >> eigenvalue_imag_;
   m_.resize(n_harm_); input_stream >> m_;
   s_.resize(n_psi_);
   this->initialise_variable_chunk(input_stream, v1_real_, v1_imag_);

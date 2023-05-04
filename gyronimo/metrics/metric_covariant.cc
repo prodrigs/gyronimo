@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,18 +26,20 @@ namespace gyronimo {
 //! General-purpose implementation of the Jacobian.
 double metric_covariant::jacobian(const IR3& r) const {
   SM3 g = (*this)(r);
-  double J = g[SM3::uu]*g[SM3::vv]*g[SM3::ww] + 2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] -
-             g[SM3::uv]*g[SM3::uv]*g[SM3::ww] - g[SM3::uu]*g[SM3::vw]*g[SM3::vw] -
-             g[SM3::uw]*g[SM3::uw]*g[SM3::vv];
-  double signJ = (J < 0) ? -1 : 1;
-  return  signJ * std::sqrt( signJ * J);
+  double det_g = g[SM3::uu]*g[SM3::vv]*g[SM3::ww] +
+      2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] - g[SM3::uv]*g[SM3::uv]*g[SM3::ww] -
+      g[SM3::uu]*g[SM3::vw]*g[SM3::vw] - g[SM3::uw]*g[SM3::uw]*g[SM3::vv];
+  return std::sqrt(det_g);
 }
 
 //! General-purpose implementation of the Jacobian gradient.
 IR3 metric_covariant::del_jacobian(const IR3& r) const {
   SM3 g = (*this)(r);
   dSM3 dg = this->del(r);
-  return {
+  double det_g = g[SM3::uu]*g[SM3::vv]*g[SM3::ww] +
+      2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] - g[SM3::uv]*g[SM3::uv]*g[SM3::ww] -
+      g[SM3::uu]*g[SM3::vw]*g[SM3::vw] - g[SM3::uw]*g[SM3::uw]*g[SM3::vv];
+  IR3 grad_det_g = {
       2.0*g[SM3::vw]*(
           g[SM3::uw]*dg[dSM3::uvu] +
           g[SM3::uv]*dg[dSM3::uwu] - g[SM3::uu]*dg[dSM3::vwu]) -
@@ -71,6 +73,7 @@ IR3 metric_covariant::del_jacobian(const IR3& r) const {
       g[SM3::uw]*g[SM3::uw]*dg[dSM3::vvw] +
       g[SM3::uu]*g[SM3::ww]*dg[dSM3::vvw] + 
       2.0*g[SM3::uv]*g[SM3::uw]*dg[dSM3::vww]};
+  return (0.5/std::sqrt(det_g))*grad_det_g;
 }
 
 //! General-purpose product of a covariant metric and a contravariant vector.
