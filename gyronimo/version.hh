@@ -24,7 +24,7 @@ namespace gyronimo {
 
 constexpr int version_major = 0;
 constexpr int version_minor = 2;
-constexpr int version_patch = 1;
+constexpr int version_patch = 2;
 
 } // end namespace gyronimo.
 
