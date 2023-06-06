@@ -57,6 +57,7 @@ void print_help() {
       "  -tfinal=, -samples=\n"
       "         Time limit (lref/vref, default 1) and samples (default 512).\n"
       "  Note: lambda=magnetic_moment_si*B_axis_si/energy_si.\n";
+  std::cout << help_message;
   std::exit(0);
 }
 
@@ -120,7 +121,9 @@ double get_initial_radial_position(
       std::begin(s_grid), std::end(s_grid),
       [&orbit](double x, double y) { return orbit(x) * orbit(y) < 0.0; });
   if (bracketing_iterator == std::end(s_grid)) {
-    std::cout << "# orbit not crossing the low-field side midplane.\n";
+    std::cout << "# orbit not crossing the low-field side midplane.\n"
+              << "# try pphi in the range [" << pphi_functional(0.0) << ":"
+              << pphi_functional(1.0) << "]\n";
     std::exit(1);
   }
   auto root_interval = boost::math::tools::bisect(

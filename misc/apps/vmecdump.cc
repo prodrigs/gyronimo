@@ -76,11 +76,11 @@ void print_info(const parser_vmec& vmec) {
   std::cout << "        ntor: " << vmec.ntor() << '\n';
   std::cout << "        mpol: " << vmec.mpol() << '\n';
   std::cout << "      signgs: " << vmec.signgs() << '\n';
-  std::cout << "       B_mag: " << vmec.B_0() << " [T]" << '\n';
-  std::cout << "       R_mag: " << vmec.R_0() << " [m]" << '\n';
+  std::cout << "       B_mag: " << vmec.B0() << " [T]" << '\n';
+  std::cout << "       R_mag: " << vmec.R0() << " [m]" << '\n';
   std::cout << "       F_mag: " << vmec.rbtor0() << " [m.T]" << '\n';
-  std::cout << "       R_geo: " << vmec.Rmajor() << " [m]" << '\n';
-  std::cout << "     a_minor: " << vmec.Aminor() << " [m]" << '\n';
+  std::cout << "       R_geo: " << vmec.rmajor() << " [m]" << '\n';
+  std::cout << "     a_minor: " << vmec.aminor() << " [m]" << '\n';
   std::cout << "      volume: " << vmec.volume() << " [m^3]" << '\n';
 }
 
