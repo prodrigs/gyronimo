@@ -24,6 +24,10 @@
 #include <gyronimo/core/error.hh>
 #include <gyronimo/dynamics/boris_push.hh>
 
+#include <gyronimo/dynamics/lorentz.hh>
+#include <gyronimo/dynamics/odeint_adapter.hh>
+#include <boost/numeric/odeint.hpp>
+
 namespace gyronimo {
 
 /*!
@@ -89,9 +93,10 @@ curvilinear_boris::state curvilinear_boris::do_step(
 		Efield = contraction<second>(e_old, E_contravariant);
 	}
 	double Btime = time * iBfield_time_factor_;
-	IR3 Bversor_contravariant = magnetic_field_->contravariant_versor(q_old, Btime);
-	IR3 Bversor = contraction<second>(e_old, Bversor_contravariant);
-	double Bmag = magnetic_field_->magnitude(q_old, Btime);
+	IR3 Bfield_contravariant = magnetic_field_->contravariant(q_old, Btime);
+	IR3 Bfield = contraction<second>(e_old, Bfield_contravariant);
+	double Bmag = std::sqrt(inner_product(Bfield, Bfield));
+    IR3 Bversor = Bfield / Bmag;
 
 	// perform cartesian_boris step
 	IR3 v_new = electric_field_ ? 
@@ -156,13 +161,29 @@ double curvilinear_boris::energy_perpendicular(const state &s, double &time) con
 curvilinear_boris::state curvilinear_boris::generate_initial_state(
 		const IR3 &pos, const IR3 &vel, const double &time, const double &dt) const {
 
-	state s0 = {
-		pos[IR3::u], pos[IR3::v], pos[IR3::w],
-		vel[IR3::u], vel[IR3::v], vel[IR3::w]
-	};
-	state s1 = do_step(s0, time, -0.5*dt);
+	// state s0 = {
+	// 	pos[IR3::u], pos[IR3::v], pos[IR3::w],
+	// 	vel[IR3::u], vel[IR3::v], vel[IR3::w]
+	// };
+	// state s1 = do_step(s0, time, -0.5*dt);
 
-	return {s0[0], s0[1], s0[2], s1[3], s1[4], s1[5]};
+	// return {s0[0], s0[1], s0[2], s1[3], s1[4], s1[5]};
+
+    lorentz lo(Lref_, Vref_, qom_, electric_field_, magnetic_field_);
+    odeint_adapter<gyronimo::lorentz> sys(&lo);
+    boost::numeric::odeint::runge_kutta4<gyronimo::lorentz::state> rk4;
+    IR3 vel_con = my_morphism_->to_contravariant(vel, pos);
+	lorentz::state inout = {
+		pos[IR3::u], pos[IR3::v], pos[IR3::w],
+		vel_con[IR3::u], vel_con[IR3::v], vel_con[IR3::w]
+	};
+	rk4.do_step(sys, inout, time, -0.5*dt);
+    IR3 qmh = {inout[0], inout[1], inout[2]};
+    IR3 vmh_con = {inout[3], inout[4], inout[5]};
+    IR3 vmh = my_morphism_->from_contravariant(vmh_con, qmh);
+
+	return {pos[IR3::u], pos[IR3::v], pos[IR3::w], 
+            vmh[IR3::u], vmh[IR3::v], vmh[IR3::w]};
 }
 
 } // end namespace gyronimo
