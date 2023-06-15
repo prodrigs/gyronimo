@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
+// Copyright (C) 2022, 2023 Jorge Ferreira and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,184 +23,158 @@ namespace gyronimo {
 
 metric_vmec::metric_vmec(
     const parser_vmec* p, const interpolator1d_factory* ifactory)
-    : parser_(p), b0_(p->B0()), mnmax_(p->mnmax()), mnmax_nyq_(p->mnmax_nyq()),
-      ns_(p->ns()), mpol_(p->mpol()), ntor_(p->ntor()), signsgs_(p->signgs()),
-      nfp_(p->nfp()), xm_(p->xm()), xn_(p->xn()), xm_nyq_(p->xm_nyq()),
-      xn_nyq_(p->xn_nyq()), Rmnc_(nullptr), Zmns_(nullptr), gmnc_(nullptr) {
-  // set radial grid block
-  dblock_adapter s_range(p->radius());
-  dblock_adapter s_half_range(p->radius_half_cell());
-  // set spectral components
-  Rmnc_ = new interpolator1d*[xm_.size()];
-  Zmns_ = new interpolator1d*[xm_.size()];
-  gmnc_ = new interpolator1d*[xm_.size()];
-  //@todo NEED TO FIX AXIS AND EDGE! TBI! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    : parser_(p), harmonics_(p->mnmax()), m_(p->xm()), n_(p->xn()),
+    r_mn_(p->mnmax()), z_mn_(p->mnmax()) {
+  dblock_adapter sgrid(p->sgrid());
 #pragma omp parallel for
-  for (size_t i = 0; i < xm_.size(); i++) {
-    std::slice s_cut(i, s_range.size(), xm_.size());
-    std::valarray<double> rmnc_i = (p->rmnc())[s_cut];
-    Rmnc_[i] = ifactory->interpolate_data(s_range, dblock_adapter(rmnc_i));
-    std::valarray<double> zmnc_i = (p->zmns())[s_cut];
-    Zmns_[i] = ifactory->interpolate_data(s_range, dblock_adapter(zmnc_i));
-    // note that gmnc is defined at half mesh
-    std::slice s_h_cut(i + xm_nyq_.size(), s_half_range.size(), xm_nyq_.size());
-    std::valarray<double> gmnc_i = (p->gmnc())[s_h_cut];
-    gmnc_[i] = ifactory->interpolate_data(s_half_range, dblock_adapter(gmnc_i));
-  };
+  for (size_t i = 0; i < harmonics_; i++) {
+    std::slice mask(i, sgrid.size(), harmonics_);
+    narray_type r_mn_data = (p->rmnc())[mask], z_mn_data = (p->zmns())[mask];
+    r_mn_[i] = std::move(std::unique_ptr<interpolator1d>(
+        ifactory->interpolate_data(sgrid, dblock_adapter(r_mn_data))));
+    z_mn_[i] = std::move(std::unique_ptr<interpolator1d>(
+        ifactory->interpolate_data(sgrid, dblock_adapter(z_mn_data))));
+  }
 }
-metric_vmec::~metric_vmec() {
-  if (Rmnc_) delete Rmnc_;
-  if (Zmns_) delete Zmns_;
-  if (gmnc_) delete gmnc_;
-}
+
 SM3 metric_vmec::operator()(const IR3& position) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  double R = 0.0, dR_ds = 0.0, dR_dtheta = 0.0, dR_dzeta = 0.0;
-  double Z = 0.0, dZ_ds = 0.0, dZ_dtheta = 0.0, dZ_dzeta = 0.0;
-
-#pragma omp parallel for reduction(+: R, Z, dR_ds, dR_dtheta, dR_dzeta, dZ_ds, dZ_dtheta, dZ_dzeta)
-  for (size_t i = 0; i < xm_.size(); i++) {
-    double m = xm_[i];
-    double n = xn_[i];
-    double cosmn = std::cos(m * theta - n * zeta);
-    double sinmn = std::sin(m * theta - n * zeta);
-    double rmnc_i = (*Rmnc_[i])(s);
-    double zmns_i = (*Zmns_[i])(s);
-    // assuming for now that vmec equilibrium has stellarator symmetry.
-    R += rmnc_i * cosmn;
-    Z += zmns_i * sinmn;
-    dR_ds += (*Rmnc_[i]).derivative(s) * cosmn;
-    dR_dtheta -= m * rmnc_i * sinmn;
-    dR_dzeta += n * rmnc_i * sinmn;
-    dZ_ds += (*Zmns_[i]).derivative(s) * sinmn;
-    dZ_dtheta += m * zmns_i * cosmn;
-    dZ_dzeta -= n * zmns_i * cosmn;
+  auto cis_mn = metric_vmec::cached_cis(theta, zeta);
+  double r = 0.0, dr_ds = 0.0, dr_dtheta = 0.0, dr_dzeta = 0.0;
+  double dz_ds = 0.0, dz_dtheta = 0.0, dz_dzeta = 0.0;
+#pragma omp parallel for reduction(+: r, z, dr_ds, dr_dtheta, dr_dzeta, dz_ds, dz_dtheta, dz_dzeta)
+  for (size_t i = 0; i < harmonics_; i++) {
+    double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
+    double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
+    r += r_mn_i * cos_mn_i;
+    dr_ds += (*r_mn_[i]).derivative(s) * cos_mn_i;
+    dr_dtheta -= m_[i] * r_mn_i * sin_mn_i;
+    dr_dzeta += n_[i] * r_mn_i * sin_mn_i;
+    dz_ds += (*z_mn_[i]).derivative(s) * sin_mn_i;
+    dz_dtheta += m_[i] * z_mn_i * cos_mn_i;
+    dz_dzeta -= n_[i] * z_mn_i * cos_mn_i;
   };
   return {
-      dR_ds * dR_ds + dZ_ds * dZ_ds,  // g_uu
-      dR_ds * dR_dzeta + dZ_ds * dZ_dzeta,  // g_uw
-      dR_ds * dR_dtheta + dZ_ds * dZ_dtheta,  // g_uv
-      R * R + dR_dzeta * dR_dzeta + dZ_dzeta * dZ_dzeta,  // g_vv
-      dR_dtheta * dR_dzeta + dZ_dtheta * dZ_dzeta,  // g_vw
-      dR_dtheta * dR_dtheta + dZ_dtheta * dZ_dtheta  // g_ww
+      dr_ds * dr_ds + dz_ds * dz_ds,  // g_uu
+      dr_ds * dr_dzeta + dz_ds * dz_dzeta,  // g_uw
+      dr_ds * dr_dtheta + dz_ds * dz_dtheta,  // g_uv
+      r * r + dr_dzeta * dr_dzeta + dz_dzeta * dz_dzeta,  // g_vv
+      dr_dtheta * dr_dzeta + dz_dtheta * dz_dzeta,  // g_vw
+      dr_dtheta * dr_dtheta + dz_dtheta * dz_dtheta  // g_ww
   };
 }
+
 dSM3 metric_vmec::del(const IR3& position) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  double R = 0.0, Z = 0.0;
-  double dR_ds = 0.0, dR_dtheta = 0.0, dR_dzeta = 0.0;
-  double d2R_ds2 = 0.0, d2R_dsdtheta = 0.0, d2R_dsdzeta = 0.0;
-  double d2R_dthetads = 0.0, d2R_dtheta2 = 0.0, d2R_dthetadzeta = 0.0;
-  double d2R_dzetads = 0.0, d2R_dzetadtheta = 0.0, d2R_dzeta2 = 0.0;
-  double dZ_ds = 0.0, dZ_dtheta = 0.0, dZ_dzeta = 0.0;
-  double d2Z_ds2 = 0.0, d2Z_dsdtheta = 0.0, d2Z_dsdzeta = 0.0;
-  double d2Z_dthetads = 0.0, d2Z_dtheta2 = 0.0, d2Z_dthetadzeta = 0.0;
-  double d2Z_dzetads = 0.0, d2Z_dzetadtheta = 0.0, d2Z_dzeta2 = 0.0;
-
-#pragma omp parallel for reduction(+: R, dR_ds, dR_dtheta, dR_dzeta, d2R_ds2, d2R_dsdtheta, d2R_dsdzeta, d2R_dtheta2, d2R_dthetadzeta, d2R_dzeta2, Z, dZ_ds ,dZ_dtheta, dZ_dzeta, d2Z_ds2, d2Z_dsdtheta, d2Z_dsdzeta, d2Z_dtheta2, d2Z_dthetadzeta, d2Z_dzeta2)
-  for (size_t i = 0; i < xm_.size(); i++) {
-    double m = xm_[i];
-    double n = xn_[i];
-    double cosmn = std::cos(m * theta - n * zeta);
-    double sinmn = std::sin(m * theta - n * zeta);
-    double rmnc_i = (*Rmnc_[i])(s);
-    double zmns_i = (*Zmns_[i])(s);
-    double d_rmnc_i = (*Rmnc_[i]).derivative(s);
-    double d_zmns_i = (*Zmns_[i]).derivative(s);
-    double d2_rmnc_i = (*Rmnc_[i]).derivative2(s);
-    double d2_zmns_i = (*Zmns_[i]).derivative2(s);
-    // assuming for now that vmec equilibrium has stellarator symmetry.
-    R += rmnc_i * cosmn;
-    Z += zmns_i * sinmn;
-    dR_ds += d_rmnc_i * cosmn;
-    dR_dtheta -= m * rmnc_i * sinmn;
-    dR_dzeta += n * rmnc_i * sinmn;
-    d2R_ds2 += d2_rmnc_i * cosmn;
-    d2R_dsdtheta -= m * d_rmnc_i * sinmn;
-    d2R_dsdzeta += n * d_rmnc_i * sinmn;
-    d2R_dtheta2 -= m * m * rmnc_i * cosmn;
-    d2R_dthetadzeta += m * n * rmnc_i * cosmn;
-    d2R_dzeta2 -= n * n * rmnc_i * cosmn;
-    dZ_ds += d_zmns_i * sinmn;
-    dZ_dtheta += m * zmns_i * cosmn;
-    dZ_dzeta -= n * zmns_i * cosmn;
-    d2Z_ds2 += d2_zmns_i * sinmn;
-    d2Z_dsdtheta += m * d_zmns_i * cosmn;
-    d2Z_dsdzeta -= n * d_zmns_i * cosmn;
-    d2Z_dtheta2 -= m * m * zmns_i * sinmn;
-    d2Z_dthetadzeta += m * n * zmns_i * sinmn;
-    d2Z_dzeta2 -= n * n * zmns_i * sinmn;
+  auto cis_mn = metric_vmec::cached_cis(theta, zeta);
+  double r = 0.0, z = 0.0;
+  double dr_ds = 0.0, dr_dtheta = 0.0, dr_dzeta = 0.0;
+  double d2r_ds2 = 0.0, d2r_dsdtheta = 0.0, d2r_dsdzeta = 0.0;
+  double d2r_dthetads = 0.0, d2r_dtheta2 = 0.0, d2r_dthetadzeta = 0.0;
+  double d2r_dzetads = 0.0, d2r_dzetadtheta = 0.0, d2r_dzeta2 = 0.0;
+  double dz_ds = 0.0, dz_dtheta = 0.0, dz_dzeta = 0.0;
+  double d2z_ds2 = 0.0, d2z_dsdtheta = 0.0, d2z_dsdzeta = 0.0;
+  double d2z_dthetads = 0.0, d2z_dtheta2 = 0.0, d2z_dthetadzeta = 0.0;
+  double d2z_dzetads = 0.0, d2z_dzetadtheta = 0.0, d2z_dzeta2 = 0.0;
+#pragma omp parallel for reduction(+: r, dr_ds, dr_dtheta, dr_dzeta, d2r_ds2, d2r_dsdtheta, d2r_dsdzeta, d2r_dtheta2, d2r_dthetadzeta, d2r_dzeta2, z, dz_ds ,dz_dtheta, dz_dzeta, d2z_ds2, d2z_dsdtheta, d2z_dsdzeta, d2z_dtheta2, d2z_dthetadzeta, d2z_dzeta2)
+  for (size_t i = 0; i < harmonics_; i++) {
+    double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
+    double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
+    double d_r_mn_i = (*r_mn_[i]).derivative(s);
+    double d_z_mn_i = (*z_mn_[i]).derivative(s);
+    double d2_r_mn_i = (*r_mn_[i]).derivative2(s);
+    double d2_z_mn_i = (*z_mn_[i]).derivative2(s);
+    r += r_mn_i * cos_mn_i;
+    z += z_mn_i * sin_mn_i;
+    dr_ds += d_r_mn_i * cos_mn_i;
+    dr_dtheta -= m_[i] * r_mn_i * sin_mn_i;
+    dr_dzeta += n_[i] * r_mn_i * sin_mn_i;
+    d2r_ds2 += d2_r_mn_i * cos_mn_i;
+    d2r_dsdtheta -= m_[i] * d_r_mn_i * sin_mn_i;
+    d2r_dsdzeta += n_[i] * d_r_mn_i * sin_mn_i;
+    d2r_dtheta2 -= m_[i] * m_[i] * r_mn_i * cos_mn_i;
+    d2r_dthetadzeta += m_[i] * n_[i] * r_mn_i * cos_mn_i;
+    d2r_dzeta2 -= n_[i] * n_[i] * r_mn_i * cos_mn_i;
+    dz_ds += d_z_mn_i * sin_mn_i;
+    dz_dtheta += m_[i] * z_mn_i * cos_mn_i;
+    dz_dzeta -= n_[i] * z_mn_i * cos_mn_i;
+    d2z_ds2 += d2_z_mn_i * sin_mn_i;
+    d2z_dsdtheta += m_[i] * d_z_mn_i * cos_mn_i;
+    d2z_dsdzeta -= n_[i] * d_z_mn_i * cos_mn_i;
+    d2z_dtheta2 -= m_[i] * m_[i] * z_mn_i * sin_mn_i;
+    d2z_dthetadzeta += m_[i] * n_[i] * z_mn_i * sin_mn_i;
+    d2z_dzeta2 -= n_[i] * n_[i] * z_mn_i * sin_mn_i;
   }
-  //@todo still need to test this carefully. Find a way to test d_g!
   return {
-      2 * (dR_ds * d2R_ds2 + dZ_ds * d2Z_ds2),
-      2 * (dR_ds * d2R_dsdzeta + dZ_ds * d2Z_dsdzeta),  // d_i g_uu
-      2 * (dR_ds * d2R_dsdtheta + dZ_ds * d2Z_dsdtheta),
-      dR_ds * d2R_dsdzeta + dR_dzeta * d2R_ds2 + dZ_ds * d2Z_dsdzeta +
-          dZ_dzeta * d2Z_ds2,
-      dR_ds * d2R_dzeta2 + dR_dzeta * d2R_dsdzeta + dZ_ds * d2Z_dzeta2 +
-          dZ_dzeta * d2Z_dsdzeta,  // d_i g_uv
-      dR_ds * d2R_dthetadzeta + dR_dzeta * d2R_dsdzeta +
-          dZ_ds * d2Z_dthetadzeta + dZ_dzeta * d2Z_dsdtheta,
-      dR_ds * d2R_dsdtheta + dR_dtheta * d2R_ds2 + dZ_ds * d2Z_dsdtheta +
-          dZ_dtheta * d2Z_ds2,
-      dR_ds * d2R_dthetadzeta + dR_dtheta * d2R_dsdzeta +
-          dZ_ds * d2Z_dthetadzeta + dZ_dtheta * d2Z_dsdzeta,  // d_i g_uw
-      dR_ds * d2R_dtheta2 + dR_dtheta * d2R_dsdtheta + dZ_ds * d2Z_dtheta2 +
-          dZ_dtheta * d2Z_dsdtheta,
-      2 * (R * dR_ds + dR_dzeta * d2R_dsdzeta + dZ_dzeta * d2Z_dsdzeta),
+      2 * (dr_ds * d2r_ds2 + dz_ds * d2z_ds2),
+      2 * (dr_ds * d2r_dsdzeta + dz_ds * d2z_dsdzeta),  // d_i g_uu
+      2 * (dr_ds * d2r_dsdtheta + dz_ds * d2z_dsdtheta),
+      dr_ds * d2r_dsdzeta + dr_dzeta * d2r_ds2 + dz_ds * d2z_dsdzeta +
+          dz_dzeta * d2z_ds2,
+      dr_ds * d2r_dzeta2 + dr_dzeta * d2r_dsdzeta + dz_ds * d2z_dzeta2 +
+          dz_dzeta * d2z_dsdzeta,  // d_i g_uv
+      dr_ds * d2r_dthetadzeta + dr_dzeta * d2r_dsdtheta +
+          dz_ds * d2z_dthetadzeta + dz_dzeta * d2z_dsdtheta,
+      dr_ds * d2r_dsdtheta + dr_dtheta * d2r_ds2 + dz_ds * d2z_dsdtheta +
+          dz_dtheta * d2z_ds2,
+      dr_ds * d2r_dthetadzeta + dr_dtheta * d2r_dsdzeta +
+          dz_ds * d2z_dthetadzeta + dz_dtheta * d2z_dsdzeta,  // d_i g_uw
+      dr_ds * d2r_dtheta2 + dr_dtheta * d2r_dsdtheta + dz_ds * d2z_dtheta2 +
+          dz_dtheta * d2z_dsdtheta,
+      2 * (r * dr_ds + dr_dzeta * d2r_dsdzeta + dz_dzeta * d2z_dsdzeta),
       2 *
-          (R * dR_dzeta + dR_dzeta * d2R_dzeta2 +
-           dZ_dzeta * d2Z_dzeta2),  // d_i g_vv
+          (r * dr_dzeta + dr_dzeta * d2r_dzeta2 +
+           dz_dzeta * d2z_dzeta2),  // d_i g_vv
       2 *
-          (R * dR_dtheta + dR_dzeta * d2R_dthetadzeta +
-           dZ_dzeta * d2Z_dthetadzeta),
-      dR_dtheta * d2R_dsdzeta + dR_dzeta * d2R_dsdtheta +
-          dZ_dtheta * d2Z_dsdzeta + dZ_dzeta * d2Z_dsdtheta,
-      dR_dtheta * d2R_dzeta2 + dR_dzeta * d2R_dthetadzeta +
-          dZ_dtheta * d2Z_dzeta2 + dZ_dzeta * d2Z_dthetadzeta,  // d_i g_vw
-      dR_dtheta * d2R_dthetadzeta + dR_dzeta * d2R_dtheta2 +
-          dZ_dtheta * d2Z_dthetadzeta + dZ_dzeta * d2Z_dtheta2,
-      2 * (dR_dtheta * d2R_dsdtheta + dZ_dtheta * d2Z_dsdtheta),
-      2 * (dR_dtheta * d2R_dthetadzeta + dZ_dtheta * d2Z_dthetadzeta),  // d_i
+          (r * dr_dtheta + dr_dzeta * d2r_dthetadzeta +
+           dz_dzeta * d2z_dthetadzeta),
+      dr_dtheta * d2r_dsdzeta + dr_dzeta * d2r_dsdtheta +
+          dz_dtheta * d2z_dsdzeta + dz_dzeta * d2z_dsdtheta,
+      dr_dtheta * d2r_dzeta2 + dr_dzeta * d2r_dthetadzeta +
+          dz_dtheta * d2z_dzeta2 + dz_dzeta * d2z_dthetadzeta,  // d_i g_vw
+      dr_dtheta * d2r_dthetadzeta + dr_dzeta * d2r_dtheta2 +
+          dz_dtheta * d2z_dthetadzeta + dz_dzeta * d2z_dtheta2,
+      2 * (dr_dtheta * d2r_dsdtheta + dz_dtheta * d2z_dsdtheta),
+      2 * (dr_dtheta * d2r_dthetadzeta + dz_dtheta * d2z_dthetadzeta),  // d_i
                                                                         // g_ww
-      2 * (dR_dtheta * d2R_dtheta2 + dZ_dtheta * d2Z_dtheta2),
+      2 * (dr_dtheta * d2r_dtheta2 + dz_dtheta * d2z_dtheta2),
   };
 }
 
 IR3 metric_vmec::transform2cylindrical(const IR3& position) const {
-  double u = position[gyronimo::IR3::u];
-  double v = position[gyronimo::IR3::v];
-  double w = position[gyronimo::IR3::w];
-  double R = 0.0, Z = 0.0;
-
-#pragma omp parallel for reduction(+ : R, Z)
-  for (size_t i = 0; i < xm_.size(); i++) {
-    double m = xm_[i];
-    double n = xn_[i];
-    R += (*Rmnc_[i])(u)*std::cos(m * w - n * v);
-    Z += (*Zmns_[i])(u)*std::sin(m * w - n * v);
-  }
-  return {R, v, Z};
-}
-
-//@todo move this to jacobian and think about testing this by calling the parent
-double metric_vmec::jacobian_vmec(const IR3& position) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  double J = 0.0;
-#pragma omp parallel for reduction(+ : J)
-  for (size_t i = 0; i < xm_nyq_.size(); i++) {
-    J += (*gmnc_[i])(s)*std::cos(xm_nyq_[i] * theta - xn_nyq_[i] * zeta);
-  };
-  // left-handed VMEC coordinate system is re-oriented
-  // to u = Phi/Phi_bnd, v = zeta, w = theta for J>0
-  // should we check/assume that signgs is always negative?
-  return -J;
+  auto cis_mn = metric_vmec::cached_cis(theta, zeta);
+  double r = 0.0, z = 0.0;
+#pragma omp parallel for reduction(+ : r, z)
+  for (size_t i = 0; i < harmonics_; i++) {
+    double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
+    r += r_mn_i * std::real(cis_mn[i]);
+    z += z_mn_i * std::imag(cis_mn[i]);
+  }
+  return {r, zeta, z};
 }
+
+//! Cached evaluation of trigonometric coefficients for internal Fourier series.
+const metric_vmec::cis_container_t& metric_vmec::cached_cis(
+    double theta, double zeta) const {
+  thread_local double cached_theta = -1e6, cached_zeta = -1e6;
+  thread_local cis_container_t cis_mn(harmonics_);
+  if (theta != cached_theta || zeta != cached_zeta) {
+#pragma omp parallel for
+    for(size_t i = 0;i < harmonics_;i++) {
+      double angle_mn = m_[i] * theta - n_[i] * zeta;
+      cis_mn[i] = {std::cos(angle_mn), std::sin(angle_mn)};
+    }
+    cached_theta = theta;
+    cached_zeta = zeta;
+  }
+  return cis_mn;
+}
+
 }  // end namespace gyronimo

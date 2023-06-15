@@ -55,11 +55,11 @@ void print_help() {
       "         -r, -z, -phi\n"
       "                Any of the R/Z/phi coordinates.\n"
       "         -jac   Metric jacobian, by metric_covariant::jacobian().\n"
-      "         -jac-vmec\n"
-      "                Native metric jacobian, via vmec output.\n"
+//    "         -jac-vmec\n"
+//    "                Native metric jacobian, via vmec output.\n"
       "         -b     B magnitude, by IR3field::magnitude() (default).\n"
-      "         -b-vmec\n"
-      "                Native B magnitude, via vmec output.\n"
+//    "         -b-vmec\n"
+//    "                Native B magnitude, via vmec output.\n"
       "         Available options:\n"
       "         -python\n"
       "                Output in python array format (default table).\n"
@@ -86,13 +86,13 @@ void print_info(const parser_vmec& vmec) {
 
 void print_profiles(const parser_vmec& vmec) {
   for (size_t i = 0; i < vmec.ns(); i++)
-    std::cout << vmec.radius()[i] << " " << vmec.iotaf()[i] << " "
+    std::cout << vmec.sgrid()[i] << " " << vmec.iotaf()[i] << " "
               << vmec.pres()[i] << '\n';
 }
 
 void print_rphiz(
     const parser_vmec& vmap, const interpolator1d_factory* ifactory) {
-  dblock_adapter u_range(vmap.radius());
+  dblock_adapter u_range(vmap.sgrid());
   interpolator1d** Rmnc = new interpolator1d*[vmap.xm().size()];
   interpolator1d** Zmns = new interpolator1d*[vmap.xm().size()];
   for (size_t i = 0; i < vmap.xm().size(); i++) {
@@ -142,11 +142,11 @@ void print_surface(
         if (command_line["z"]) std::cout << z << " ";
         if (command_line["phi"]) std::cout << phi << " ";
         if (command_line["jac"]) std::cout << g.jacobian(position) << " ";
-        if (command_line["jac-vmec"])
-          std::cout << g.jacobian_vmec(position) << " ";
+//      if (command_line["jac-vmec"])
+//        std::cout << g.jacobian_vmec(position) << " ";
         if (command_line["b"]) std::cout << veq.magnitude(position, 0.0) << " ";
-        if (command_line["b-vmec"])
-          std::cout << veq.magnitude_vmec(position, 0.0) << " ";
+//      if (command_line["b-vmec"])
+//        std::cout << veq.magnitude_vmec(position, 0.0) << " ";
         if (!command_line["python"]) std::cout << '\n';
         else if (v < 2 * std::numbers::pi) std::cout << " ";
       }

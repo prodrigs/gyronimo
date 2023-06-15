@@ -86,9 +86,9 @@ parser_vmec::parser_vmec(const std::string& filename) {
   } catch (netCDF::exceptions::NcException& e) {
     std::cout << e.what() << std::endl;
   }
-  radius_ = linspace<narray_type>(0.0, 1.0, ns_);
+  sgrid_ = linspace<narray_type>(0.0, 1.0, ns_);
   double ds_half_cell = 0.5 / (ns_ - 1);
-  radius_half_cell_ =
+  sgrid_half_cell_ =
       linspace<narray_type>(ds_half_cell, 1.0 - ds_half_cell, ns_ - 1);
 }
 void parser_vmec::get_data(

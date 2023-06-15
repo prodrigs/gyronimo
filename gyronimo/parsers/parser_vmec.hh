@@ -98,8 +98,8 @@ class parser_vmec {
   const narray_type& pres() const { return pres_; };
   const narray_type& presf() const { return presf_; };
   const narray_type& q() const { return q_factor_; };
-  const narray_type& radius() const { return radius_; };
-  const narray_type& radius_half_cell() const { return radius_half_cell_; };
+  const narray_type& sgrid() const { return sgrid_; };
+  const narray_type& sgrid_half_cell() const { return sgrid_half_cell_; };
   const narray_type& raxis_cc() const { return raxis_cc_; };
   const narray_type& rmnc() const { return rmnc_; };
   const narray_type& xm() const { return xm_; };
@@ -164,8 +164,8 @@ class parser_vmec {
   narray_type pres_;
   narray_type presf_;
   narray_type q_factor_;
-  narray_type radius_;
-  narray_type radius_half_cell_;
+  narray_type sgrid_;
+  narray_type sgrid_half_cell_;
   narray_type raxis_cc_;
   narray_type rmnc_;
   narray_type xm_;
