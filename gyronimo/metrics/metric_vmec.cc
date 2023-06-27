@@ -19,22 +19,18 @@
 
 #include <gyronimo/metrics/metric_vmec.hh>
 
+#include <cmath>
+#include <numeric>
+
 namespace gyronimo {
 
 metric_vmec::metric_vmec(
     const parser_vmec* p, const interpolator1d_factory* ifactory)
     : parser_(p), harmonics_(p->mnmax()), m_(p->xm()), n_(p->xn()),
-    r_mn_(p->mnmax()), z_mn_(p->mnmax()) {
-  dblock_adapter sgrid(p->sgrid());
-#pragma omp parallel for
-  for (size_t i = 0; i < harmonics_; i++) {
-    std::slice mask(i, sgrid.size(), harmonics_);
-    narray_type r_mn_data = (p->rmnc())[mask], z_mn_data = (p->zmns())[mask];
-    r_mn_[i] = std::move(std::unique_ptr<interpolator1d>(
-        ifactory->interpolate_data(sgrid, dblock_adapter(r_mn_data))));
-    z_mn_[i] = std::move(std::unique_ptr<interpolator1d>(
-        ifactory->interpolate_data(sgrid, dblock_adapter(z_mn_data))));
-  }
+      index_(harmonics_), r_mn_(p->mnmax()), z_mn_(p->mnmax()) {
+  std::iota(index_.begin(), index_.end(), 0);
+  this->build_interpolator_array(r_mn_, parser_->rmnc(), ifactory);
+  this->build_interpolator_array(z_mn_, parser_->zmns(), ifactory);
 }
 
 SM3 metric_vmec::operator()(const IR3& position) const {
@@ -42,27 +38,28 @@ SM3 metric_vmec::operator()(const IR3& position) const {
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
   auto cis_mn = metric_vmec::cached_cis(theta, zeta);
-  double r = 0.0, dr_ds = 0.0, dr_dtheta = 0.0, dr_dzeta = 0.0;
-  double dz_ds = 0.0, dz_dtheta = 0.0, dz_dzeta = 0.0;
-#pragma omp parallel for reduction(+: r, z, dr_ds, dr_dtheta, dr_dzeta, dz_ds, dz_dtheta, dz_dzeta)
-  for (size_t i = 0; i < harmonics_; i++) {
-    double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
-    double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
-    r += r_mn_i * cos_mn_i;
-    dr_ds += (*r_mn_[i]).derivative(s) * cos_mn_i;
-    dr_dtheta -= m_[i] * r_mn_i * sin_mn_i;
-    dr_dzeta += n_[i] * r_mn_i * sin_mn_i;
-    dz_ds += (*z_mn_[i]).derivative(s) * sin_mn_i;
-    dz_dtheta += m_[i] * z_mn_i * cos_mn_i;
-    dz_dzeta -= n_[i] * z_mn_i * cos_mn_i;
-  };
+  auto out = std::transform_reduce(
+      index_.begin(), index_.end(), auxiliar1_t {0, 0, 0, 0, 0, 0, 0},
+      std::plus<>(), [&](size_t i) -> auxiliar1_t {
+        double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
+        double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
+        return {
+            r_mn_i * cos_mn_i,  // r_mn_i
+            (*r_mn_[i]).derivative(s) * cos_mn_i,  // drdu_mn_i
+            n_[i] * r_mn_i * sin_mn_i,  // drdv_mn_i
+            -m_[i] * r_mn_i * sin_mn_i,  // drdw_mn_i
+            (*z_mn_[i]).derivative(s) * sin_mn_i,  // dzdu_mn_i
+            -n_[i] * z_mn_i * cos_mn_i,  // dzdv_mn_i
+            m_[i] * z_mn_i * cos_mn_i  // dzdw_mn_i
+        };
+      });
   return {
-      dr_ds * dr_ds + dz_ds * dz_ds,  // g_uu
-      dr_ds * dr_dzeta + dz_ds * dz_dzeta,  // g_uw
-      dr_ds * dr_dtheta + dz_ds * dz_dtheta,  // g_uv
-      r * r + dr_dzeta * dr_dzeta + dz_dzeta * dz_dzeta,  // g_vv
-      dr_dtheta * dr_dzeta + dz_dtheta * dz_dzeta,  // g_vw
-      dr_dtheta * dr_dtheta + dz_dtheta * dz_dtheta  // g_ww
+      out.drdu * out.drdu + out.dzdu * out.dzdu,  // g_uu
+      out.drdu * out.drdv + out.dzdu * out.dzdv,  // g_uw
+      out.drdu * out.drdw + out.dzdu * out.dzdw,  // g_uv
+      out.r * out.r + out.drdv * out.drdv + out.dzdv * out.dzdv,  // g_vv
+      out.drdw * out.drdv + out.dzdw * out.dzdv,  // g_vw
+      out.drdw * out.drdw + out.dzdw * out.dzdw  // g_ww
   };
 }
 
@@ -71,77 +68,67 @@ dSM3 metric_vmec::del(const IR3& position) const {
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
   auto cis_mn = metric_vmec::cached_cis(theta, zeta);
-  double r = 0.0, z = 0.0;
-  double dr_ds = 0.0, dr_dtheta = 0.0, dr_dzeta = 0.0;
-  double d2r_ds2 = 0.0, d2r_dsdtheta = 0.0, d2r_dsdzeta = 0.0;
-  double d2r_dthetads = 0.0, d2r_dtheta2 = 0.0, d2r_dthetadzeta = 0.0;
-  double d2r_dzetads = 0.0, d2r_dzetadtheta = 0.0, d2r_dzeta2 = 0.0;
-  double dz_ds = 0.0, dz_dtheta = 0.0, dz_dzeta = 0.0;
-  double d2z_ds2 = 0.0, d2z_dsdtheta = 0.0, d2z_dsdzeta = 0.0;
-  double d2z_dthetads = 0.0, d2z_dtheta2 = 0.0, d2z_dthetadzeta = 0.0;
-  double d2z_dzetads = 0.0, d2z_dzetadtheta = 0.0, d2z_dzeta2 = 0.0;
-#pragma omp parallel for reduction(+: r, dr_ds, dr_dtheta, dr_dzeta, d2r_ds2, d2r_dsdtheta, d2r_dsdzeta, d2r_dtheta2, d2r_dthetadzeta, d2r_dzeta2, z, dz_ds ,dz_dtheta, dz_dzeta, d2z_ds2, d2z_dsdtheta, d2z_dsdzeta, d2z_dtheta2, d2z_dthetadzeta, d2z_dzeta2)
-  for (size_t i = 0; i < harmonics_; i++) {
-    double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
-    double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
-    double d_r_mn_i = (*r_mn_[i]).derivative(s);
-    double d_z_mn_i = (*z_mn_[i]).derivative(s);
-    double d2_r_mn_i = (*r_mn_[i]).derivative2(s);
-    double d2_z_mn_i = (*z_mn_[i]).derivative2(s);
-    r += r_mn_i * cos_mn_i;
-    z += z_mn_i * sin_mn_i;
-    dr_ds += d_r_mn_i * cos_mn_i;
-    dr_dtheta -= m_[i] * r_mn_i * sin_mn_i;
-    dr_dzeta += n_[i] * r_mn_i * sin_mn_i;
-    d2r_ds2 += d2_r_mn_i * cos_mn_i;
-    d2r_dsdtheta -= m_[i] * d_r_mn_i * sin_mn_i;
-    d2r_dsdzeta += n_[i] * d_r_mn_i * sin_mn_i;
-    d2r_dtheta2 -= m_[i] * m_[i] * r_mn_i * cos_mn_i;
-    d2r_dthetadzeta += m_[i] * n_[i] * r_mn_i * cos_mn_i;
-    d2r_dzeta2 -= n_[i] * n_[i] * r_mn_i * cos_mn_i;
-    dz_ds += d_z_mn_i * sin_mn_i;
-    dz_dtheta += m_[i] * z_mn_i * cos_mn_i;
-    dz_dzeta -= n_[i] * z_mn_i * cos_mn_i;
-    d2z_ds2 += d2_z_mn_i * sin_mn_i;
-    d2z_dsdtheta += m_[i] * d_z_mn_i * cos_mn_i;
-    d2z_dsdzeta -= n_[i] * d_z_mn_i * cos_mn_i;
-    d2z_dtheta2 -= m_[i] * m_[i] * z_mn_i * sin_mn_i;
-    d2z_dthetadzeta += m_[i] * n_[i] * z_mn_i * sin_mn_i;
-    d2z_dzeta2 -= n_[i] * n_[i] * z_mn_i * sin_mn_i;
-  }
+  auto out = std::transform_reduce(
+      index_.begin(), index_.end(),
+      auxiliar2_t {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+      std::plus<>(), [&](size_t i) -> auxiliar2_t {
+        double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
+        double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
+        double drdu_mn_i = (*r_mn_[i]).derivative(s);
+        double dzdu_mn_i = (*z_mn_[i]).derivative(s);
+        double d2rdudu_mn_i = (*r_mn_[i]).derivative2(s);
+        double d2zdudu_mn_i = (*z_mn_[i]).derivative2(s);
+        return {
+            r_mn_i * cos_mn_i,  // r_mn_i
+            z_mn_i * sin_mn_i,  // z_mn_i
+            drdu_mn_i * cos_mn_i,  // drdu_mn_i
+            n_[i] * r_mn_i * sin_mn_i,  // drdv_mn_i
+            -m_[i] * r_mn_i * sin_mn_i,  // drdw_mn_i
+            dzdu_mn_i * sin_mn_i,  // dzdu_mn_i
+            -n_[i] * z_mn_i * cos_mn_i,  // dzdv_mn_i
+            m_[i] * z_mn_i * cos_mn_i,  // dzdw_mn_i
+            d2rdudu_mn_i * cos_mn_i,  // d2rdudu_mn_i
+            n_[i] * drdu_mn_i * sin_mn_i,  // d2rdudv_mn_i
+            -m_[i] * drdu_mn_i * sin_mn_i,  // d2rdudw_mn_i
+            -n_[i] * n_[i] * r_mn_i * cos_mn_i,  // d2rdvdv_mn_i
+            m_[i] * n_[i] * r_mn_i * cos_mn_i,  // d2rdvdw_mn_i
+            -m_[i] * m_[i] * r_mn_i * cos_mn_i,  // d2rdwdw_mn_i
+            d2zdudu_mn_i * sin_mn_i,  // dzdudu_mn_i
+            -n_[i] * dzdu_mn_i * cos_mn_i,  // dzdudv_mn_i
+            m_[i] * dzdu_mn_i * cos_mn_i,  // dzdudw_mn_i
+            -n_[i] * n_[i] * z_mn_i * sin_mn_i,  // dzdvdv_mn_i
+            m_[i] * n_[i] * z_mn_i * sin_mn_i,  // dzdvdw_mn_i
+            -m_[i] * m_[i] * z_mn_i * sin_mn_i  // dzdwdw_mn_i
+        };
+      });
   return {
-      2 * (dr_ds * d2r_ds2 + dz_ds * d2z_ds2),
-      2 * (dr_ds * d2r_dsdzeta + dz_ds * d2z_dsdzeta),  // d_i g_uu
-      2 * (dr_ds * d2r_dsdtheta + dz_ds * d2z_dsdtheta),
-      dr_ds * d2r_dsdzeta + dr_dzeta * d2r_ds2 + dz_ds * d2z_dsdzeta +
-          dz_dzeta * d2z_ds2,
-      dr_ds * d2r_dzeta2 + dr_dzeta * d2r_dsdzeta + dz_ds * d2z_dzeta2 +
-          dz_dzeta * d2z_dsdzeta,  // d_i g_uv
-      dr_ds * d2r_dthetadzeta + dr_dzeta * d2r_dsdtheta +
-          dz_ds * d2z_dthetadzeta + dz_dzeta * d2z_dsdtheta,
-      dr_ds * d2r_dsdtheta + dr_dtheta * d2r_ds2 + dz_ds * d2z_dsdtheta +
-          dz_dtheta * d2z_ds2,
-      dr_ds * d2r_dthetadzeta + dr_dtheta * d2r_dsdzeta +
-          dz_ds * d2z_dthetadzeta + dz_dtheta * d2z_dsdzeta,  // d_i g_uw
-      dr_ds * d2r_dtheta2 + dr_dtheta * d2r_dsdtheta + dz_ds * d2z_dtheta2 +
-          dz_dtheta * d2z_dsdtheta,
-      2 * (r * dr_ds + dr_dzeta * d2r_dsdzeta + dz_dzeta * d2z_dsdzeta),
-      2 *
-          (r * dr_dzeta + dr_dzeta * d2r_dzeta2 +
-           dz_dzeta * d2z_dzeta2),  // d_i g_vv
-      2 *
-          (r * dr_dtheta + dr_dzeta * d2r_dthetadzeta +
-           dz_dzeta * d2z_dthetadzeta),
-      dr_dtheta * d2r_dsdzeta + dr_dzeta * d2r_dsdtheta +
-          dz_dtheta * d2z_dsdzeta + dz_dzeta * d2z_dsdtheta,
-      dr_dtheta * d2r_dzeta2 + dr_dzeta * d2r_dthetadzeta +
-          dz_dtheta * d2z_dzeta2 + dz_dzeta * d2z_dthetadzeta,  // d_i g_vw
-      dr_dtheta * d2r_dthetadzeta + dr_dzeta * d2r_dtheta2 +
-          dz_dtheta * d2z_dthetadzeta + dz_dzeta * d2z_dtheta2,
-      2 * (dr_dtheta * d2r_dsdtheta + dz_dtheta * d2z_dsdtheta),
-      2 * (dr_dtheta * d2r_dthetadzeta + dz_dtheta * d2z_dthetadzeta),  // d_i
-                                                                        // g_ww
-      2 * (dr_dtheta * d2r_dtheta2 + dz_dtheta * d2z_dtheta2),
+      2 * (out.drdu * out.d2rdudu + out.dzdu * out.d2zdudu),
+      2 * (out.drdu * out.d2rdudv + out.dzdu * out.d2zdudv),
+      2 * (out.drdu * out.d2rdudw + out.dzdu * out.d2zdudw),
+      out.drdu * out.d2rdudv + out.drdv * out.d2rdudu + out.dzdu * out.d2zdudv +
+          out.dzdv * out.d2zdudu,
+      out.drdu * out.d2rdvdv + out.drdv * out.d2rdudv + out.dzdu * out.d2zdvdv +
+          out.dzdv * out.d2zdudv,
+      out.drdu * out.d2rdvdw + out.drdv * out.d2rdudw + out.dzdu * out.d2zdvdw +
+          out.dzdv * out.d2zdudw,
+      out.drdu * out.d2rdudw + out.drdw * out.d2rdudu + out.dzdu * out.d2zdudw +
+          out.dzdw * out.d2zdudu,
+      out.drdu * out.d2rdvdw + out.drdw * out.d2rdudv + out.dzdu * out.d2zdvdw +
+          out.dzdw * out.d2zdudv,
+      out.drdu * out.d2rdwdw + out.drdw * out.d2rdudw + out.dzdu * out.d2zdwdw +
+          out.dzdw * out.d2zdudw,
+      2 * (out.r * out.drdu + out.drdv * out.d2rdudv + out.dzdv * out.d2zdudv),
+      2 * (out.r * out.drdv + out.drdv * out.d2rdvdv + out.dzdv * out.d2zdvdv),
+      2 * (out.r * out.drdw + out.drdv * out.d2rdvdw + out.dzdv * out.d2zdvdw),
+      out.drdw * out.d2rdudv + out.drdv * out.d2rdudw + out.dzdw * out.d2zdudv +
+          out.dzdv * out.d2zdudw,
+      out.drdw * out.d2rdvdv + out.drdv * out.d2rdvdw + out.dzdw * out.d2zdvdv +
+          out.dzdv * out.d2zdvdw,
+      out.drdw * out.d2rdvdw + out.drdv * out.d2rdwdw + out.dzdw * out.d2zdvdw +
+          out.dzdv * out.d2zdwdw,
+      2 * (out.drdw * out.d2rdudw + out.dzdw * out.d2zdudw),
+      2 * (out.drdw * out.d2rdvdw + out.dzdw * out.d2zdvdw),
+      2 * (out.drdw * out.d2rdwdw + out.dzdw * out.d2zdwdw),
   };
 }
 
@@ -151,7 +138,6 @@ IR3 metric_vmec::transform2cylindrical(const IR3& position) const {
   double theta = position[IR3::w];
   auto cis_mn = metric_vmec::cached_cis(theta, zeta);
   double r = 0.0, z = 0.0;
-#pragma omp parallel for reduction(+ : r, z)
   for (size_t i = 0; i < harmonics_; i++) {
     double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
     r += r_mn_i * std::real(cis_mn[i]);
@@ -160,17 +146,31 @@ IR3 metric_vmec::transform2cylindrical(const IR3& position) const {
   return {r, zeta, z};
 }
 
+void metric_vmec::build_interpolator_array(
+    std::vector<std::unique_ptr<interpolator1d>>& interpolator_array,
+    const narray_type& samples_array, const interpolator1d_factory* ifactory) {
+  dblock_adapter sgrid(parser_->sgrid());
+  std::transform(
+      index_.begin(), index_.end(), interpolator_array.begin(), [&](size_t i) {
+        std::slice mask_i(i, sgrid.size(), harmonics_);
+        narray_type data = samples_array[mask_i];
+        return std::move(std::unique_ptr<interpolator1d>(
+            ifactory->interpolate_data(sgrid, dblock_adapter(data))));
+      });
+}
+
 //! Cached evaluation of trigonometric coefficients for internal Fourier series.
 const metric_vmec::cis_container_t& metric_vmec::cached_cis(
     double theta, double zeta) const {
   thread_local double cached_theta = -1e6, cached_zeta = -1e6;
   thread_local cis_container_t cis_mn(harmonics_);
   if (theta != cached_theta || zeta != cached_zeta) {
-#pragma omp parallel for
-    for(size_t i = 0;i < harmonics_;i++) {
-      double angle_mn = m_[i] * theta - n_[i] * zeta;
-      cis_mn[i] = {std::cos(angle_mn), std::sin(angle_mn)};
-    }
+    std::transform(
+        index_.begin(), index_.end(), cis_mn.begin(),
+        [&](size_t i) -> cis_container_t::value_type {
+          double angle_mn = m_[i] * theta - n_[i] * zeta;
+          return {std::cos(angle_mn), std::sin(angle_mn)};
+        });
     cached_theta = theta;
     cached_zeta = zeta;
   }

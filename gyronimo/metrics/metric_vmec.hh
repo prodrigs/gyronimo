@@ -20,11 +20,12 @@
 #ifndef GYRONIMO_METRIC_VMEC
 #define GYRONIMO_METRIC_VMEC
 
-#include <memory>
-#include <complex>
 #include <gyronimo/interpolators/interpolator1d.hh>
 #include <gyronimo/metrics/metric_covariant.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
+
+#include <complex>
+#include <memory>
 
 namespace gyronimo {
 
@@ -56,11 +57,44 @@ class metric_vmec : public metric_covariant {
   const size_t harmonics_;
   const narray_type m_, n_;
   const parser_vmec* parser_;
+  std::vector<size_t> index_;
   std::vector<std::unique_ptr<interpolator1d>> r_mn_, z_mn_;
+
+  void build_interpolator_array(
+      std::vector<std::unique_ptr<interpolator1d>>& interpolator_array,
+      const narray_type& samples_array, const interpolator1d_factory* ifactory);
 
   typedef std::vector<std::complex<double>> cis_container_t;
   const cis_container_t& cached_cis(double theta, double zeta) const;
+
+  struct auxiliar1_t {
+    double r, drdu, drdv, drdw, dzdu, dzdv, dzdw;
+  };
+  friend auxiliar1_t operator+(const auxiliar1_t& x, const auxiliar1_t& y);
+  struct auxiliar2_t {
+    double r, z, drdu, drdv, drdw, dzdu, dzdv, dzdw;
+    double d2rdudu, d2rdudv, d2rdudw, d2rdvdv, d2rdvdw, d2rdwdw;
+    double d2zdudu, d2zdudv, d2zdudw, d2zdvdv, d2zdvdw, d2zdwdw;
+  };
+  friend auxiliar2_t operator+(const auxiliar2_t& x, const auxiliar2_t& y);
 };
+
+inline metric_vmec::auxiliar1_t operator+(
+    const metric_vmec::auxiliar1_t& x, const metric_vmec::auxiliar1_t& y) {
+  return {x.r + y.r, x.drdu + y.drdu, x.drdv + y.drdv, x.drdw + y.drdw,
+          x.dzdu + y.dzdu, x.dzdv + y.dzdv, x.dzdw + y.dzdw};
+}
+
+inline metric_vmec::auxiliar2_t operator+(
+    const metric_vmec::auxiliar2_t& x, const metric_vmec::auxiliar2_t& y) {
+  return {x.r + y.r, x.z + y.z,
+      x.drdu + y.drdu, x.drdv + y.drdv, x.drdw + y.drdw,
+      x.dzdu + y.dzdu, x.dzdv + y.dzdv, x.dzdw + y.dzdw,
+      x.d2rdudu + y.d2rdudu, x.d2rdudv + y.d2rdudv, x.d2rdudw + y.d2rdudw,
+      x.d2rdvdv + y.d2rdvdv, x.d2rdvdw + y.d2rdvdw, x.d2rdwdw + y.d2rdwdw,
+      x.d2zdudu + y.d2zdudu, x.d2zdudv + y.d2zdudv, x.d2zdudw + y.d2zdudw,
+      x.d2zdvdv + y.d2zdvdv, x.d2zdvdw + y.d2zdvdw, x.d2zdwdw + y.d2zdwdw};
+}
 
 }  // end namespace gyronimo
 

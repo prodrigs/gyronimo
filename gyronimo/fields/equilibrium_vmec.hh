@@ -25,6 +25,9 @@
 #include <gyronimo/metrics/metric_vmec.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
 
+#include <complex>
+#include <memory>
+
 namespace gyronimo {
 
 //! Equilibrium magnetic field in 'VMEC' curvilinear coordinates.
@@ -60,11 +63,39 @@ class equilibrium_vmec : public IR3field_c1 {
   const size_t harmonics_;
   const narray_type m_, n_;
   const metric_vmec* metric_;
+  std::vector<size_t> index_;
   std::vector<std::unique_ptr<interpolator1d>> btheta_mn_, bzeta_mn_;
+
+  void build_interpolator_array(
+      std::vector<std::unique_ptr<interpolator1d>>& interpolator_array,
+      const narray_type& samples_array, const interpolator1d_factory* ifactory);
 
   typedef std::vector<std::complex<double>> cis_container_t;
   const cis_container_t& cached_cis(double theta, double zeta) const;
+
+  struct auxiliar1_t {
+    double bzeta, btheta;
+  };
+  struct auxiliar2_t {
+    double dbzetadu, dbzetadv, dbzetadw, dbthetadu, dbthetadv, dbthetadw;
+  };
+  friend auxiliar1_t operator+(const auxiliar1_t& x, const auxiliar1_t& y);
+  friend auxiliar2_t operator+(const auxiliar2_t& x, const auxiliar2_t& y);
 };
+
+inline equilibrium_vmec::auxiliar1_t operator+(
+    const equilibrium_vmec::auxiliar1_t& x,
+    const equilibrium_vmec::auxiliar1_t& y) {
+  return {x.bzeta + y.bzeta, x.btheta + y.btheta};
+}
+
+inline equilibrium_vmec::auxiliar2_t operator+(
+    const equilibrium_vmec::auxiliar2_t& x,
+    const equilibrium_vmec::auxiliar2_t& y) {
+  return {x.dbzetadu + y.dbzetadu, x.dbzetadv + y.dbzetadv,
+      x.dbzetadw + y.dbzetadw, x.dbthetadu + y.dbthetadu,
+      x.dbthetadv + y.dbthetadv, x.dbthetadw + y.dbthetadw};
+}
 
 }  // end namespace gyronimo.
 
