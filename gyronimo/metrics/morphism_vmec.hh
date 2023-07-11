@@ -44,6 +44,7 @@ class morphism_vmec : public morphism {
   virtual double jacobian(const IR3& q) const override;
 
   const parser_vmec* parser() const { return parser_; };
+  std::pair<double, double> get_rz(const IR3& position) const;
  private:
   const parser_vmec* parser_;
   narray_type xm_, xn_;
@@ -52,7 +53,6 @@ class morphism_vmec : public morphism {
   interpolator1d** Zmns_;
   interpolator1d** gmnc_;
 
-  std::pair<double, double> get_rz(const IR3& position) const;
   std::pair<double, double> reflection_past_axis(double s, double theta) const;
 };
 

@@ -56,7 +56,7 @@ class metric_covariant {
   virtual ddIR3 christoffel_first_kind(const IR3& r) const;
   virtual ddIR3 christoffel_second_kind(const IR3& r) const;
 
-  virtual IR3 inertial_force(const IR3& r, const IR3& vel) const;
+  virtual IR3 inertial_force(const IR3& q, const IR3& dot_q) const;
 };
 
 }

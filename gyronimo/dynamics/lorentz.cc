@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,126 +17,89 @@
 
 // @lorentz.cc, this file is part of ::gyronimo::
 
-#include <gyronimo/dynamics/lorentz.hh>
-#include <cmath>
-#include <gyronimo/core/error.hh>
 #include <gyronimo/core/codata.hh>
 #include <gyronimo/core/contraction.hh>
+#include <gyronimo/core/error.hh>
+#include <gyronimo/dynamics/lorentz.hh>
+
+#include <cmath>
 
 namespace gyronimo {
 
 //! Class constructor.
 /*!
-	Takes a reference length `Lref`, a reference velocity `Vref`, 
-	the charge-over-mass ratio `qom`, an electric field `Efield`
-	and a magnetic field `Bfield`. The fields `Efield` and `Bfield`
-	cannot be `nullptr`. For null fields, create an IR3field that
-	returns zero in the contravariant components.
+    Builds the Lorentz equations of motion for a particle with charge-to-mass
+    ratio `qom` (normalised to the proton's ratio). If supplied (defaults to no
+    field), the optional electric field must point to the same underlying
+    `metric_covariant` object as the magnetic field.
 */
-lorentz::lorentz(const double &Lref, const double &Vref, 
-		const double &qom, const IR3field *Efield, const IR3field *Bfield)
-		: Lref_(Lref), Vref_(Vref), Tref_(Lref/Vref), 
-		Oref_(Bfield ? qom * codata::e / 
-			codata::m_proton * Bfield->m_factor() * Tref_ : 1.0), 
-		electric_field_(Efield), magnetic_field_(Bfield),
-		iEfield_time_factor_(Efield ? Tref_ / Efield->t_factor() : 1.0),
-		iBfield_time_factor_(Bfield ? Tref_ / Bfield->t_factor() : 1.0),
-		metric_(Bfield ? Bfield->metric() : nullptr) {
-
-	// test if fields exist
-	// if(!Efield) error(__func__, __FILE__, __LINE__, 
-	//             " Efield cannot be nullptr.", 1);
-	if(!Bfield) error(__func__, __FILE__, __LINE__, 
-	            " Bfield cannot be nullptr.", 1);
-
-	if(Efield) {
-		// test if fields are in the same coordinates
-		const metric_covariant *Emetric = Efield->metric();
-		const metric_covariant *Bmetric = Bfield->metric();
-		if(Emetric != Bmetric)
-			error(__func__, __FILE__, __LINE__, 
-				" Efield and Bfield must be in the same coordinates.", 1);
-
-		// test if normalization factors are consistent
-		double E_m_factor = Efield->m_factor();
-		double B_m_factor = Bfield->m_factor();
-		if(std::abs(1.0 - E_m_factor/(Vref_*B_m_factor)) > 1.0e-14)
-			error(__func__, __FILE__, __LINE__, 
-				" inconsistent Efield and Bfield.", 1);
-	}
+lorentz::lorentz(
+    const double& Lref, const double& Vref, const double& qom,
+    const IR3field* B, const IR3field* E)
+    : Lref_(Lref), Vref_(Vref), Tref_(Lref / Vref),
+      Oref_(
+          B ? qom * codata::e / codata::m_proton * B->m_factor() * Tref_ : 1.0),
+      electric_field_(E), magnetic_field_(B),
+      iE_time_factor_(E ? Tref_ / E->t_factor() : 1.0),
+      iB_time_factor_(B ? Tref_ / B->t_factor() : 1.0),
+      metric_(B ? B->metric() : nullptr) {
+  if (!B) error(__func__, __FILE__, __LINE__, " no magnetic field.", 1);
+  if (E && B->metric() != E->metric())
+    error(__func__, __FILE__, __LINE__, " mismatched E/B coordinates.", 1);
 }
 
-//! Calculates the dynamic system `dx` for a particle in state `state`, at time `t`.
-lorentz::state lorentz::operator()(const state &s, const double &time) const {
+//! Evaluates the time derivative `dsdt` of the dynamical state `s` at time `t`.
+lorentz::state lorentz::operator()(const state& s, const double& time) const {
+  IR3 q = {s[0], s[1], s[2]};
+  IR3 v = {s[3], s[4], s[5]};
 
-	// extract position and velocity
-	IR3 q = {s[0], s[1], s[2]};
-	IR3 v = {s[3], s[4], s[5]};
-	
-	IR3 dq = Lref_ * v;
-	IR3 dv = Lref_ * metric_->inertial_force(q, v);
+  IR3 dot_q = Lref_ * v;
+  IR3 dot_v = Lref_ * metric_->inertial_force(q, v);
 
-	if(electric_field_) {
-		double Etime = time * iEfield_time_factor_;
-		dv += Oref_ * electric_field_->contravariant(q, Etime);
-	}
-	if(magnetic_field_) {
-		double Btime = time * iBfield_time_factor_;
-		IR3 B = magnetic_field_->contravariant(q, Btime);
-		double jacobian = metric_->jacobian(q);
-		IR3 vxB_covariant = cross_product<covariant>(v, B, jacobian);
-		IR3 vxB = metric_->to_contravariant(vxB_covariant, q);
-		dv += Oref_ * vxB;
-	}
+  IR3 B = magnetic_field_->contravariant(q, iB_time_factor_ * time);
+  IR3 vxB = cross_product<covariant>(v, B, metric_->jacobian(q));
+  dot_v += Oref_ * metric_->to_contravariant(vxB, q);
+  if (electric_field_)
+    dot_v += Oref_ * electric_field_->contravariant(q, iE_time_factor_ * time);
 
-	return {dq[IR3::u], dq[IR3::v], dq[IR3::w],
-	        dv[IR3::u], dv[IR3::v], dv[IR3::w]};
+  return {dot_q[IR3::u], dot_q[IR3::v], dot_q[IR3::w],
+          dot_v[IR3::u], dot_v[IR3::v], dot_v[IR3::w]};
 }
 
-//! Generates a `lorentz::state` from curvilinear position `pos` and velocity `vel`.
-lorentz::state lorentz::generate_state(const IR3 &pos, const IR3 &vel) const {
-	return {pos[IR3::u], pos[IR3::v], pos[IR3::w],
-			vel[IR3::u], vel[IR3::v], vel[IR3::w]};
+//! Generates a `lorentz::state` from curvilinear position `q` and velocity `v`.
+lorentz::state lorentz::generate_state(const IR3& q, const IR3& v) const {
+  return {q[IR3::u], q[IR3::v], q[IR3::w], v[IR3::u], v[IR3::v], v[IR3::w]};
 }
 
 //! Extracts the position from a `lorentz::state`.
-IR3 lorentz::get_position(const state &s) const {
-	return {s[0], s[1], s[2]};
-}
+IR3 lorentz::get_position(const state& s) const { return {s[0], s[1], s[2]}; }
 
 //! Extracts the velocity from a `lorentz::state`, normalized to `Vref`.
-IR3 lorentz::get_velocity(const state &s) const {
-	return {s[3], s[4], s[5]};
-}
+IR3 lorentz::get_velocity(const state& s) const { return {s[3], s[4], s[5]}; }
 
 //! Returns the kinetic energy of the state, normalized to `Uref`.
-double lorentz::energy_kinetic(const state &s) const {
-	IR3 pos   = {s[0], s[1], s[2]};
-	IR3 v_con = {s[3], s[4], s[5]};
-	IR3 v_cov = metric_->to_covariant(v_con, pos);
-	return inner_product(v_cov, v_con);
+double lorentz::energy_kinetic(const state& s) const {
+  IR3 q = {s[0], s[1], s[2]};
+  IR3 dot_q = {s[3], s[4], s[5]};
+  return inner_product(dot_q, metric_->to_covariant(dot_q, q));
 }
 
 //! Returns the parallel energy of the state, normalized to `Uref`.
-double lorentz::energy_parallel(const state &s, const double &time) const {
-	IR3 q = {s[0], s[1], s[2]};
-	IR3 v_con = {s[3], s[4], s[5]};
-	double Btime = time * iBfield_time_factor_;
-	IR3 b_cov = magnetic_field_->covariant_versor(q, Btime);
-	double vpar = inner_product(v_con, b_cov);
-	return vpar*vpar;
+double lorentz::energy_parallel(const state& s, const double& time) const {
+  IR3 q = {s[0], s[1], s[2]};
+  IR3 dot_q = {s[3], s[4], s[5]};
+  IR3 b = magnetic_field_->covariant_versor(q, iB_time_factor_ * time);
+  double vpar = inner_product(dot_q, b);
+  return vpar * vpar;
 }
 
 //! Returns the perpendicular energy of the state, normalized to `Uref`.
-double lorentz::energy_perpendicular(const state &s, const double &time) const {
-	IR3 q = {s[0], s[1], s[2]};
-	IR3 v_con = {s[3], s[4], s[5]};
-	double Btime = time * iBfield_time_factor_;
-	IR3 b_con = magnetic_field_->contravariant_versor(q, Btime);
-	double jacobian = metric_->jacobian(q);
-	IR3 vperp_cov = cross_product<covariant>(v_con, b_con, jacobian);
-	IR3 vperp_con = metric_->to_contravariant(vperp_cov, q);
-	return inner_product(vperp_cov, vperp_con);
+double lorentz::energy_perpendicular(const state& s, const double& time) const {
+  IR3 q = {s[0], s[1], s[2]};
+  IR3 dot_q = {s[3], s[4], s[5]};
+  IR3 b = magnetic_field_->contravariant_versor(q, iB_time_factor_ * time);
+  IR3 vperp = cross_product<covariant>(dot_q, b, metric_->jacobian(q));
+  return inner_product(vperp, metric_->to_contravariant(vperp, q));
 }
 
-} // end namespace gyronimo
+}  // end namespace gyronimo
