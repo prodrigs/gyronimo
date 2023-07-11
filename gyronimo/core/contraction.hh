@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,18 +25,16 @@
 
 namespace gyronimo {
 
-//! Identifies which component (`covariant` or `contravariant`) of the vector is being considered.
-enum representation {covariant, contravariant};
-
-IR3 contraction(const SM3& g, const IR3& B);
-IR3 cross_product(const IR3& A, const IR3& B);
-template<representation>
-IR3 cross_product(const IR3& A, const IR3& B, double jacobian);
-double inner_product(const IR3& A, const IR3& B);
-
-//! Index to contract in a templated `contraction` of multi-indexed objects.
+enum variance_type {covariant, contravariant};
 enum contraction_index {first, second, third};
 
+IR3 contraction(const SM3& g, const IR3& B);
+double inner_product(const IR3& A, const IR3& B);
+IR3 cross_product(const IR3& A, const IR3& B);
+dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h);
+
+template<variance_type>
+IR3 cross_product(const IR3& A, const IR3& B, double jacobian);
 template<contraction_index>
 IR3 contraction(const dIR3& dA, const IR3& B);
 template<contraction_index>
@@ -49,7 +47,6 @@ template<contraction_index, contraction_index>
 ddIR3 contraction(const dIR3& dA, const ddIR3& ddB);
 template<contraction_index, contraction_index>
 dIR3 contraction(const SM3& g, const dIR3& dB);
-dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h);
 
 } // end namespace gyronimo.
 

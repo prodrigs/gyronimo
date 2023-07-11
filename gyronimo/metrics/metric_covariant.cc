@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -96,10 +96,9 @@ IR3 metric_covariant::to_contravariant(const IR3& B, const IR3& r) const {
 
 //! General-purpose derivative of the inverse metric.
 /*!
-    Implements the rule
-    ```
+    Implements the rule @f$
     \partial_k g^{ij} = - g^{im} \partial_k g_{mn} g^{nj}
-    ```
+    @f$.
 */
 dSM3 metric_covariant::del_inverse(const IR3& r) const {
   SM3 ig = this->inverse(r);
@@ -113,16 +112,15 @@ dSM3 metric_covariant::del_inverse(const IR3& r) const {
 
 //! General-purpose Christoffel symbols of the first kind.
 /*!
-    Implements the rule
-    ```
-    \Gamma_{\alpha\beta\gamma} = \frac{1}{2} \left(
-                \frac{\partial g_{\alpha\beta}}{\partial q^\gamma} +
-                \frac{\partial g_{\alpha\gamma}}{\partial q^\beta} -
-                \frac{\partial g_{\beta\gamma}}{\partial q^\alpha} \right)
-    ```
+    Implements the rule @f$
+    \Gamma_{ijk} = \frac{1}{2} \left(
+                \frac{\partial g_{ij}}{\partial q^k} +
+                \frac{\partial g_{ik}}{\partial q^j} -
+                \frac{\partial g_{jk}}{\partial q^i} \right)
+    @f$.
 */
-ddIR3 metric_covariant::christoffel_first_kind(const IR3& r) const {
-  dSM3 dg = del(r);
+ddIR3 metric_covariant::christoffel_first_kind(const IR3& q) const {
+  dSM3 dg = del(q);
   return {
       0.5 * (dg[dSM3::uuu] + dg[dSM3::uuu] - dg[dSM3::uuu]),  // uuu
       0.5 * (dg[dSM3::uuv] + dg[dSM3::uvu] - dg[dSM3::uvu]),  // uuv
@@ -147,25 +145,20 @@ ddIR3 metric_covariant::christoffel_first_kind(const IR3& r) const {
 
 //! General-purpose Christoffel symbols of the second kind.
 /*!
-    Implements the rule
-    ```
-    \Gamma^\alpha_{\beta\gamma} = g^{\alpha\mu} \, \Gamma_{\mu\beta\gamma}
-    ```
+    Implements the rule @f$ \Gamma^k_{ij} = g^{km} \, \Gamma_{mij} @f$.
 */
-ddIR3 metric_covariant::christoffel_second_kind(const IR3& r) const {
+ddIR3 metric_covariant::christoffel_second_kind(const IR3& q) const {
   return contraction<second, first>(
-      this->inverse(r), this->christoffel_first_kind(r));
+      this->inverse(q), this->christoffel_first_kind(q));
 }
 
-//! Implementation of the contravariant inertial force
+//! Contravariant inertial force.
 /*!
-    Implements the rule
-    @f$ F^\alpha = - \Gamma^\alpha_{\beta\gamma} \, v^\beta \, v^\gamma @f$
-    where `vel` must be contravariant
+    Implements the rule @f$ F^k = - \Gamma^k_{ij} \, \dot{q}^i \, \dot{q}^j @f$.
 */
-IR3 metric_covariant::inertial_force(const IR3& r, const IR3& vel) const {
-  ddIR3 CF2 = christoffel_second_kind(r);
-  return (-1.0)*contraction<second,third>(CF2, vel, vel);
+IR3 metric_covariant::inertial_force(const IR3& q, const IR3& dot_q) const {
+  ddIR3 gamma = christoffel_second_kind(q);
+  return (-1.0)*contraction<second,third>(gamma, dot_q, dot_q);
 }
 
 } // end namespace gyronimo.

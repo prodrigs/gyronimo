@@ -26,7 +26,7 @@ double inner_product(const IR3& A, const IR3& B) {
   return A[IR3::u]*B[IR3::u] + A[IR3::v]*B[IR3::v] + A[IR3::w]*B[IR3::w];
 }
 
-//! Cartesian cross product: A and B must be cartesian.
+//! Cartesian cross product (A and B are cartesian).
 IR3 cross_product(const IR3& A, const IR3& B) {
   return {
     A[IR3::v]*B[IR3::w] - A[IR3::w]*B[IR3::v],
@@ -35,25 +35,16 @@ IR3 cross_product(const IR3& A, const IR3& B) {
   };
 }
 
-//! Covariant cross product: A and B must be contravariant.
+//! Covariant cross product (A and B are contravariant).
 template<>
 IR3 cross_product<covariant>(const IR3& A, const IR3& B, double jacobian) {
-  return {
-    (A[IR3::v]*B[IR3::w] - A[IR3::w]*B[IR3::v]) * jacobian,
-    (A[IR3::w]*B[IR3::u] - A[IR3::u]*B[IR3::w]) * jacobian,
-    (A[IR3::u]*B[IR3::v] - A[IR3::v]*B[IR3::u]) * jacobian
-  };
+  return cross_product(A, B) * jacobian;
 }
 
-//! Contravariant cross product: A and B must be covariant.
+//! Contravariant cross product (A and B must be covariant).
 template<>
 IR3 cross_product<contravariant>(const IR3& A, const IR3& B, double jacobian) {
-  double ijacobian = 1.0/jacobian;
-  return {
-    (A[IR3::v]*B[IR3::w] - A[IR3::w]*B[IR3::v]) * ijacobian,
-    (A[IR3::w]*B[IR3::u] - A[IR3::u]*B[IR3::w]) * ijacobian,
-    (A[IR3::u]*B[IR3::v] - A[IR3::v]*B[IR3::u]) * ijacobian
-  };
+  return cross_product(A, B) / jacobian;
 }
 
 //! Contraction of a symmetric 3x3 matrix and a IR^3 vector.
