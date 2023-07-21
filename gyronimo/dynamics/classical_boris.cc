@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,169 +31,105 @@
 
 namespace gyronimo {
 
-/*!
-        Class constructor.
-        Takes a reference length `Lref`, a reference velocity `Vref`,
-        the charge-over-mass ratio `qom`, an electric field `Efield`
-        and a magnetic field `Bfield`. The field `Bfield`
-        cannot be `nullptr`.
-*/
+//! Class constructor.
 classical_boris::classical_boris(
     const double& Lref, const double& Vref, const double& qom,
-    const IR3field* Efield, const IR3field* Bfield)
+    const IR3field* B, const IR3field* E)
     : Lref_(Lref), Vref_(Vref), Tref_(Lref / Vref), qom_(qom),
-      Oref_(
-          Bfield
-              ? qom * codata::e / codata::m_proton * Bfield->m_factor() * Tref_
-              : 1.0),
-      electric_field_(Efield), magnetic_field_(Bfield),
-      iEfield_time_factor_(Efield ? Tref_ / Efield->t_factor() : 1.0),
-      iBfield_time_factor_(Bfield ? Tref_ / Bfield->t_factor() : 1.0),
-      metric_(
-          Bfield ? dynamic_cast<const metric_connected*>(Bfield->metric())
-                 : nullptr),
+      Oref_(B ? qom * codata::e / codata::m_proton * B->m_factor() * Tref_ : 1),
+      electric_field_(E), magnetic_field_(B),
+      iE_time_factor_(E ? Tref_ / E->t_factor() : 1),
+      iB_time_factor_(B ? Tref_ / B->t_factor() : 1),
+      metric_(B ? dynamic_cast<const metric_connected*>(B->metric()) : nullptr),
       my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
-  // test if fields exist
-  // if(!Efield) error(__func__, __FILE__, __LINE__,
-  // 	    " Efield cannot be nullptr.", 1);
-  if (!Bfield)
-    error(__func__, __FILE__, __LINE__, " Bfield cannot be nullptr.", 1);
-
-  // test if metrics are the same
-  if (Efield) {
-    const metric_covariant* Emetric = Efield->metric();
-    const metric_covariant* Bmetric = Bfield->metric();
-    if (Emetric != Bmetric)
-      error(
-          __func__, __FILE__, __LINE__,
-          " Efield and Bfield must be in the same coordinate representation.",
-          1);
-  }
-
-  // ensure that the field metrics derive from metric_connected
+  if (!B) error(__func__, __FILE__, __LINE__, "no magnetic field.", 1);
+  if (E && B->metric() != E->metric())
+    error(__func__, __FILE__, __LINE__, "mismatched E/B coordinates.", 1);
   if (!metric_)
-    error(
-        __func__, __FILE__, __LINE__,
-        " field metrics must derive from 'gyronimo::metric_connected'.", 1);
-
-  // test if normalization factors are consistent
-  if (Efield) {
-    double E_m_factor = Efield->m_factor();
-    double B_m_factor = Bfield->m_factor();
-    if (std::abs(1.0 - E_m_factor / (Vref_ * B_m_factor)) > 1.0e-14)
-      error(
-          __func__, __FILE__, __LINE__,
-          " inconsistent Efield and Bfield normalization.", 1);
-  }
+    error(__func__, __FILE__, __LINE__, "field has no metric_connected.", 1);
 }
 
-//! Performs a time step `dt` update to the state `in` and returns the result.
+//! Returns the update of a state by a single time step `dt`.
 classical_boris::state classical_boris::do_step(
-    const state& in, const double& time, const double& dt) const {
-  // extract position and velocity from state
-  IR3 q_old = {in[0], in[1], in[2]};
-  IR3 v_old = {in[3], in[4], in[5]};
-  dIR3 e_old = my_morphism_->del(q_old);
+    const state& s, const double& time, const double& dt) const {
+  double Btime = time * iB_time_factor_;
+  const double tildeEref = Oref_ * iB_time_factor_ / (iE_time_factor_ * Vref_);
 
-  // calculate fields
-  IR3 Efield = {0.0, 0.0, 0.0};
-  if (electric_field_) {
-    double Etime = time * iEfield_time_factor_;
-    IR3 E_contravariant = electric_field_->contravariant(q_old, Etime);
-    Efield = contraction<second>(e_old, E_contravariant);
-  }
-  double Btime = time * iBfield_time_factor_;
-  IR3 Bfield_contravariant = magnetic_field_->contravariant(q_old, Btime);
-  IR3 Bfield = contraction<second>(e_old, Bfield_contravariant);
-  double Bmag = std::sqrt(inner_product(Bfield, Bfield));
-  IR3 Bversor = Bfield / Bmag;
+  IR3 q = this->get_position(s), v = this->get_velocity(s);
+  double B = magnetic_field_->magnitude(q, Btime);
+  IR3 b = my_morphism_->from_contravariant(
+      magnetic_field_->contravariant_versor(q, Btime), q);
+  IR3 E = electric_field_ ?
+      my_morphism_->from_contravariant(
+          electric_field_->contravariant(q, time * iE_time_factor_), q) :
+      IR3 {0, 0, 0};
 
-  // perform cartesian_boris step
-  IR3 v_new = electric_field_
-      ? boris_push(v_old, Oref_, Efield, Bmag, Bversor, dt)
-      : boris_push(v_old, Oref_, Bmag, Bversor, dt);
-  // IR3 x_new = x_old + (Lref_*dt) * v_new;
+  IR3 updated_v = electric_field_ ?
+      boris_push(v, Oref_, tildeEref, E, B, b, dt) :
+      boris_push(v, Oref_, B, b, dt);
+  IR3 updated_q = my_morphism_->translation(q, (Lref_ * dt) * updated_v);
 
-  // IR3 q_new = my_morphism_->inverse(x_new);
-  // IR3 u_new = my_morphism_->to_contravariant(v_new, q_new);
-
-  IR3 q_new = my_morphism_->translation(q_old, (Lref_ * dt) * v_new);
-
-  return {q_new[IR3::u], q_new[IR3::v], q_new[IR3::w],
-          v_new[IR3::u], v_new[IR3::v], v_new[IR3::w]};
+  return this->generate_state(updated_q, updated_v);
 }
 
-//! Returns the `classical_boris::state` state from a point in SI phase-space.
+//! Builds a state from curvilinear position and normalised cartesian velocity.
 classical_boris::state classical_boris::generate_state(
-    const IR3& pos, const IR3& vel) const {
-  return {pos[IR3::u], pos[IR3::v], pos[IR3::w],
-          vel[IR3::u], vel[IR3::v], vel[IR3::w]};
+    const IR3& q, const IR3& v) const {
+  return {q[IR3::u], q[IR3::v], q[IR3::w], v[IR3::u], v[IR3::v], v[IR3::w]};
 }
 
-//! Returns the vector position of the state in SI units.
+//! Extracts curvilinear position from state.
 IR3 classical_boris::get_position(const state& s) const {
   return {s[0], s[1], s[2]};
 }
 
-//! Returns the vector velocity of the state in SI units.
+//! Extracts cartesian normalised velocity from state.
 IR3 classical_boris::get_velocity(const state& s) const {
-  IR3 q = {s[0], s[1], s[2]};
-  IR3 v = {s[3], s[4], s[5]};
+  return {s[3], s[4], s[5]};
+}
+
+//! Extracts curvilinear normalised velocity from state.
+IR3 classical_boris::get_dot_q(const state& s) const {
+  IR3 q = this->get_position(s), v = this->get_velocity(s);
   return my_morphism_->to_contravariant(v, q);
 }
 
-//! Returns the kinetic energy of the state, normalized to `Uref`.
+//! Returns the kinetic energy of the state, normalised to `Uref`.
 double classical_boris::energy_kinetic(const state& s) const {
-  return (s[3] * s[3] + s[4] * s[4] + s[5] * s[5]);
+  IR3 v = this->get_velocity(s);
+  return inner_product(v, v);
 }
 
-//! Returns the parallel energy of the state, normalized to `Uref`.
+//! Returns the parallel energy of the state, normalised to `Uref`.
 double classical_boris::energy_parallel(const state& s, double& time) const {
-  IR3 q = {s[0], s[1], s[2]};
-  IR3 v = {s[3], s[4], s[5]};
-  double Btime = time * iBfield_time_factor_;
-  IR3 Bversor_con = magnetic_field_->contravariant_versor(q, Btime);
-  IR3 Bversor = my_morphism_->from_contravariant(Bversor_con, q);
-  double vpar = inner_product(v, Bversor);
-  return vpar * vpar;
+  IR3 q = this->get_position(s), v = this->get_velocity(s);
+  IR3 b = my_morphism_->from_contravariant(
+      magnetic_field_->contravariant_versor(q, time * iB_time_factor_), q);
+  double v_parallel = inner_product(v, b);
+  return v_parallel * v_parallel;
 }
 
-//! Returns the perpendicular energy of the state, normalized to `Uref`.
+//! Returns the perpendicular energy of the state, normalised to `Uref`.
 double classical_boris::energy_perpendicular(
     const state& s, double& time) const {
-  IR3 q = {s[0], s[1], s[2]};
-  IR3 v = {s[3], s[4], s[5]};
-  double Btime = time * iBfield_time_factor_;
-  IR3 Bversor_con = magnetic_field_->contravariant_versor(q, Btime);
-  IR3 Bversor = my_morphism_->from_contravariant(Bversor_con, q);
-  IR3 vperp = cross_product(v, Bversor);
-  return inner_product(vperp, vperp);
+  IR3 q = this->get_position(s), v = this->get_velocity(s);
+  IR3 b = my_morphism_->from_contravariant(
+      magnetic_field_->contravariant_versor(q, time * iB_time_factor_), q);
+  IR3 v_perpendicular = cross_product(v, b);
+  return inner_product(v_perpendicular, v_perpendicular);
 }
 
-classical_boris::state classical_boris::generate_initial_state(
-    const IR3& pos, const IR3& vel, const double& time,
-    const double& dt) const {
-  // state s0 = {
-  // 	pos[IR3::u], pos[IR3::v], pos[IR3::w],
-  // 	vel[IR3::u], vel[IR3::v], vel[IR3::w]
-  // };
-  // state s1 = do_step(s0, time, -0.5*dt);
-
-  // return {s0[0], s0[1], s0[2], s1[3], s1[4], s1[5]};
-
-  lorentz lo(Lref_, Vref_, qom_, electric_field_, magnetic_field_);
-  odeint_adapter<gyronimo::lorentz> sys(&lo);
+//! Returns a state with the velocity integrated backwards by a half time step.
+classical_boris::state classical_boris::half_back_step(
+    const IR3& q, const IR3& v, const double& time, const double& dt) const {
+  lorentz lo(Lref_, Vref_, qom_, magnetic_field_, electric_field_);
+  auto ls = lo.generate_state(q, my_morphism_->to_contravariant(v, q));
   boost::numeric::odeint::runge_kutta4<gyronimo::lorentz::state> rk4;
-  IR3 vel_con = my_morphism_->to_contravariant(vel, pos);
-  lorentz::state inout = {pos[IR3::u],     pos[IR3::v],     pos[IR3::w],
-                          vel_con[IR3::u], vel_con[IR3::v], vel_con[IR3::w]};
-  rk4.do_step(sys, inout, time, -0.5 * dt);
-  IR3 qmh = {inout[0], inout[1], inout[2]};
-  IR3 vmh_con = {inout[3], inout[4], inout[5]};
-  IR3 vmh = my_morphism_->from_contravariant(vmh_con, qmh);
-
-  return {pos[IR3::u], pos[IR3::v], pos[IR3::w],
-          vmh[IR3::u], vmh[IR3::v], vmh[IR3::w]};
+  rk4.do_step(odeint_adapter(&lo), ls, time, -0.5 * dt);
+  IR3 q_half_back = lo.get_position(ls), dot_q_half_back = lo.get_velocity(ls);
+  IR3 v_half_back =
+      my_morphism_->from_contravariant(dot_q_half_back, q_half_back);
+  return this->generate_state(q, v_half_back);
 }
 
 }  // end namespace gyronimo

@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,91 +29,49 @@
 
 namespace gyronimo {
 
-/*!
-        Class constructor.
-        Takes a reference length `Lref`, a reference velocity `Vref`,
-        the charge-over-mass ratio `qom`, an electric field `Efield`
-        and a magnetic field `Bfield`. The field `Bfield`
-        cannot be `nullptr`.
-*/
+//! Class constructor.
 cartesian_boris::cartesian_boris(
     const double& Lref, const double& Vref, const double& qom,
-    const IR3field* Efield, const IR3field* Bfield)
+    const IR3field* B, const IR3field* E)
     : Lref_(Lref), Vref_(Vref), Tref_(Lref / Vref), qom_(qom),
-      Oref_(
-          Bfield
-              ? qom * codata::e / codata::m_proton * Bfield->m_factor() * Tref_
-              : 1.0),
-      electric_field_(Efield), magnetic_field_(Bfield),
-      iEfield_time_factor_(Efield ? Tref_ / Efield->t_factor() : 1.0),
-      iBfield_time_factor_(Bfield ? Tref_ / Bfield->t_factor() : 1.0),
-      metric_(
-          Bfield ? dynamic_cast<const metric_cartesian*>(Bfield->metric())
-                 : nullptr),
+      Oref_(B ? qom * codata::e / codata::m_proton * B->m_factor() * Tref_ : 1),
+      electric_field_(E), magnetic_field_(B),
+      iE_time_factor_(E ? Tref_ / E->t_factor() : 1),
+      iB_time_factor_(B ? Tref_ / B->t_factor() : 1),
+      metric_(B ? dynamic_cast<const metric_cartesian*>(B->metric()) : nullptr),
       my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
-  // test if fields exist
-  // if(!Efield) error(__func__, __FILE__, __LINE__,
-  // 							" Efield cannot be nullptr.",
-  // 1);
-  if (!Bfield)
-    error(__func__, __FILE__, __LINE__, " Bfield cannot be nullptr.", 1);
-
-  // test if fields are cartesian
+  if (!B) error(__func__, __FILE__, __LINE__, "no magnetic field.", 1);
+  if (E && B->metric() != E->metric())
+    error(__func__, __FILE__, __LINE__, "mismatched E/B coordinates.", 1);
   if (!metric_)
-    error(
-        __func__, __FILE__, __LINE__,
-        " Bfield must be in cartesian coordinates.", 1);
-  if (Efield) {
-    const metric_covariant* Emetric = Efield->metric();
-    if (Emetric != metric_)
-      error(
-          __func__, __FILE__, __LINE__,
-          " Efield must be in cartesian coordinates.", 1);
-  }
-
-  // test if normalization factors are consistent
-  if (Efield) {
-    double E_m_factor = Efield->m_factor();
-    double B_m_factor = Bfield->m_factor();
-    if (std::abs(1.0 - E_m_factor / (Vref_ * B_m_factor)) > 1.0e-14)
-      error(
-          __func__, __FILE__, __LINE__, " inconsistent Efield and Bfield.", 1);
-  }
+    error(__func__, __FILE__, __LINE__, "field has no metric_cartesian.", 1);
 }
 
 //! Performs a time step `dt` update to the state `in` and returns the result.
 cartesian_boris::state cartesian_boris::do_step(
-    const cartesian_boris::state& in, const double& time,
-    const double& dt) const {
-  // extract position and velocity from state
-  IR3 x_old = {in[0], in[1], in[2]};
-  IR3 v_old = {in[3], in[4], in[5]};
+    const state& s, const double& time, const double& dt) const {
+  double Btime = time * iB_time_factor_;
+  const double tildeEref = Oref_ * iB_time_factor_ / (iE_time_factor_ * Vref_);
 
-  // calculate fields
-  IR3 Efield = {0.0, 0.0, 0.0};
-  if (electric_field_) {
-    double Etime = time * iEfield_time_factor_;
-    Efield = electric_field_->contravariant(x_old, Etime);
-  }
-  double Btime = time * iBfield_time_factor_;
-  double Bmag = magnetic_field_->magnitude(x_old, Btime);
-  IR3 Bversor = magnetic_field_->contravariant_versor(x_old, Btime);
+  IR3 x = this->get_position(s), v = this->get_velocity(s);
+  double B = magnetic_field_->magnitude(x, Btime);
+  IR3 b = magnetic_field_->contravariant_versor(x, Btime);
+  IR3 E = electric_field_ ?
+      electric_field_->contravariant(x, time * iE_time_factor_) :
+      IR3 {0, 0, 0};
 
-  // perform cartesian_boris step
-  IR3 v_new = electric_field_
-      ? boris_push(v_old, Oref_, Efield, Bmag, Bversor, dt)
-      : boris_push(v_old, Oref_, Bmag, Bversor, dt);
-  IR3 x_new = x_old + (Lref_ * dt) * v_new;
+  IR3 updated_v = electric_field_ ?
+      boris_push(v, Oref_, tildeEref, E, B, b, dt) :
+      boris_push(v, Oref_, B, b, dt);
+  IR3 updated_x = x + (Lref_ * dt) * updated_v;
 
-  return {x_new[IR3::u], x_new[IR3::v], x_new[IR3::w],
-          v_new[IR3::u], v_new[IR3::v], v_new[IR3::w]};
+  return this->generate_state(updated_x, updated_v);
 }
 
 //! Returns the `cartesian_boris::state` state from a point in SI phase-space.
 cartesian_boris::state cartesian_boris::generate_state(
-    const IR3& pos, const IR3& vel) const {
-  return {pos[IR3::u], pos[IR3::v], pos[IR3::w],
-          vel[IR3::u], vel[IR3::v], vel[IR3::w]};
+    const IR3& x, const IR3& v) const {
+  return {x[IR3::u], x[IR3::v], x[IR3::w], v[IR3::u], v[IR3::v], v[IR3::w]};
 }
 
 //! Returns the vector position of the state in SI units.
@@ -128,51 +86,36 @@ IR3 cartesian_boris::get_velocity(const state& s) const {
 
 //! Returns the kinetic energy of the state, normalized to `Uref`.
 double cartesian_boris::energy_kinetic(const state& s) const {
-  return s[3] * s[3] + s[4] * s[4] + s[5] * s[5];
+  IR3 v = this->get_velocity(s);
+  return inner_product(v, v);
 }
 
 //! Returns the parallel energy of the state, normalized to `Uref`.
 double cartesian_boris::energy_parallel(const state& s, double& time) const {
-  IR3 x = {s[0], s[1], s[2]};
-  IR3 v = {s[3], s[4], s[5]};
-  double Btime = time * iBfield_time_factor_;
-  IR3 b = magnetic_field_->contravariant_versor(x, Btime);
-  double vpar = inner_product(v, b);
-  return vpar * vpar;
+  IR3 x = this->get_position(s), v = this->get_velocity(s);
+  IR3 b = magnetic_field_->contravariant_versor(x, time * iB_time_factor_);
+  double v_parallel = inner_product(v, b);
+  return v_parallel * v_parallel;
 }
 
 //! Returns the perpendicular energy of the state, normalized to `Uref`.
 double cartesian_boris::energy_perpendicular(
     const state& s, double& time) const {
-  IR3 x = {s[0], s[1], s[2]};
-  IR3 v = {s[3], s[4], s[5]};
-  double Btime = time * iBfield_time_factor_;
-  IR3 b = magnetic_field_->contravariant_versor(x, Btime);
-  IR3 vperp = cross_product(v, b);
-  return inner_product(vperp, vperp);
+  IR3 x = this->get_position(s), v = this->get_velocity(s);
+  IR3 b = magnetic_field_->contravariant_versor(x, time * iB_time_factor_);
+  IR3 v_perpendicular = cross_product(v, b);
+  return inner_product(v_perpendicular, v_perpendicular);
 }
 
-cartesian_boris::state cartesian_boris::generate_initial_state(
-    const IR3& pos, const IR3& vel, const double& time,
-    const double& dt) const {
-  // state s0 = {
-  //     pos[IR3::u], pos[IR3::v], pos[IR3::w],
-  //     vel[IR3::u], vel[IR3::v], vel[IR3::w]
-  // };
-  // state s1 = do_step(s0, time, -0.5*dt);
-
-  // return {s0[0], s0[1], s0[2], s1[3], s1[4], s1[5]};
-
-  lorentz lo(Lref_, Vref_, qom_, electric_field_, magnetic_field_);
-  odeint_adapter<gyronimo::lorentz> sys(&lo);
+//! Returns a state with the velocity integrated backwards by a half time step.
+cartesian_boris::state cartesian_boris::half_back_step(
+    const IR3& x, const IR3& v, const double& time, const double& dt) const {
+  lorentz lo(Lref_, Vref_, qom_, magnetic_field_, electric_field_);
+  auto ls = lo.generate_state(x, v);
   boost::numeric::odeint::runge_kutta4<gyronimo::lorentz::state> rk4;
-  lorentz::state inout = {pos[IR3::u], pos[IR3::v], pos[IR3::w],
-                          vel[IR3::u], vel[IR3::v], vel[IR3::w]};
-  rk4.do_step(sys, inout, time, -0.5 * dt);
-  IR3 vmh = {inout[3], inout[4], inout[5]};
-
-  return {pos[IR3::u], pos[IR3::v], pos[IR3::w],
-          vmh[IR3::u], vmh[IR3::v], vmh[IR3::w]};
+  rk4.do_step(odeint_adapter(&lo), ls, time, -0.5 * dt);
+  IR3 x_half_back = lo.get_position(ls), v_half_back = lo.get_velocity(ls);
+  return this->generate_state(x, v_half_back);
 }
 
 }  // end namespace gyronimo

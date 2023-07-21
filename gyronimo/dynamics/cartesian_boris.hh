@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,15 +25,26 @@
 
 namespace gyronimo {
 
-//! Gyronimo implementation for cartesian boris stepper class.
+//! Boris stepper, fully cartesian (position, velocity, fields).
 /*!
-        This class implements the boris pusher [C. K. Birdsall and
-        A. B. Langdon, Plasma Physics via Computer Simulation, CRC Press, 1991],
-        which is typically defined only for cartesian coordinates.
-        Indeed, this class constrains field representation to cartesian
-   coordinates by checking if field metrics are of type `metric_cartesian`. To
-   use the boris pusher in curvilinear coordinates, look at `classical_boris`
-   class.
+    Advances a charged-particle's cartesian velocity by a single
+    time step using the Boris algorithm [C. K. Birdsall and A. B. Langdon,
+    Plasma Physics via Computer Simulation, CRC Press, 1991], which is a
+    particular way of discretizing the equation of motion for the Lorentz force
+    @f{equation*}{
+      \frac{d\tilde{\mathbf{v}}}{d\tau}
+          = \tilde{\Omega}_{ref} \tilde{\mathbf{v}} \times \tilde{\mathbf{B}} +
+            \tilde{E}_{ref} \tilde{\mathbf{E}}
+    @f}
+    Here, @f$\tau = t/T_{ref}@f$, @f$\tilde{\mathbf{v}} = \mathbf{v}/V_{ref}@f$
+    @f$\tilde{\mathbf{B}} = \mathbf{B}/B_{ref}@f$, and @f$\tilde{\mathbf{E}} =
+    \mathbf{E}/E_{ref}@f$ are the time, cartesian velocity, magnetic, and
+    electric fields normalised, respectively, to `Tref`, `Vref`, `Bref`, and
+    `Eref` (all in SI units), whereas @f$\tilde{\Omega}_{ref} = T_{ref} \: q_s
+    B_{ref}/m_s@f$ and @f$\tilde{E}_{ref} = \tilde{\Omega}_{ref} E_{ref} /
+    (B_{ref} V_{ref})@f$. Positions and velocities are cartesian and the
+    supplied magnetic and electric fields are tested to check if they carry a
+    `metric_cartesian` object.
 */
 class cartesian_boris {
  public:
@@ -41,12 +52,10 @@ class cartesian_boris {
 
   cartesian_boris(
       const double& Lref, const double& Vref, const double& qom,
-      const IR3field* Efield, const IR3field* Bfield);
+      const IR3field* B, const IR3field* E);
   ~cartesian_boris() {};
-
-  state do_step(const state& in, const double& time, const double& dt) const;
-
-  state generate_state(const IR3& pos, const IR3& vel) const;
+  state do_step(const state& s, const double& time, const double& dt) const;
+  state generate_state(const IR3& q, const IR3& v) const;
   IR3 get_position(const state& s) const;
   IR3 get_velocity(const state& s) const;
 
@@ -54,31 +63,24 @@ class cartesian_boris {
   double energy_parallel(const state& s, double& time) const;
   double energy_perpendicular(const state& s, double& time) const;
 
-  state generate_initial_state(
-      const IR3& pos, const IR3& vel, const double& t, const double& dt) const;
+  state half_back_step(
+      const IR3& q, const IR3& v, const double& t, const double& dt) const;
 
   const IR3field* electric_field() const { return electric_field_; };
   const IR3field* magnetic_field() const { return magnetic_field_; };
-  const morphism_cartesian* my_morphism() const { return my_morphism_; };
-
-  //! Returns the reference length scale `Lref`.
+  const morphism* my_morphism() const { return my_morphism_; };
   double Lref() const { return Lref_; };
-  //! Returns the reference time scale `Tref`.
   double Tref() const { return Tref_; };
-  //! Returns the reference velocity scale `Vref`.
   double Vref() const { return Vref_; };
-  //! Returns the reference frequency scale `Oref`.
   double Oref() const { return Oref_; };
-  //! Returns the charge-over-mass ratio.
   double qom() const { return qom_; };
  private:
   const double Lref_, Vref_, Tref_, qom_, Oref_;
   const IR3field *electric_field_, *magnetic_field_;
-  const double iEfield_time_factor_, iBfield_time_factor_;
-  const metric_cartesian* metric_;
-  const morphism_cartesian* my_morphism_;
-
-};  // end class classical_boris
+  const double iE_time_factor_, iB_time_factor_;
+  const metric_connected* metric_;
+  const morphism* my_morphism_;
+};
 
 }  // end namespace gyronimo
 
