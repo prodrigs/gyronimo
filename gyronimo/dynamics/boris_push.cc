@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,34 +25,20 @@
 namespace gyronimo {
 
 IR3 boris_push(
-    const IR3& v_old, const double& Oref, const double& Bmag,
-    const IR3& Bversor, const double& dt) {
-  // step 1
-  double T = std::tan(0.5 * Oref * dt * Bmag);
-  double S = 2 * T / (1 + T * T);
-  IR3 v_prime = v_old + T * cross_product(v_old, Bversor);
-  IR3 v_new = v_old + S * cross_product(v_prime, Bversor);
-
-  return v_new;
+    const IR3& velocity, const double& tildeOref, const double& B, const IR3& b,
+    const double& dt) {
+  double T = std::tan(0.5 * tildeOref * dt * B), S = 2 * T / (1 + T * T);
+  IR3 v_prime = velocity + T * cross_product(velocity, b);
+  return velocity + S * cross_product(v_prime, b);
 }
 
 IR3 boris_push(
-    const IR3& v_old, const double& Oref, const IR3& Efield, const double& Bmag,
-    const IR3& Bversor, const double& dt) {
-  // step 1
-  IR3 half_E_impulse = (0.5 * Oref * dt) * Efield;
-  IR3 v_minus = v_old + half_E_impulse;
-
-  // step 2
-  double T = std::tan(0.5 * Oref * dt * Bmag);
-  double S = 2 * T / (1 + T * T);
-  IR3 v_prime = v_minus + T * cross_product(v_minus, Bversor);
-  IR3 v_plus = v_minus + S * cross_product(v_prime, Bversor);
-
-  // step 3
-  IR3 v_new = v_plus + half_E_impulse;
-
-  return v_new;
+    const IR3& velocity, const double& tildeOref, const double& tildeEref,
+    const IR3& E, const double& B, const IR3& b, const double& dt) {
+  IR3 half_E_impulse = (0.5 * tildeEref * dt) * E;
+  IR3 v_minus = velocity + half_E_impulse;
+  IR3 v_plus = boris_push(v_minus, tildeOref, B, b, dt);
+  return v_plus + half_E_impulse;
 }
 
 }  // end namespace gyronimo

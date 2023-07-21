@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,64 +24,15 @@
 
 namespace gyronimo {
 
-//! Gyronimo implementation of the Cartesian Boris push.
-/*!
-        This class implements a single step in the Boris push [C. K. Birdsall
-   and A. B. Langdon, Plasma Physics via Computer Simulation, CRC Press, 1991],
-        defined only for cartesian coordinates.
-        This method assumes the electric field is zero.
-        The boris push refers to a particular way of discretizing the equation
-        of motion for the velocity, given by:
-        @f$
-                \frac{\tilde{\textbf{v}}(\tau+\Delta\tau/2)-
-                                \tilde{\textbf{v}}(\tau-\Delta\tau/2)}{\Delta\tau}
-                        = \Omega_{ref}
-   \frac{\tilde{\textbf{v}}(\tau+\Delta\tau/2)
-                                +\tilde{\textbf{v}}(\tau-\Delta\tau/2)}{2}
-                                \times \tilde{\textbf{B}}(\tau)
-    @f$
-        The following variables are adimensional: the time is normalized to
-   `Tref` with @f$ t=T_{ref}\,\tau @f$, the velocity to `Vref`=`Lref`/`Tref`
-   with
-        @f$ \textbf{v}=V_{ref}\,\tilde{\textbf{v}} @f$ and the magnetic field
-        to `Bref` with @f$ \tilde{\textbf{B}} = \textbf{B}/B_{ref} @f$.
-        In this normalization, the reference frequency factor is given by
-        @f$ \Omega_{ref} = \frac{q_s \, B_{ref}}{m_s} \, T_{ref} @f$.
-*/
+//! Boris cartesian-velocity pusher (magnetic field only).
 IR3 boris_push(
-    const IR3& v_old, const double& Oref, const double& Bmag,
-    const IR3& Bversor, const double& dt);
+    const IR3& velocity, const double& tildeOref, const double& B, const IR3& b,
+    const double& dt);
 
-//! Gyronimo implementation of the Cartesian Boris push.
-/*!
-        This class implements a single step in the Boris push [C. K. Birdsall
-   and A. B. Langdon, Plasma Physics via Computer Simulation, CRC Press, 1991],
-        defined only for cartesian coordinates.
-        The boris push refers to a particular way of discretizing the equation
-        of motion for the velocity, given by:
-        @f$
-                \frac{\tilde{\textbf{v}}(\tau+\Delta\tau/2)-
-                                \tilde{\textbf{v}}(\tau-\Delta\tau/2)}{\Delta\tau}
-                        = \Omega_{ref} \left( \tilde{\textbf{E}}(\tau) +
-                                \frac{\tilde{\textbf{v}}(\tau+\Delta\tau/2)
-                                +\tilde{\textbf{v}}(\tau-\Delta\tau/2)}{2}
-                                \times \tilde{\textbf{B}}(\tau) \right)
-    @f$
-        The following variables are adimensional: the time is normalized to
-   `Tref` with @f$ t=T_{ref}\,\tau @f$, the velocity to `Vref`=`Lref`/`Tref`
-   with
-        @f$ \textbf{v}=V_{ref}\,\tilde{\textbf{v}} @f$, the electric field to
-        `Eref` with @f$ \tilde{\textbf{E}} = \textbf{E}/E_{ref} @f$ and the
-        magnetic field to `Bref` with @f$ \tilde{\textbf{B}} =
-   \textbf{B}/B_{ref} @f$. In this normalization, the reference frequency factor
-   is given by
-        @f$ \Omega_{ref} = \frac{q_s \, B_{ref}}{m_s} \, T_{ref} @f$, and the
-        electric and magnetic fields are assumed to respect Faraday's law, with
-        @f$ V_{ref} = E_{ref} / B_{ref} @f$.
-*/
+//! Boris velocity pusher (electric and magnetic fields).
 IR3 boris_push(
-    const IR3& v_old, const double& Oref, const IR3& Efield, const double& Bmag,
-    const IR3& Bversor, const double& dt);
+    const IR3& velocity, const double& tildeOref, const double& tildeEref,
+    const IR3& E, const double& B, const IR3& b, const double& dt);
 
 }  // end namespace gyronimo
 

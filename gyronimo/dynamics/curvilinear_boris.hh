@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,16 +26,37 @@
 
 namespace gyronimo {
 
-//! Gyronimo implementation for curvilinear boris stepper class.
+//! Boris-like stepper, cartesian velocity and curvilinear position.
 /*!
-        This class implements the curvilinear boris pusher
-        [Journal of Plasma Physics, Volume 61, Issue 3, April 1999, pp. 367 -
-   389]. This class mixes the typical Cartesian boris push with a Runge-Kutta 2
-   advance in curvilinear coordinates. To achieve this, field representation is
-   only constrained to metrics of the type `metric_connected` to be able to
-   convert coordinates and vectors using the connected `morphism`. To use the
-   classical boris pusher in curvilinear coordinates, look at `classical_boris`
-   class.
+    Advances a charged-particle's cartesian velocity by a single
+    time step using the Boris algorithm [C. K. Birdsall and A. B. Langdon,
+    Plasma Physics via Computer Simulation, CRC Press, 1991], which is a
+    particular way of discretizing the equation of motion for the Lorentz force
+    @f{equation*}{
+      \frac{d\tilde{\mathbf{v}}}{d\tau}
+          = \tilde{\Omega}_{ref} \tilde{\mathbf{v}} \times \tilde{\mathbf{B}} +
+            \tilde{E}_{ref} \tilde{\mathbf{E}}
+    @f}
+    Here, @f$\tau = t/T_{ref}@f$, @f$\tilde{\mathbf{v}} = \mathbf{v}/V_{ref}@f$
+    @f$\tilde{\mathbf{B}} = \mathbf{B}/B_{ref}@f$, and @f$\tilde{\mathbf{E}} =
+    \mathbf{E}/E_{ref}@f$ are the time, cartesian velocity, magnetic, and
+    electric fields normalised, respectively, to `Tref`, `Vref`, `Bref`, and
+    `Eref` (all in SI units), whereas @f$\tilde{\Omega}_{ref} = T_{ref} \: q_s
+    B_{ref}/m_s@f$ and @f$\tilde{E}_{ref} = \tilde{\Omega}_{ref} E_{ref} /
+    (B_{ref} V_{ref})@f$. The curvilinear position is advanced using the
+    technique described in G. Delzanno *et al*., IEEE Trans. Plasma Sci. **41**,
+    3577 (2013): the Runge/Kutta-2 midpoint method provides a temporary estimate
+    @f{equation*}{
+      q^k_{\tau + \Delta\tau/2} = q^k_\tau + \frac{1}{2} \Delta\tau \:
+          \tilde{\mathbf{v}}_{\tau + \Delta\tau/2} \cdot \mathbf{e}^k_\tau,
+    @f}
+    which is used to evaluate the basis @f$\mathbf{e}^k(\tau)@f$ at the velocity
+    instant in order to produce
+    @f{equation*}{
+      q^k_{\tau + \Delta\tau} = q^k_\tau + \Delta\tau \:
+          \tilde{\mathbf{v}}_{\tau + \Delta\tau/2} \cdot
+              \mathbf{e}^k_{\tau + \Delta\tau/2}.
+    @f}
 */
 class curvilinear_boris {
  public:
@@ -43,44 +64,37 @@ class curvilinear_boris {
 
   curvilinear_boris(
       const double& Lref, const double& Vref, const double& qom,
-      const IR3field* Efield, const IR3field* Bfield);
+      const IR3field* B, const IR3field* E);
   ~curvilinear_boris() {};
 
-  state do_step(const state& in, const double& time, const double& dt) const;
-
-  state generate_state(const IR3& pos, const IR3& vel) const;
+  state do_step(const state& s, const double& time, const double& dt) const;
+  state generate_state(const IR3& q, const IR3& v) const;
   IR3 get_position(const state& s) const;
   IR3 get_velocity(const state& s) const;
+  IR3 get_dot_q(const state& s) const;
 
   double energy_kinetic(const state& s) const;
   double energy_parallel(const state& s, double& time) const;
   double energy_perpendicular(const state& s, double& time) const;
 
-  state generate_initial_state(
-      const IR3& pos, const IR3& vel, const double& t, const double& dt) const;
+  state half_back_step(
+      const IR3& q, const IR3& v, const double& t, const double& dt) const;
 
   const IR3field* electric_field() const { return electric_field_; };
   const IR3field* magnetic_field() const { return magnetic_field_; };
   const morphism* my_morphism() const { return my_morphism_; };
-
-  //! Returns the reference length scale `Lref`.
   double Lref() const { return Lref_; };
-  //! Returns the reference time scale `Tref`.
   double Tref() const { return Tref_; };
-  //! Returns the reference velocity scale `Vref`.
   double Vref() const { return Vref_; };
-  //! Returns the reference frequency scale `Oref`.
   double Oref() const { return Oref_; };
-  //! Returns the charge-over-mass ratio.
   double qom() const { return qom_; };
  private:
   const double Lref_, Vref_, Tref_, qom_, Oref_;
   const IR3field *electric_field_, *magnetic_field_;
-  const double iEfield_time_factor_, iBfield_time_factor_;
+  const double iE_time_factor_, iB_time_factor_;
   const metric_connected* metric_;
   const morphism* my_morphism_;
-
-};  // end class curvilinear_boris
+};
 
 }  // end namespace gyronimo
 
