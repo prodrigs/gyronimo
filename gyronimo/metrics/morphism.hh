@@ -27,14 +27,14 @@ namespace gyronimo {
 
 //! Abstract morphism from curvilinear `q` into *cartesian* `x` coordinates.
 /*!
-    Derived classes must implement the map @f$ \mathbf{x}(q^\alpha) @f$ from the
-    curvilinear coordinates @f$ q^\alpha @f$ into the cartesian space and its
-    inverse, along with the first-order and second-order partial derivatives of
-    the former. The default implementation provides the inverse derivative and
-    the transformation jacobian, dual and tangent-space basis, and conversion
-    between covariant and contravariant components. These methods are left
-    virtual to allow more efficient reimplementations in derived classes, if
-    needed.
+    Derived classes must implement the map @f$ \mathbf{x}(q^\gamma) @f$ from the
+    curvilinear coordinates @f$ q^\gamma @f$ into the **cartesian** space (i.e.,
+    {x,y,z} in SI units) and its inverse, along with its first-order and
+    second-order partial derivatives. The default implementation provides the
+    inverse derivative and the transformation jacobian, dual and tangent-space
+    basis, and conversion between covariant and contravariant components. These
+    methods are left virtual to allow more efficient reimplementations in
+    derived classes, if needed.
 */
 class morphism {
  public:
@@ -56,6 +56,41 @@ class morphism {
   virtual IR3 from_contravariant(const IR3& A, const IR3& q) const;
   virtual IR3 translation(const IR3& q, const IR3& delta) const;
 };
+
+inline dIR3 morphism::del_inverse(const IR3& q) const {
+  return gyronimo::inverse(del(q));
+}
+
+//! Tangent basis @f$ \textbf{e}_\gamma = \partial_\gamma \mathbf{x} @f$.
+inline dIR3 morphism::tan_basis(const IR3& q) const { return del(q); }
+
+//! Dual basis @f$ \textbf{e}^\gamma = \nabla q^\gamma(\mathbf{x}) @f$.
+inline dIR3 morphism::dual_basis(const IR3& q) const { return del_inverse(q); }
+
+//! Covariant components of cartesian `A` at curvilinear @f$q^\gamma@f$.
+inline IR3 morphism::to_covariant(const IR3& A, const IR3& q) const {
+  return contraction<first>(del(q), A);
+}
+
+//! Contravariant components of cartesian `A` at curvilinear @f$q^\gamma@f$.
+inline IR3 morphism::to_contravariant(const IR3& A, const IR3& q) const {
+  return contraction<second>(del_inverse(q), A);
+}
+
+//! Cartesian vector from covariant components.
+inline IR3 morphism::from_covariant(const IR3& A, const IR3& q) const {
+  return contraction<first>(del_inverse(q), A);
+}
+
+//! Cartesian vector from contravariant components.
+inline IR3 morphism::from_contravariant(const IR3& A, const IR3& q) const {
+  return contraction<second>(del(q), A);
+}
+
+//! Curvilinear after cartesian displacement @f$\mathbf{x}(q^\gamma)+\delta@f$.
+inline IR3 morphism::translation(const IR3& q, const IR3& delta) const {
+  return this->inverse((*this)(q) + delta);
+}
 
 }  // end namespace gyronimo
 

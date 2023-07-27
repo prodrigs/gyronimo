@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,27 +24,25 @@
 
 namespace gyronimo {
 
-//! Morphism for cylindrical coordinates.
+//! Morphism from cylindrical coordinates @f$\{r, \phi, z\}@f$.
 /*!
-    The three contravariant coordinates are the distance to the axis (`u`,
-    normalised to `Lref` in SI units), the angle measured counterclockwise when
-    seen from the top of the axis (`v`), and the length measured along the
-    latter (`w`, normalised also to `Lref`).
+    The contravariant coordinates are the distance to the axis (normalised to
+    `Lref` in SI units), the angle measured counterclockwise when seen from the
+    top of the axis (in rads), and the length measured along the latter (also
+    normalised to `Lref`).
 */
 class morphism_cylindrical : public morphism {
  public:
-  morphism_cylindrical(const double& Lref)
-      : morphism(), Lref_(Lref), iLref_(1 / Lref),
-        Lref3_(Lref * Lref * Lref) {};
+  morphism_cylindrical(const double& Lref);
   virtual ~morphism_cylindrical() override {};
 
-  virtual IR3 operator()(const IR3& q) const override;
-  virtual IR3 inverse(const IR3& x) const override;
-  virtual dIR3 del(const IR3& q) const override;
-  virtual ddIR3 ddel(const IR3& q) const override;
+  virtual IR3 operator()(const IR3& q) const override final;
+  virtual IR3 inverse(const IR3& x) const override final;
+  virtual dIR3 del(const IR3& q) const override final;
+  virtual ddIR3 ddel(const IR3& q) const override final;
 
-  virtual double jacobian(const IR3& q) const override;
-  virtual dIR3 del_inverse(const IR3& q) const override;
+  virtual double jacobian(const IR3& q) const override final;
+  virtual dIR3 del_inverse(const IR3& q) const override final;
 
   double Lref() const { return Lref_; };
  private:

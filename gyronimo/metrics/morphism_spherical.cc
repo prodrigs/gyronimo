@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 20222023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,56 +23,55 @@
 
 namespace gyronimo {
 
+morphism_spherical::morphism_spherical(const double& Lref)
+    : morphism(), Lref_(Lref), iLref_(1 / Lref), Lref3_(Lref * Lref * Lref) {};
 IR3 morphism_spherical::operator()(const IR3& q) const {
-  double r = Lref_ * q[IR3::u];
-  double cn_theta = std::cos(q[IR3::v]);
-  double sn_theta = std::sin(q[IR3::v]);
-  double cn_phi = std::cos(q[IR3::w]);
-  double sn_phi = std::sin(q[IR3::w]);
-  return {r * cn_phi * sn_theta, r * sn_phi * sn_theta, r * cn_theta};
+  double r_si = Lref_ * q[IR3::u], phi = q[IR3::v], theta = q[IR3::w];
+  double cos_phi = std::cos(phi), sin_phi = std::sin(phi);
+  double cos_theta = std::cos(theta), sin_theta = std::sin(theta);
+  return {
+      r_si * cos_theta * sin_phi, r_si * sin_theta * sin_phi, r_si * cos_phi};
 }
 IR3 morphism_spherical::inverse(const IR3& x) const {
-  double r_squared = x[IR3::u] * x[IR3::u] + x[IR3::v] * x[IR3::v];
-  return {iLref_ * std::sqrt(r_squared + x[IR3::w] * x[IR3::w]),
-      std::atan2(sqrt(r_squared), x[IR3::w]), std::atan2(x[IR3::v], x[IR3::u])};
+  double x_si = x[IR3::u], y_si = x[IR3::v], z_si = x[IR3::w];
+  double r_sin_phi_squared = x_si * x_si + y_si * y_si;
+  return {
+      iLref_ * std::sqrt(r_sin_phi_squared + z_si * z_si),
+      std::atan2(sqrt(r_sin_phi_squared), z_si), std::atan2(y_si, x_si)};
 }
 dIR3 morphism_spherical::del(const IR3& q) const {
-  double r = q[IR3::u];
-  double cn_theta = Lref_ * std::cos(q[IR3::v]);
-  double sn_theta = Lref_ * std::sin(q[IR3::v]);
-  double cn_phi = std::cos(q[IR3::w]);
-  double sn_phi = std::sin(q[IR3::w]);
-  return {cn_phi * sn_theta, r * cn_phi * cn_theta, -r * sn_phi * sn_theta,
-          sn_phi * sn_theta, r * sn_phi * cn_theta, r * cn_phi * sn_theta,
-          cn_theta, -r * sn_theta, 0};
+  double r = q[IR3::u], phi = q[IR3::v], theta = q[IR3::w];
+  double cos_phi = Lref_ * std::cos(phi), sin_phi = Lref_ * std::sin(phi);
+  double cos_theta = std::cos(theta), sin_theta = std::sin(theta);
+  return {
+      cos_theta * sin_phi, r * cos_theta * cos_phi, -r * sin_theta * sin_phi,
+      sin_theta * sin_phi, r * sin_theta * cos_phi, r * cos_theta * sin_phi,
+      cos_phi, -r * sin_phi, 0};
 }
 ddIR3 morphism_spherical::ddel(const IR3& q) const {
-  double r = q[IR3::u];
-  double cn_theta = Lref_ * std::cos(q[IR3::v]);
-  double sn_theta = Lref_ * std::sin(q[IR3::v]);
-  double cn_phi = std::cos(q[IR3::w]);
-  double sn_phi = std::sin(q[IR3::w]);
-  return {0, cn_phi * cn_theta, -sn_phi * sn_theta,
-      -r * cn_phi * sn_theta, -r * sn_phi * cn_theta, -r * cn_phi * sn_theta,
-      0, sn_phi * cn_theta, cn_phi * sn_theta,
-      -r * sn_phi * sn_theta, r * cn_phi * cn_theta, -r * sn_phi * sn_theta,
-      0, -sn_theta, 0,
-      -r * cn_theta, 0, 0};
+  double r = q[IR3::u], phi = q[IR3::v], theta = q[IR3::w];
+  double cos_phi = Lref_ * std::cos(phi), sin_phi = Lref_ * std::sin(phi);
+  double cos_theta = std::cos(theta), sin_theta = std::sin(theta);
+  return {
+      0, cos_theta * cos_phi, -sin_theta * sin_phi, -r * cos_theta * sin_phi,
+      -r * sin_theta * cos_phi, -r * cos_theta * sin_phi, 0,
+      sin_theta * cos_phi, cos_theta * sin_phi, -r * sin_theta * sin_phi,
+      r * cos_theta * cos_phi, -r * sin_theta * sin_phi, 0, -sin_phi, 0,
+      -r * cos_phi, 0, 0};
+}
+dIR3 morphism_spherical::del_inverse(const IR3& q) const {
+  double ir = 1 / q[IR3::u], phi = q[IR3::v], theta = q[IR3::w];
+  double cos_theta = std::cos(theta), sin_theta = std::sin(theta);
+  double cos_phi = iLref_ * std::cos(phi), sin_phi = std::sin(phi),
+         csc_phi = iLref_ / sin_phi;
+  sin_phi *= iLref_;
+  return {
+      cos_theta * sin_phi, sin_theta * sin_phi, cos_phi,
+      ir * cos_theta * cos_phi, ir * sin_theta * cos_phi, -ir * sin_phi,
+      -ir * sin_theta * csc_phi, ir * cos_theta * csc_phi, 0};
 }
 double morphism_spherical::jacobian(const IR3& q) const {
   return Lref3_ * q[IR3::u] * q[IR3::u] * std::sin(q[IR3::v]);
-}
-dIR3 morphism_spherical::del_inverse(const IR3& q) const {
-  double ir = 1 / q[IR3::u];
-  double cn_theta = iLref_ * std::cos(q[IR3::v]);
-  double sn_theta = std::sin(q[IR3::v]);
-  double csc_theta = iLref_ / sn_theta;
-  sn_theta *= iLref_;
-  double cn_phi = std::cos(q[IR3::w]);
-  double sn_phi = std::sin(q[IR3::w]);
-  return {cn_phi * sn_theta, sn_phi * sn_theta, cn_theta,
-      ir * cn_phi * cn_theta, ir * sn_phi * cn_theta, -ir * sn_theta,
-          -ir * sn_phi * csc_theta, ir * cn_phi * csc_theta, 0};
 }
 
 }  // end namespace gyronimo

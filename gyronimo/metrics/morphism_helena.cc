@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include <gyronimo/core/multiroot.hh>
 #include <gyronimo/metrics/morphism_helena.hh>
 
+#include <cmath>
 #include <numbers>
 
 namespace gyronimo {
@@ -92,10 +93,10 @@ ddIR3 morphism_helena::ddel(const IR3& q) const {
   double Zu = z_->partial_u(s, chi), Zv = z_->partial_v(s, chi);
   double Zuu = z_->partial2_uu(s, chi), Zuv = z_->partial2_uv(s, chi),
       Zvv = z_->partial2_vv(s, chi);
-  double sn = std::sin(phi), cn = std::cos(phi);
-  return {Ruu * cn, Ruv * cn, -Ru * sn, Rvv * cn,
-      -Rv * sn, -R * cn, -Ruu * sn, -Ruv * sn, -Ru * cn,
-      -Rvv * sn, -Rv * cn, R * sn, Zuu, Zuv, 0, Zvv, 0, 0};
+  double cos = std::cos(phi), sin = std::sin(phi);
+  return {Ruu * cos, Ruv * cos, -Ru * sin, Rvv * cos,
+      -Rv * sin, -R * cos, -Ruu * sin, -Ruv * sin, -Ru * cos,
+      -Rvv * sin, -Rv * cos, R * sin, Zuu, Zuv, 0, Zvv, 0, 0};
 }
 double morphism_helena::jacobian(const IR3& q) const {
   double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]);

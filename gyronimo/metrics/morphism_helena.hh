@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,32 +26,32 @@
 
 namespace gyronimo {
 
-//! Morphism for `HELENA` curvilinear coordinates.
+//! Morphism from `HELENA` field-aligned coordinates @f$\{s, \chi, \phi\}@f$.
 /*!
-    Builds the morphism from the information provided by a `parser_helena`
+    The contravariant coordinates are the square root of the poloidal flux per
+    radian normalised to its value at the boundary (i.e.,
+    @f$s=\sqrt{\Psi/\Psi_b}@f$), the angle on the poloidal cross section such
+    that @f$B^\phi=q B^\chi@f$, with @f$q@f$ the safety factor, measured
+    *counterclockwise* from the left-hand side midplane, and the toroidal angle
+    measured *clockwise* when looking from the torus top. Both angles are in
+    rads.
+
+    The morphism is built from the information provided by a `parser_helena`
     object. The actual type of 2d interpolators to use is set by the specific
     `interpolator2d_factory` object pointer provided to the constructor.
-
-    The right-handed curvilinear coordinates are the square root of the poloidal
-    flux per radian normalised to its value at the boundary (`u`, or `HELENA`
-    @f$s=\sqrt{\Psi/\Psi_b}@f$), an angle on the poloidal cross section (`v`, or
-    `HELENA` @f$\chi : B^\phi=q B^\chi@f$, in rads) measured *counterclockwise*
-    from the left-hand side midplane (the `x` axis), and the toroidal angle
-    (`w`, or `HELENA` @f$\phi@f$, in rads) measured *clockwise* when looking
-    from the torus top.
 */
 class morphism_helena : public morphism {
  public:
   morphism_helena(
       const parser_helena* parser, const interpolator2d_factory* ifactory);
   virtual ~morphism_helena() override;
-  virtual IR3 operator()(const IR3& q) const override;
-  virtual IR3 inverse(const IR3& x) const override;
-  virtual dIR3 del(const IR3& q) const override;
-  virtual ddIR3 ddel(const IR3& q) const override;
+  virtual IR3 operator()(const IR3& q) const override final;
+  virtual IR3 inverse(const IR3& x) const override final;
+  virtual dIR3 del(const IR3& q) const override final;
+  virtual ddIR3 ddel(const IR3& q) const override final;
 
-  virtual double jacobian(const IR3& q) const override;
-  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
+  virtual double jacobian(const IR3& q) const override final;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override final;
   const parser_helena* parser() const { return parser_; };
  private:
   const parser_helena* parser_;

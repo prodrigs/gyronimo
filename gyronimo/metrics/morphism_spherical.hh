@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,27 +24,25 @@
 
 namespace gyronimo {
 
-//! Morphism for spherical coordinates.
+//! Morphism from spherical coordinates @f$\{r, \phi, \theta\}@f$.
 /*!
-    The three contravariant coordinates are the distance to the origin
-    normalised to `Lref` in SI units, the angle measured from the `z` axis
-    (i.e., co-latitude measured from the north pole), and the angle measured
-    from the `x` axis counterclockwise when seen from the north pole.
+    The contravariant coordinates are the distance to the origin (normalised to
+    `Lref` in SI units), the angle measured from the `z` axis (i.e., co-latitude
+    measured from the north pole), and the angle measured from the `x` axis
+    counterclockwise when seen from the north pole. Both angles are in rads.
 */
 class morphism_spherical : public morphism {
  public:
-  morphism_spherical(const double& Lref)
-      : morphism(), Lref_(Lref), iLref_(1 / Lref),
-        Lref3_(Lref * Lref * Lref) {};
+  morphism_spherical(const double& Lref);
   virtual ~morphism_spherical() override {};
 
-  virtual IR3 operator()(const IR3& q) const override;
-  virtual IR3 inverse(const IR3& x) const override;
-  virtual dIR3 del(const IR3& q) const override;
-  virtual ddIR3 ddel(const IR3& q) const override;
+  virtual IR3 operator()(const IR3& q) const override final;
+  virtual IR3 inverse(const IR3& x) const override final;
+  virtual dIR3 del(const IR3& q) const override final;
+  virtual ddIR3 ddel(const IR3& q) const override final;
 
-  virtual double jacobian(const IR3& q) const override;
-  virtual dIR3 del_inverse(const IR3& q) const override;
+  virtual double jacobian(const IR3& q) const override final;
+  virtual dIR3 del_inverse(const IR3& q) const override final;
 
   double Lref() const { return Lref_; };
  private:

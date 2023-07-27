@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,38 +23,38 @@
 
 namespace gyronimo {
 
+morphism_cylindrical::morphism_cylindrical(const double& Lref)
+    : morphism(), Lref_(Lref), iLref_(1 / Lref), Lref3_(Lref * Lref * Lref) {};
+dIR3 morphism_cylindrical::del(const IR3& q) const {
+  double r = q[IR3::u], phi = q[IR3::v];
+  double Lref_sin = Lref_ * std::sin(phi), Lref_cos = Lref_ * std::cos(phi);
+  return {Lref_cos, -r * Lref_sin, 0, Lref_sin, r * Lref_cos, 0, 0, 0, Lref_};
+}
 IR3 morphism_cylindrical::operator()(const IR3& q) const {
-  return {
-      Lref_ * q[IR3::u] * std::cos(q[IR3::v]),
-      Lref_ * q[IR3::u] * std::sin(q[IR3::v]), Lref_ * q[IR3::w]};
+  double r = q[IR3::u], phi = q[IR3::v], z = q[IR3::w];
+  return {Lref_ * r * std::cos(phi), Lref_ * r * std::sin(phi), Lref_ * z};
 }
 IR3 morphism_cylindrical::inverse(const IR3& x) const {
-  return {
-      iLref_ * std::sqrt(x[IR3::u] * x[IR3::u] + x[IR3::v] * x[IR3::v]),
-      std::atan2(x[IR3::v], x[IR3::u]), iLref_ * x[IR3::w]};
-}
-dIR3 morphism_cylindrical::del(const IR3& q) const {
-  double Lref_sn = Lref_ * std::sin(q[IR3::v]);
-  double Lref_cn = Lref_ * std::cos(q[IR3::v]);
-  double r = q[IR3::u];
-  return {Lref_cn, -r * Lref_sn, 0, Lref_sn, r * Lref_cn, 0, 0, 0, Lref_};
+  double x_si = x[IR3::u], y_si = x[IR3::v], z_si = x[IR3::w];
+  double r_si = std::sqrt(x_si * x_si + y_si * y_si);
+  return {iLref_ * r_si, std::atan2(y_si, x_si), iLref_ * z_si};
 }
 ddIR3 morphism_cylindrical::ddel(const IR3& q) const {
-  double r = q[IR3::u];
-  double Lref_sn = Lref_ * std::sin(q[IR3::v]);
-  double Lref_cn = Lref_ * std::cos(q[IR3::v]);
-  return {0, -Lref_sn, 0, -r * Lref_cn, 0, 0,
-          0, Lref_cn, 0, -r * Lref_sn, 0, 0, 0, 0, 0, 0, 0, 0};
+  double r = q[IR3::u], phi = q[IR3::v];
+  double Lref_sin = Lref_ * std::sin(phi), Lref_cos = Lref_ * std::cos(phi);
+  return {
+      0, -Lref_sin, 0, -r * Lref_cos, 0, 0, 0, Lref_cos,
+      0, -r * Lref_sin, 0, 0, 0, 0, 0, 0, 0, 0};
 }
 double morphism_cylindrical::jacobian(const IR3& q) const {
   return Lref3_ * q[IR3::u];
 }
 dIR3 morphism_cylindrical::del_inverse(const IR3& q) const {
-  double iLref_sn = iLref_ * std::sin(q[IR3::v]);
-  double iLref_cn = iLref_ * std::cos(q[IR3::v]);
-  double ir = 1 / q[IR3::u];
+  double ir = 1 / q[IR3::u], phi = q[IR3::v];
+  double iLref_sin = iLref_ * std::sin(phi), iLref_cos = iLref_ * std::cos(phi);
   return {
-      iLref_cn, iLref_sn, 0, -iLref_sn * ir, iLref_cn * ir, 0, 0, 0, iLref_};
+      iLref_cos, iLref_sin, 0, -iLref_sin * ir, iLref_cos * ir, 0,
+      0, 0, iLref_};
 }
 
 }  // end namespace gyronimo
