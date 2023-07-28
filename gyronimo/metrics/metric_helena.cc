@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,33 +45,23 @@ metric_helena::~metric_helena() {
   if (gvv_) delete gvv_;
   if (gww_) delete gww_;
 }
-SM3 metric_helena::operator()(const IR3& position) const {
-  double s = position[IR3::u];
-  double chi = parser_->reduce_chi(position[IR3::v]);
+SM3 metric_helena::operator()(const IR3& q) const {
+  double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]);
   return {
-      squaredR0_ * (*guu_)(s, chi), squaredR0_ * (*guv_)(s, chi), 0.0,
-      squaredR0_ * (*gvv_)(s, chi), 0.0, squaredR0_ * (*gww_)(s, chi)};
+      squaredR0_ * (*guu_)(s, chi), squaredR0_ * (*guv_)(s, chi), 0,
+      squaredR0_ * (*gvv_)(s, chi), 0, squaredR0_ * (*gww_)(s, chi)};
 }
-dSM3 metric_helena::del(const IR3& position) const {
-  double s = position[IR3::u];
-  double chi = parser_->reduce_chi(position[IR3::v]);
+dSM3 metric_helena::del(const IR3& q) const {
+  double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]);
   return {
       squaredR0_ * (*guu_).partial_u(s, chi),
-      squaredR0_ * (*guu_).partial_v(s, chi), 0.0,  // d_i g_uu
+      squaredR0_ * (*guu_).partial_v(s, chi), 0,
       squaredR0_ * (*guv_).partial_u(s, chi),
-      squaredR0_ * (*guv_).partial_v(s, chi), 0.0,  // d_i g_uv
-      0.0, 0.0, 0.0,  // d_i g_uw
+      squaredR0_ * (*guv_).partial_v(s, chi), 0, 0, 0, 0,
       squaredR0_ * (*gvv_).partial_u(s, chi),
-      squaredR0_ * (*gvv_).partial_v(s, chi), 0.0,  // d_i g_vv
-      0.0, 0.0, 0.0,  // d_i g_vw
+      squaredR0_ * (*gvv_).partial_v(s, chi), 0, 0, 0, 0,
       squaredR0_ * (*gww_).partial_u(s, chi),
-      squaredR0_ * (*gww_).partial_v(s, chi), 0.0};  // d_i g_ww
-}
-ddIR3 metric_helena::christoffel_first_kind(const IR3& r) const {
-  return this->gyronimo::metric_covariant::christoffel_first_kind(r);
-}
-ddIR3 metric_helena::christoffel_second_kind(const IR3& r) const {
-  return this->gyronimo::metric_covariant::christoffel_second_kind(r);
+      squaredR0_ * (*gww_).partial_v(s, chi), 0};
 }
 
 }  // end namespace gyronimo

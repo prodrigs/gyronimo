@@ -17,15 +17,14 @@
 
 // @metric_covariant.cc, this file is part of ::gyronimo::
 
-#include <gyronimo/core/contraction.hh>
 #include <gyronimo/metrics/metric_covariant.hh>
 
 #include <cmath>
 
 namespace gyronimo {
 
-double metric_covariant::jacobian(const IR3& r) const {
-  SM3 g = (*this)(r);
+double metric_covariant::jacobian(const IR3& q) const {
+  SM3 g = (*this)(q);
   return std::sqrt(
       g[SM3::uu] * g[SM3::vv] * g[SM3::ww] +
       2.0 * g[SM3::uv] * g[SM3::uw] * g[SM3::vw] -
@@ -33,10 +32,10 @@ double metric_covariant::jacobian(const IR3& r) const {
       g[SM3::uu] * g[SM3::vw] * g[SM3::vw] -
       g[SM3::uw] * g[SM3::uw] * g[SM3::vv]);
 }
-IR3 metric_covariant::del_jacobian(const IR3& r) const {
-  SM3 g = (*this)(r);
-  dSM3 dg = this->del(r);
-  double ijacobian = 1.0 / this->jacobian(r);
+IR3 metric_covariant::del_jacobian(const IR3& q) const {
+  SM3 g = (*this)(q);
+  dSM3 dg = this->del(q);
+  double ijacobian = 1.0 / this->jacobian(q);
 
   IR3 aux_1a = {
       g[SM3::uw] * g[SM3::vw], g[SM3::uv] * g[SM3::vw],
@@ -69,40 +68,11 @@ IR3 metric_covariant::del_jacobian(const IR3& r) const {
 
   return ijacobian * (aux_1 + 0.5 * aux_2 - aux_3 - 0.5 * aux_4);
 }
-SM3 metric_covariant::inverse(const IR3& r) const {
-  SM3 m = (*this)(r);
-  return gyronimo::inverse(m);
-}
 
-//! General-purpose product of a covariant metric and a contravariant vector.
-/*!
-    Returns the *covariant* product of the *covariant* metric, evaluated at a
-    contravariant position, by the *contravariant* vector `B`.
-*/
-IR3 metric_covariant::to_covariant(const IR3& B, const IR3& r) const {
-  return contraction((*this)(r), B);
-}
-
-//! General-purpose product of a contravariant metric and a covariant vector.
-/*!
-    Returns the *contravariant* product of the *contravariant* metric, evaluated
-    at a contravariant position, with the *covariant* vector `B`. This method is
-    significantly more expensive than `to_covariant` because it involves the
-    covariant-metric inversion.
-*/
-IR3 metric_covariant::to_contravariant(const IR3& B, const IR3& r) const {
-  return contraction(this->inverse(r), B);
-}
-
-//! General-purpose derivative of the inverse metric.
-/*!
-    Implements the rule @f$
-    \partial_k g^{ij} = - g^{im} \partial_k g_{mn} g^{nj}
-    @f$.
-*/
-dSM3 metric_covariant::del_inverse(const IR3& r) const {
-  SM3 ig = this->inverse(r);
-  dSM3 dg = contraction(ig, this->del(r), ig);
+//! General derivative @f$\partial_k g^{ij} = -g^{im}\partial_k g_{mn}g^{nj}@f$.
+dSM3 metric_covariant::del_inverse(const IR3& q) const {
+  SM3 ig = this->inverse(q);
+  dSM3 dg = contraction(ig, this->del(q), ig);
   return {-dg[dSM3::uuu], -dg[dSM3::uuv], -dg[dSM3::uuw], -dg[dSM3::uvu],
           -dg[dSM3::uvv], -dg[dSM3::uvw], -dg[dSM3::uwu], -dg[dSM3::uwv],
           -dg[dSM3::uww], -dg[dSM3::vvu], -dg[dSM3::vvv], -dg[dSM3::vvw],
@@ -110,14 +80,13 @@ dSM3 metric_covariant::del_inverse(const IR3& r) const {
           -dg[dSM3::wwv], -dg[dSM3::www]};
 }
 
-//! General-purpose Christoffel symbols of the first kind.
-/*!
-    Implements the rule @f$
-    \Gamma_{ijk} = \frac{1}{2} \left(
+//! General Christoffel symbol @f$\Gamma_{ijk}@f$.
+/*! @f{equation*}{
+      \Gamma_{ijk} = \frac{1}{2} \left(
                 \frac{\partial g_{ij}}{\partial q^k} +
                 \frac{\partial g_{ik}}{\partial q^j} -
                 \frac{\partial g_{jk}}{\partial q^i} \right)
-    @f$.
+    @f}
 */
 ddIR3 metric_covariant::christoffel_first_kind(const IR3& q) const {
   dSM3 dg = del(q);
@@ -141,24 +110,6 @@ ddIR3 metric_covariant::christoffel_first_kind(const IR3& q) const {
       0.5 * (dg[dSM3::vww] + dg[dSM3::wwv] - dg[dSM3::vww]),  // wvw
       0.5 * (dg[dSM3::www] + dg[dSM3::www] - dg[dSM3::www])  // www
   };
-}
-
-//! General-purpose Christoffel symbols of the second kind.
-/*!
-    Implements the rule @f$ \Gamma^k_{ij} = g^{km} \, \Gamma_{mij} @f$.
-*/
-ddIR3 metric_covariant::christoffel_second_kind(const IR3& q) const {
-  return contraction<second, first>(
-      this->inverse(q), this->christoffel_first_kind(q));
-}
-
-//! Contravariant inertial force.
-/*!
-    Implements the rule @f$ F^k = - \Gamma^k_{ij} \, \dot{q}^i \, \dot{q}^j @f$.
-*/
-IR3 metric_covariant::inertial_force(const IR3& q, const IR3& dot_q) const {
-  ddIR3 gamma = christoffel_second_kind(q);
-  return (-1.0)*contraction<second,third>(gamma, dot_q, dot_q);
 }
 
 } // end namespace gyronimo.

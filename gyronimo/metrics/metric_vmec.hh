@@ -38,10 +38,9 @@ class metric_vmec : public metric_connected {
   virtual ~metric_vmec() override;
   virtual SM3 operator()(const IR3& position) const override;
   virtual dSM3 del(const IR3& position) const override;
-  const parser_vmec* parser() const {return parser_;};
-  const double signgs() const {return signsgs_;};
 
-  virtual const morphism_vmec* my_morphism() const override {
+  const parser_vmec* parser() const {return parser_;};
+  const morphism_vmec* my_morphism() const {
     return static_cast<const morphism_vmec*>(metric_connected::my_morphism());
   };
 

@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção and Paulo Rodrigues.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,13 +21,9 @@
 
 namespace gyronimo {
 
-double metric_connected::jacobian(const IR3& r) const {
-  return my_morphism_->jacobian(r);
-}
-
-//! General-purpose covariant metric @f$g_{ij}=\mathbf{e}_i\cdot\mathbf{e}_j@f$.
-SM3 metric_connected::operator()(const IR3& r) const {
-  dIR3 e = my_morphism_->del(r);
+//! General covariant metric @f$g_{ij} = \mathbf{e}_i\cdot\mathbf{e}_j@f$.
+SM3 metric_connected::operator()(const IR3& q) const {
+  dIR3 e = my_morphism_->del(q);
   IR3 e1 = {e[dIR3::uu], e[dIR3::vu], e[dIR3::wu]};
   IR3 e2 = {e[dIR3::uv], e[dIR3::vv], e[dIR3::wv]};
   IR3 e3 = {e[dIR3::uw], e[dIR3::vw], e[dIR3::ww]};
@@ -36,16 +32,14 @@ SM3 metric_connected::operator()(const IR3& r) const {
   return g;
 }
 
-//! General-purpose covariant-metric derivatives.
+//! General covariant-metric derivatives from parent `morphism`.
 /*!
-    Implements the rule
-    ```
-    \partial_\gamma \, g_{\alpha\beta} =
-        \Gamma_{\alpha\beta\gamma} + \Gamma_{\beta\alpha\gamma}
-    ```
+    Extracts the metric derivatives from the Christoffel symbol of the first
+    kind following the rule @f$\partial_k \, g_{ij} = \Gamma_{ijk} +
+    \Gamma_{ijk}@f$.
 */
-dSM3 metric_connected::del(const IR3& r) const {
-  ddIR3 CF = christoffel_first_kind(r);
+dSM3 metric_connected::del(const IR3& q) const {
+  ddIR3 CF = christoffel_first_kind(q);
   return {
       CF[ddIR3::uuu] + CF[ddIR3::uuu],  // uuu
       CF[ddIR3::uuv] + CF[ddIR3::uuv],  // uuv
@@ -68,18 +62,16 @@ dSM3 metric_connected::del(const IR3& r) const {
   };
 }
 
-//! General-purpose Jacobian gradient.
+//! General jacobian gradient from parent `morphism`.
 /*!
-    Implements the rule
-    ```
-    \partial_\alpha J = J \left(
-        \Gamma^1_{\alpha 1} + \Gamma^2_{\alpha 2} + \Gamma^3_{\alpha 3} \right)
-    ```
+    @f{equation*}{
+    \partial_i J = J \left(
+        \Gamma^1_{i 1} + \Gamma^2_{i 2} + \Gamma^3_{i 3} \right)
+    @f}
 */
-IR3 metric_connected::del_jacobian(const IR3& r) const {
-  double J = jacobian(r);
-  dIR3 ee = my_morphism_->del_inverse(r);
-  ddIR3 de = my_morphism_->ddel(r);
+IR3 metric_connected::del_jacobian(const IR3& q) const {
+  dIR3 ee = my_morphism_->del_inverse(q);
+  ddIR3 de = my_morphism_->ddel(q);
   IR3 con = {
       ee[dIR3::uu] * de[ddIR3::uuu] + ee[dIR3::uv] * de[ddIR3::vuu] +
           ee[dIR3::uw] * de[ddIR3::wuu] + ee[dIR3::vu] * de[ddIR3::uuv] +
@@ -96,34 +88,7 @@ IR3 metric_connected::del_jacobian(const IR3& r) const {
           ee[dIR3::vv] * de[ddIR3::vvw] + ee[dIR3::vw] * de[ddIR3::wvw] +
           ee[dIR3::wu] * de[ddIR3::uww] + ee[dIR3::wv] * de[ddIR3::vww] +
           ee[dIR3::ww] * de[ddIR3::www]};
-  return (J * con);
-}
-
-//! General-purpose Christoffel symbols of the first kind.
-/*!
-    Implements the rule
-    ```
-    \Gamma_{\alpha\beta\gamma} = \textbf{e}_\alpha \cdot
-        \frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\gamma}
-    ```
-*/
-ddIR3 metric_connected::christoffel_first_kind(const IR3& r) const {
-  dIR3 e = my_morphism_->del(r);
-  ddIR3 ddR = my_morphism_->ddel(r);
-  return contraction<first, first>(e, ddR);
-}
-
-//! General-purpose Christoffel symbols of the second kind.
-/*!
-    Implements the rule
-    ```
-    \Gamma^\alpha_{\beta\gamma} = \textbf{e}^\alpha \cdot
-        \frac{\partial^2 \textbf{x}}{\partial q^\beta \, \partial q^\gamma}
-    ```
-*/
-ddIR3 metric_connected::christoffel_second_kind(const IR3& r) const {
-  return contraction<second, first>(
-      my_morphism_->del_inverse(r), my_morphism_->ddel(r));
+  return (jacobian(q) * con);
 }
 
 }  // end namespace gyronimo.

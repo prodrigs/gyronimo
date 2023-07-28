@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Manuel Assunção.
+// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,34 +25,51 @@
 
 namespace gyronimo {
 
-//! Trivial covariant metric for cylindrical space.
+//! Metric for cylindrical coordinates @f$\{r, \phi, z\}@f$.
+/*!
+    The contravariant coordinates are the distance to the axis (normalised to
+    `Lref` in SI units), the angle measured counterclockwise when seen from the
+    top of the axis (in rads), and the length measured along the latter (also
+    normalised to `Lref`).
+*/
 class metric_cylindrical : public metric_connected {
  public:
   metric_cylindrical(const morphism_cylindrical* morph);
   virtual ~metric_cylindrical() override {};
-
-  virtual SM3 operator()(const IR3& q) const override;
-  virtual SM3 inverse(const IR3& q) const override;
-
-  virtual dSM3 del(const IR3& q) const override;
-  virtual double jacobian(const IR3& q) const override;
-  virtual IR3 del_jacobian(const IR3& q) const override;
-  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
-
-  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
-  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
-  virtual IR3 inertial_force(const IR3& q, const IR3& vel) const;
+  virtual SM3 operator()(const IR3& q) const override final;
+  virtual SM3 inverse(const IR3& q) const override final;
+  virtual dSM3 del(const IR3& q) const override final;
+  virtual double jacobian(const IR3& q) const override final;
+  virtual IR3 del_jacobian(const IR3& q) const override final;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override final;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override final;
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override final;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override final;
+  virtual IR3 inertial_force(
+      const IR3& q, const IR3& dot_q) const override final;
 
   double Lref() { return Lref_; };
-
-  virtual const morphism_cylindrical* my_morphism() const override {
+  const morphism_cylindrical* my_morphism() const {
     return static_cast<const morphism_cylindrical*>(
         metric_connected::my_morphism());
   };
  private:
-  const double Lref_, Lref_2_, iLref_2_, Lref_3_;
+  const double Lref_, Lref2_, iLref2_, Lref3_;
 };
+
+inline SM3 metric_cylindrical::operator()(const IR3& q) const {
+  return {Lref2_, 0.0, 0.0, Lref2_ * q[IR3::u] * q[IR3::u], 0.0, Lref2_};
+}
+inline SM3 metric_cylindrical::inverse(const IR3& q) const {
+  return {
+      iLref2_, 0.0, 0.0, iLref2_ / (q[IR3::u] * q[IR3::u]), 0.0, iLref2_};
+}
+inline double metric_cylindrical::jacobian(const IR3& q) const {
+  return Lref3_ * q[IR3::u];
+}
+inline IR3 metric_cylindrical::del_jacobian(const IR3& q) const {
+  return {Lref3_, 0.0, 0.0};
+}
 
 }  // end namespace gyronimo.
 

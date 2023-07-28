@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,39 +25,40 @@
 
 namespace gyronimo {
 
-//! Covariant metric for toroidal coordinates with polar cross section.
+//! Metric for geometrical toroidal coordinates @f$\{r, \theta, \phi\}@f$.
 /*!
-    The three contravariant coordinates are the distance to the magnetic axis
-    normalized to the `minor_radius` (`u`), the angle measured counterclockwise
-    on the poloidal cross section from the low-field side midplane (`v`, in
-    rads), and the toroidal angle (`w`, in rads) measured clockwise when looking
-    from the torus' top. The lengths `minor_radius` and `major_radius` are in SI
-    units. Inherited methods `Jacobian`, `to_covariant`, and `to_contravariant`
-    are overriden for efficiency.
+    The contravariant coordinates are the shortest distance (normalized to the
+    length `minor_radius`) to the circular line at `major_radius` from the torus
+    axis of symmetry (which defines the torus' midplane), the angle measured
+    counterclockwise on the poloidal cross section from the low-field side
+    midplane, and the toroidal angle measured clockwise when looking from the
+    torus' top. The lengths `minor_radius` and `major_radius` are in SI units
+    and both angles are in rads.
 */
 class metric_polar_torus : public metric_connected {
  public:
-  metric_polar_torus(const morphism_polar_torus *morph);
+  metric_polar_torus(const morphism_polar_torus* morph);
   virtual ~metric_polar_torus() override {};
+  virtual SM3 operator()(const IR3& q) const override final;
+  virtual SM3 inverse(const IR3& q) const override final;
+  virtual dSM3 del(const IR3& q) const override final;
+  virtual double jacobian(const IR3& q) const override final;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override final;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override final;
 
-  virtual SM3 operator()(const IR3& r) const override;
-  virtual SM3 inverse(const IR3& r) const override;
-  virtual dSM3 del(const IR3& r) const override;
-
-  virtual double jacobian(const IR3& r) const override;
-  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
-
-  double minor_radius() const {return minor_radius_;};
-  double major_radius() const {return major_radius_;};
-  double iaspect_ratio() const {return iaspect_ratio_;};
-
+  double minor_radius() const { return minor_radius_; };
+  double major_radius() const { return major_radius_; };
+  double iaspect_ratio() const { return iaspect_ratio_; };
+  const morphism_polar_torus* my_morphism() const {
+    return static_cast<const morphism_polar_torus*>(
+        metric_connected::my_morphism());
+  };
  private:
   const double minor_radius_, major_radius_;
   const double minor_radius_squared_, iminor_radius_squared_;
   const double major_radius_squared_, iaspect_ratio_;
 };
 
-} // end namespace gyronimo.
+}  // end namespace gyronimo.
 
-#endif // GYRONIMO_METRIC_POLAR_TORUS
+#endif  // GYRONIMO_METRIC_POLAR_TORUS

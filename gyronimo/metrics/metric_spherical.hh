@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,41 +25,36 @@
 
 namespace gyronimo {
 
-//! Covariant metric for spherical coordinates.
+//! Metric for spherical coordinates @f$\{r, \phi, \theta\}@f$.
 /*!
-    The three contravariant coordinates are the distance to the origin
-    normalized to `Lref` (`u`, with `Lref` in SI), the polar angle
-    measured from the z-axis (co-latitude `v`, in rads), and the azimuthal angle
-    (`w`, also in rads) measured clockwise when looking from the origin along
-    the z-axis. Some inherited methods are overriden for efficiency.
+    The contravariant coordinates are the distance to the origin (normalised to
+    `Lref` in SI units), the angle measured from the `z` axis (i.e., co-latitude
+    measured from the north pole), and the angle measured from the `x` axis
+    counterclockwise when seen from the north pole. Both angles are in rads.
 */
 class metric_spherical : public metric_connected {
  public:
   metric_spherical(const morphism_spherical* morph);
   virtual ~metric_spherical() override {};
-
-  virtual SM3 operator()(const IR3& r) const override;
-  virtual SM3 inverse(const IR3& r) const override;
-  virtual dSM3 del(const IR3& r) const override;
-
-  virtual double jacobian(const IR3& r) const override;
-  virtual IR3 del_jacobian(const IR3& r) const override;
-  virtual IR3 to_covariant(const IR3& B, const IR3& r) const override;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& r) const override;
-
-  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
-  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
-  virtual IR3 inertial_force(const IR3& q, const IR3& vel) const;
+  virtual SM3 operator()(const IR3& q) const override final;
+  virtual SM3 inverse(const IR3& q) const override final;
+  virtual dSM3 del(const IR3& q) const override final;
+  virtual double jacobian(const IR3& q) const override final;
+  virtual IR3 del_jacobian(const IR3& q) const override final;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override final;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override final;
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override final;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override final;
+  virtual IR3 inertial_force(
+      const IR3& q, const IR3& dot_q) const override final;
 
   double Lref() const { return Lref_; };
-
-  virtual const morphism_spherical* my_morphism() const override {
+  const morphism_spherical* my_morphism() const {
     return static_cast<const morphism_spherical*>(
         metric_connected::my_morphism());
   };
  private:
-  const double Lref_, Lref_squared_;
-  const double Lref_cube_, iLref_squared_;
+  const double Lref_, Lref2_, Lref3_, iLref2_;
 };
 
 }  // end namespace gyronimo.
