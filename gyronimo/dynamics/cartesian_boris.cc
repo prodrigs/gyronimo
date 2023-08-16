@@ -38,6 +38,7 @@ cartesian_boris::cartesian_boris(
       electric_field_(E), magnetic_field_(B),
       iE_time_factor_(E ? Tref_ / E->t_factor() : 1),
       iB_time_factor_(B ? Tref_ / B->t_factor() : 1),
+      tildeEref_(E && B ? Oref_ * E->m_factor() / (B->m_factor() * Vref_) : 1),
       metric_(B ? dynamic_cast<const metric_cartesian*>(B->metric()) : nullptr),
       my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
   if (!B) error(__func__, __FILE__, __LINE__, "no magnetic field.", 1);
@@ -51,7 +52,6 @@ cartesian_boris::cartesian_boris(
 cartesian_boris::state cartesian_boris::do_step(
     const state& s, const double& time, const double& dt) const {
   double Btime = time * iB_time_factor_;
-  const double tildeEref = Oref_ * iB_time_factor_ / (iE_time_factor_ * Vref_);
 
   IR3 x = this->get_position(s), v = this->get_velocity(s);
   double B = magnetic_field_->magnitude(x, Btime);
@@ -61,14 +61,14 @@ cartesian_boris::state cartesian_boris::do_step(
       IR3 {0, 0, 0};
 
   IR3 updated_v = electric_field_ ?
-      boris_push(v, Oref_, tildeEref, E, B, b, dt) :
+      boris_push(v, Oref_, tildeEref_, E, B, b, dt) :
       boris_push(v, Oref_, B, b, dt);
   IR3 updated_x = x + (Lref_ * dt) * updated_v;
 
   return this->generate_state(updated_x, updated_v);
 }
 
-//! Returns the `cartesian_boris::state` state from a point in SI phase-space.
+//! Returns a `cartesian_boris::state` from SI position and normalised velocity.
 cartesian_boris::state cartesian_boris::generate_state(
     const IR3& x, const IR3& v) const {
   return {x[IR3::u], x[IR3::v], x[IR3::w], v[IR3::u], v[IR3::v], v[IR3::w]};
@@ -79,7 +79,7 @@ IR3 cartesian_boris::get_position(const state& s) const {
   return {s[0], s[1], s[2]};
 }
 
-//! Returns the vector velocity of the state in SI units.
+//! Returns the vector velocity of the state (normalised to `Lref/Tref`).
 IR3 cartesian_boris::get_velocity(const state& s) const {
   return {s[3], s[4], s[5]};
 }
@@ -114,7 +114,7 @@ cartesian_boris::state cartesian_boris::half_back_step(
   auto ls = lo.generate_state(x, v);
   boost::numeric::odeint::runge_kutta4<gyronimo::lorentz::state> rk4;
   rk4.do_step(odeint_adapter(&lo), ls, time, -0.5 * dt);
-  IR3 x_half_back = lo.get_position(ls), v_half_back = lo.get_velocity(ls);
+  IR3 v_half_back = lo.get_velocity(ls);
   return this->generate_state(x, v_half_back);
 }
 

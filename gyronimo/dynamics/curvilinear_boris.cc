@@ -40,6 +40,7 @@ curvilinear_boris::curvilinear_boris(
       electric_field_(E), magnetic_field_(B),
       iE_time_factor_(E ? Tref_ / E->t_factor() : 1),
       iB_time_factor_(B ? Tref_ / B->t_factor() : 1),
+      tildeEref_(E && B ? Oref_ * E->m_factor() / (B->m_factor() * Vref_) : 1),
       metric_(B ? dynamic_cast<const metric_connected*>(B->metric()) : nullptr),
       my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
   if (!B) error(__func__, __FILE__, __LINE__, "no magnetic field.", 1);
@@ -53,7 +54,6 @@ curvilinear_boris::curvilinear_boris(
 curvilinear_boris::state curvilinear_boris::do_step(
     const state& s, const double& time, const double& dt) const {
   double Btime = time * iB_time_factor_;
-  const double tildeEref = Oref_ * iB_time_factor_ / (iE_time_factor_ * Vref_);
 
   IR3 q = this->get_position(s), v = this->get_velocity(s);
   double B = magnetic_field_->magnitude(q, Btime);
@@ -65,7 +65,7 @@ curvilinear_boris::state curvilinear_boris::do_step(
       IR3 {0, 0, 0};
 
   IR3 updated_v = electric_field_ ?
-      boris_push(v, Oref_, tildeEref, E, B, b, dt) :
+      boris_push(v, Oref_, tildeEref_, E, B, b, dt) :
       boris_push(v, Oref_, B, b, dt);
   IR3 dot_q_temporary = my_morphism_->to_contravariant(updated_v, q);
   IR3 q_temporary = q + (0.5 * Lref_ * dt) * dot_q_temporary;
