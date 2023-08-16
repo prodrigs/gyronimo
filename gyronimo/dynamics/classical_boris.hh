@@ -88,7 +88,7 @@ class classical_boris {
  private:
   const double Lref_, Vref_, Tref_, qom_, Oref_;
   const IR3field *electric_field_, *magnetic_field_;
-  const double iE_time_factor_, iB_time_factor_;
+  const double iE_time_factor_, iB_time_factor_, tildeEref_;
   const metric_connected* metric_;
   const morphism* my_morphism_;
 };
