@@ -20,7 +20,6 @@
 #include <gyronimo/core/codata.hh>
 #include <gyronimo/core/contraction.hh>
 #include <gyronimo/core/error.hh>
-#include <gyronimo/dynamics/boris_push.hh>
 #include <gyronimo/dynamics/classical_boris.hh>
 #include <gyronimo/dynamics/lorentz.hh>
 #include <gyronimo/dynamics/odeint_adapter.hh>
@@ -32,6 +31,14 @@
 namespace gyronimo {
 
 //! Class constructor.
+/*!
+    Providing a magnetic field is mandatory, the electric field is optional (it
+    may be passed `nullptr`). If provided, both fields must share the same
+    coordinates, i.e., the same underlying `metric_covariant` object. Such
+    metric must be connected to a given morphism (and thus derive from
+    `metric_connected`) in order to move between cartesian and curvilinear
+    coordinates.
+*/
 classical_boris::classical_boris(
     const double& Lref, const double& Vref, const double& qom,
     const IR3field* B, const IR3field* E)
@@ -51,47 +58,16 @@ classical_boris::classical_boris(
 }
 
 //! Returns the update of a state by a single time step `dt`.
+/*!
+    Employs the virtual member function `morphism::translation(...)` to invert
+    the specific morphism and find the updated curvilinear position.
+*/
 classical_boris::state classical_boris::do_step(
     const state& s, const double& time, const double& dt) const {
-  double Btime = time * iB_time_factor_;
-
-  IR3 q = this->get_position(s), v = this->get_velocity(s);
-  double B = magnetic_field_->magnitude(q, Btime);
-  IR3 b = my_morphism_->from_contravariant(
-      magnetic_field_->contravariant_versor(q, Btime), q);
-  IR3 E = electric_field_ ?
-      my_morphism_->from_contravariant(
-          electric_field_->contravariant(q, time * iE_time_factor_), q) :
-      IR3 {0, 0, 0};
-
-  IR3 updated_v = electric_field_ ?
-      boris_push(v, Oref_, tildeEref_, E, B, b, dt) :
-      boris_push(v, Oref_, B, b, dt);
+  IR3 q = this->get_position(s);
+  IR3 updated_v = this->cartesian_velocity_update(s, time, dt);
   IR3 updated_q = my_morphism_->translation(q, (Lref_ * dt) * updated_v);
-
   return this->generate_state(updated_q, updated_v);
-}
-
-//! Builds a state from curvilinear position and normalised cartesian velocity.
-classical_boris::state classical_boris::generate_state(
-    const IR3& q, const IR3& v) const {
-  return {q[IR3::u], q[IR3::v], q[IR3::w], v[IR3::u], v[IR3::v], v[IR3::w]};
-}
-
-//! Extracts curvilinear position from state.
-IR3 classical_boris::get_position(const state& s) const {
-  return {s[0], s[1], s[2]};
-}
-
-//! Extracts cartesian normalised velocity from state.
-IR3 classical_boris::get_velocity(const state& s) const {
-  return {s[3], s[4], s[5]};
-}
-
-//! Extracts curvilinear normalised velocity from state.
-IR3 classical_boris::get_dot_q(const state& s) const {
-  IR3 q = this->get_position(s), v = this->get_velocity(s);
-  return my_morphism_->to_contravariant(v, q);
 }
 
 //! Returns the kinetic energy of the state, normalised to `Uref`.
@@ -101,7 +77,8 @@ double classical_boris::energy_kinetic(const state& s) const {
 }
 
 //! Returns the parallel energy of the state, normalised to `Uref`.
-double classical_boris::energy_parallel(const state& s, double& time) const {
+double classical_boris::energy_parallel(
+    const state& s, const double& time) const {
   IR3 q = this->get_position(s), v = this->get_velocity(s);
   IR3 b = my_morphism_->from_contravariant(
       magnetic_field_->contravariant_versor(q, time * iB_time_factor_), q);
@@ -111,7 +88,7 @@ double classical_boris::energy_parallel(const state& s, double& time) const {
 
 //! Returns the perpendicular energy of the state, normalised to `Uref`.
 double classical_boris::energy_perpendicular(
-    const state& s, double& time) const {
+    const state& s, const double& time) const {
   IR3 q = this->get_position(s), v = this->get_velocity(s);
   IR3 b = my_morphism_->from_contravariant(
       magnetic_field_->contravariant_versor(q, time * iB_time_factor_), q);
@@ -120,6 +97,10 @@ double classical_boris::energy_perpendicular(
 }
 
 //! Returns a state with the velocity integrated backwards by a half time step.
+/*!
+    Integrates a Cauchy initial condition (position and velocity at the same
+    instant) backwards half a time step to yield a staggered initial state.
+*/
 classical_boris::state classical_boris::half_back_step(
     const IR3& q, const IR3& v, const double& time, const double& dt) const {
   lorentz lo(Lref_, Vref_, qom_, magnetic_field_, electric_field_);
@@ -130,6 +111,34 @@ classical_boris::state classical_boris::half_back_step(
   IR3 v_half_back =
       my_morphism_->from_contravariant(dot_q_half_back, q_half_back);
   return this->generate_state(q, v_half_back);
+}
+
+IR3 classical_boris::cartesian_velocity_update(
+    const state& s, const double& time, const double& dt) const {
+  auto [B_norm, B_versor, E] = this->get_cartesian_field_data(s, time);
+  IR3 half_E_impulse = (0.5 * tildeEref_ * dt) * E;
+  IR3 v_minus = this->get_velocity(s) + half_E_impulse;
+  auto [T, S] = this->get_boris_rotation_coefficients(B_norm, dt);
+  IR3 v_prime = v_minus + T * cross_product(v_minus, B_versor);
+  IR3 v_plus = v_minus + S * cross_product(v_prime, B_versor);
+  return v_plus + half_E_impulse;
+}
+std::array<double, 2> classical_boris::get_boris_rotation_coefficients(
+    const double& B, const double& dt) const {
+  double t = std::tan(0.5 * Oref_ * dt * B), s = 2 * t / (1 + t * t);
+  return {t, s};
+}
+std::tuple<double, IR3, IR3> classical_boris::get_cartesian_field_data(
+    const state& s, const double& time) const {
+  IR3 q = this->get_position(s);
+  IR3 E = electric_field_ ?
+      my_morphism_->from_contravariant(
+          electric_field_->contravariant(q, time * iE_time_factor_), q) :
+      IR3 {0, 0, 0};
+  IR3 B = my_morphism_->from_contravariant(
+      magnetic_field_->contravariant(q, time * iB_time_factor_), q);
+  double B_norm = std::sqrt(inner_product(B, B));
+  return {B_norm, B / B_norm, E};
 }
 
 }  // end namespace gyronimo
