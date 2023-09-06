@@ -1,6 +1,6 @@
-// ::gyronimo:: - gyromotion for the people, by the people -
-// An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
+// ::gyronimo:: - gyromotion for the people, by the people - An object-oriented
+// library for gyromotion applications in plasma physics.  Copyright (C)
+// 2022-2023 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ namespace gyronimo {
     where @f$\mathcal{M}(q^k)@f$ is the morphism from the coordinates @f$q^k@f$
     into the cartesian space carried by the specific magnetic and electric field
     objects supplied to the constructor. Notice that the conventional Boris
-    stepper in cartesian coordinates is recovered if @$f\mathcal{M}@$f is the
+    stepper in cartesian coordinates is recovered if @f$\mathcal{M}@f$ is the
     identity (e.g., `morphism_cartesian`).
 */
 class classical_boris {
@@ -63,15 +63,16 @@ class classical_boris {
 
   classical_boris(
       const double& Lref, const double& Vref, const double& qom,
-      const IR3field* B, const IR3field* E);
+      const IR3field* B, const IR3field* E = nullptr);
   ~classical_boris() {};
   state do_step(const state& s, const double& time, const double& dt) const;
 
   double Lref() const { return Lref_; };
   double Tref() const { return Tref_; };
   double Vref() const { return Vref_; };
-  double Oref() const { return Oref_; };
-  double qom() const { return qom_; };
+  double qom_tilde() const { return qom_tilde_; };
+  double Oref_tilde() const { return Oref_tilde_; };
+  double Eref_tilde() const { return Eref_tilde_; };
   double energy_kinetic(const state& s) const;
   double energy_parallel(const state& s, const double& time) const;
   double energy_perpendicular(const state& s, const double& time) const;
@@ -84,13 +85,15 @@ class classical_boris {
   const morphism* my_morphism() const { return my_morphism_; };
 
   IR3 cartesian_velocity_update(
-      const state& s, const double& time, const double& dt) const;
+      const state& s, const double& t, const double& dt) const;
   state half_back_step(
       const IR3& q, const IR3& v, const double& t, const double& dt) const;
  private:
-  const double Lref_, Vref_, Tref_, qom_, Oref_;
-  const IR3field *electric_field_, *magnetic_field_;
-  const double iE_time_factor_, iB_time_factor_, tildeEref_;
+  const double Lref_, Vref_, qom_tilde_;
+  const IR3field *magnetic_field_, *electric_field_;
+  const double Tref_;
+  const double iE_time_factor_, iB_time_factor_;
+  const double Oref_tilde_, Eref_tilde_;
   const metric_connected* metric_;
   const morphism* my_morphism_;
 

@@ -61,17 +61,18 @@ class curvilinear_boris {
   using state = classical_boris::state;
 
   curvilinear_boris(
-      const double& Lref, const double& Vref, const double& qom,
+      const double& Lref, const double& Vref, const double& qom_tilde,
       const IR3field* B, const IR3field* E)
-      : classical_boris_(Lref, Vref, qom, B, E) {};
+      : classical_boris_(Lref, Vref, qom_tilde, B, E) {};
   ~curvilinear_boris() {};
   state do_step(const state& s, const double& time, const double& dt) const;
 
   double Lref() const { return classical_boris_.Lref(); };
   double Tref() const { return classical_boris_.Tref(); };
   double Vref() const { return classical_boris_.Vref(); };
-  double Oref() const { return classical_boris_.Oref(); };
-  double qom() const { return classical_boris_.qom(); };
+  double qom_tilde() const { return classical_boris_.qom_tilde(); };
+  double Oref_tilde() const { return classical_boris_.Oref_tilde(); };
+  double Eref_tilde() const { return classical_boris_.Eref_tilde(); };
   double energy_kinetic(const state& s) const;
   double energy_parallel(const state& s, const double& time) const;
   double energy_perpendicular(const state& s, const double& time) const;

@@ -30,7 +30,7 @@
 
 namespace gyronimo {
 
-//! Class constructor.
+//! Sets the coefficients of the equations of motion.
 /*!
     Providing a magnetic field is mandatory, the electric field is optional (it
     may be passed `nullptr`). If provided, both fields must share the same
@@ -42,12 +42,14 @@ namespace gyronimo {
 classical_boris::classical_boris(
     const double& Lref, const double& Vref, const double& qom,
     const IR3field* B, const IR3field* E)
-    : Lref_(Lref), Vref_(Vref), Tref_(Lref / Vref), qom_(qom),
-      Oref_(B ? qom * codata::e / codata::m_proton * B->m_factor() * Tref_ : 1),
-      electric_field_(E), magnetic_field_(B),
+    : Lref_(Lref), Vref_(Vref), qom_tilde_(qom), magnetic_field_(B),
+      electric_field_(E), Tref_(Lref / Vref),
       iE_time_factor_(E ? Tref_ / E->t_factor() : 1),
       iB_time_factor_(B ? Tref_ / B->t_factor() : 1),
-      tildeEref_(E && B ? Oref_ * E->m_factor() / (B->m_factor() * Vref_) : 1),
+      Oref_tilde_(
+          B ? qom * codata::e / codata::m_proton * B->m_factor() * Tref_ : 1),
+      Eref_tilde_(
+          E && B ? Oref_tilde_ * E->m_factor() / (B->m_factor() * Vref_) : 1),
       metric_(B ? dynamic_cast<const metric_connected*>(B->metric()) : nullptr),
       my_morphism_(metric_ ? metric_->my_morphism() : nullptr) {
   if (!B) error(__func__, __FILE__, __LINE__, "no magnetic field.", 1);
@@ -102,11 +104,11 @@ double classical_boris::energy_perpendicular(
     instant) backwards half a time step to yield a staggered initial state.
 */
 classical_boris::state classical_boris::half_back_step(
-    const IR3& q, const IR3& v, const double& time, const double& dt) const {
-  lorentz lo(Lref_, Vref_, qom_, magnetic_field_, electric_field_);
+    const IR3& q, const IR3& v, const double& t, const double& dt) const {
+  lorentz lo(Lref_, Vref_, qom_tilde_, magnetic_field_, electric_field_);
   auto ls = lo.generate_state(q, my_morphism_->to_contravariant(v, q));
   boost::numeric::odeint::runge_kutta4<gyronimo::lorentz::state> rk4;
-  rk4.do_step(odeint_adapter(&lo), ls, time, -0.5 * dt);
+  rk4.do_step(odeint_adapter(&lo), ls, t, -0.5 * dt);
   IR3 q_half_back = lo.get_position(ls), dot_q_half_back = lo.get_velocity(ls);
   IR3 v_half_back =
       my_morphism_->from_contravariant(dot_q_half_back, q_half_back);
@@ -114,9 +116,9 @@ classical_boris::state classical_boris::half_back_step(
 }
 
 IR3 classical_boris::cartesian_velocity_update(
-    const state& s, const double& time, const double& dt) const {
-  auto [B_norm, B_versor, E] = this->get_cartesian_field_data(s, time);
-  IR3 half_E_impulse = (0.5 * tildeEref_ * dt) * E;
+    const state& s, const double& t, const double& dt) const {
+  auto [B_norm, B_versor, E] = this->get_cartesian_field_data(s, t);
+  IR3 half_E_impulse = (0.5 * Eref_tilde_ * dt) * E;
   IR3 v_minus = this->get_velocity(s) + half_E_impulse;
   auto [T, S] = this->get_boris_rotation_coefficients(B_norm, dt);
   IR3 v_prime = v_minus + T * cross_product(v_minus, B_versor);
@@ -125,7 +127,7 @@ IR3 classical_boris::cartesian_velocity_update(
 }
 std::array<double, 2> classical_boris::get_boris_rotation_coefficients(
     const double& B, const double& dt) const {
-  double t = std::tan(0.5 * Oref_ * dt * B), s = 2 * t / (1 + t * t);
+  double t = std::tan(0.5 * Oref_tilde_ * dt * B), s = 2 * t / (1 + t * t);
   return {t, s};
 }
 std::tuple<double, IR3, IR3> classical_boris::get_cartesian_field_data(
