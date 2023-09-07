@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
 
 // Builds the guiding_centre object:
   gyronimo::guiding_centre gc(
-      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &veq);
+      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &veq, nullptr);
 
 // Computes the initial conditions from the supplied constants of motion:
   double zstar = charge*g.parser()->cpsurf()*veq.B_0()*veq.R_0()*veq.R_0();
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
   gyronimo::guiding_centre::state initial_state = gc.generate_state(
       {initial_radial_position, 0.0, 0.0}, energySI/Ualfven,
       (vpp_sign > 0 ?
-        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus));
+        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus), 0);
 
 // integrates for t in [0,Tfinal], with dt=Tfinal/nsamples, using RK4.
   std::cout.precision(16);
