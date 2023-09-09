@@ -18,14 +18,13 @@
 // @equilibrium_helena.cc, this file is part of ::gyronimo::
 
 #include <gyronimo/core/dblock.hh>
-#include <gyronimo/core/transpose.hh>
 #include <gyronimo/fields/equilibrium_helena.hh>
 
 namespace gyronimo{
 
 equilibrium_helena::equilibrium_helena(
     const metric_helena *g, const interpolator2d_factory *ifactory)
-    : IR3field_c1(g->parser()->bmag(), 1.0, g),
+    : IR3field_c1(std::abs(g->parser()->bmag()), 1.0, g),
       metric_(g), Bchi_(nullptr), Bphi_(nullptr) {
   const parser_helena *p = metric_->parser();
   dblock_adapter s_range(p->s()), chi_range(p->chi());
