@@ -66,14 +66,14 @@ class orbit_observer {
 public:
   orbit_observer(
       double zstar, double vstar,
-      const gyronimo::IR3field_c1* e, const gyronimo::guiding_centre* g)
+      const gyronimo::equilibrium_vmec* e, const gyronimo::guiding_centre* g)
     : zstar_(zstar), vstar_(vstar), eq_pointer_(e), gc_pointer_(g) {};
   void operator()(const gyronimo::guiding_centre::state& s, double t) {
     gyronimo::IR3 x = gc_pointer_->get_position(s);
     double v_parallel = gc_pointer_->get_vpp(s);
     double bphi = eq_pointer_->covariant_versor(x, t)[gyronimo::IR3::w];
     double flux = x[gyronimo::IR3::u]*x[gyronimo::IR3::u];
-    gyronimo::IR3 X = eq_pointer_->metric()->transform2cylindrical(x);
+    // gyronimo::IR3 X = eq_pointer_->metric()->transform2cylindrical(x);
     std::cout << t << " "
         << x[gyronimo::IR3::u] << " "
         << x[gyronimo::IR3::v] << " "
@@ -81,14 +81,14 @@ public:
         << v_parallel << " "
         << -zstar_*flux + vstar_*v_parallel*bphi << " "
         << gc_pointer_->energy_perpendicular(s, t) << " "
-        << gc_pointer_->energy_parallel(s) << " " 
-        << X[gyronimo::IR3::u] << " "
-        << X[gyronimo::IR3::v] << " "
-        << X[gyronimo::IR3::w] << "\n";
+        << gc_pointer_->energy_parallel(s) << " ";
+        // << X[gyronimo::IR3::u] << " "
+        // << X[gyronimo::IR3::v] << " "
+        // << X[gyronimo::IR3::w] << "\n";
   };
 private:
   double zstar_, vstar_;
-  const gyronimo::IR3field_c1* eq_pointer_;
+  const gyronimo::equilibrium_vmec* eq_pointer_;
   const gyronimo::guiding_centre* gc_pointer_;
 };
 
@@ -148,7 +148,8 @@ int main(int argc, char* argv[]) {
   }
   gyronimo::parser_vmec vmap(command_line[1]);
   gyronimo::cubic_gsl_factory ifactory;
-  gyronimo::metric_vmec g(&vmap, &ifactory);
+  gyronimo::morphism_vmec m(&vmap, &ifactory);
+  gyronimo::metric_vmec g(&m, &ifactory);
   gyronimo::equilibrium_vmec veq(&g, &ifactory);
 
 // Reads parameters from the command line:
@@ -184,7 +185,7 @@ int main(int argc, char* argv[]) {
 
 // Builds the guiding_centre object:
   gyronimo::guiding_centre gc(
-      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &veq);
+      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &veq, nullptr);
 
 // Computes the initial conditions from the supplied constants of motion:
   double zstar = charge*g.parser()->cpsurf()*veq.B_0()*veq.R_0()*veq.R_0();
@@ -195,7 +196,7 @@ int main(int argc, char* argv[]) {
   gyronimo::guiding_centre::state initial_state = gc.generate_state(
       {initial_radial_position, 0.0, 0.0}, energySI/Ualfven,
       (vpp_sign > 0 ?
-        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus));
+        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus), 0);
 
 // integrates for t in [0,Tfinal], with dt=Tfinal/nsamples, using RK4.
   std::cout.precision(16);

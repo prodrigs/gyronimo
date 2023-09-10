@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2023 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ namespace gyronimo {
 */
 class IR3 : public  std::array<double, 3> {
  public:
-  enum index:size_t {u = 0, v = 1, w = 2};
+  enum index {u = 0, v = 1, w = 2};
 
   IR3(const std::initializer_list<double>& list)
       : std::array<double, 3>::array() {
@@ -99,7 +99,7 @@ class IR3 : public  std::array<double, 3> {
 */
 class dIR3 {
  public:
-  enum index : size_t {
+  enum index {
     uu = 0, uv = 1, uw = 2, vu = 3, vv = 4, vw = 5, wu = 6, wv = 7, ww = 8};
 
   double& operator[](index i) {return data_[i];}
@@ -112,6 +112,36 @@ class dIR3 {
 
   std::array<double, 9> data_;
 };
+
+//! Second partial derivatives of a @f$\mathbb{R}^3@f$ vector.
+/*!
+    **Aggregate** type supporting list initialization. Unlike `IR3`, no
+    vectorised algebraic operations are supported. The index operator
+    `B[ddIR3::ijk]` returns the value @f$\partial_j\partial_k B^i@f$ (for
+    contravariant vectors) or @f$\partial_j\partial_k B_i@f$ (for covariant
+    vectors) with `i,j,k = u, v, w`.
+*/
+class ddIR3 {
+ public:
+  enum index {
+    uuu = 0, uuv = 1, uuw = 2, uvv = 3, uvw = 4, uww = 5,
+    vuu = 6, vuv = 7, vuw = 8, vvv = 9, vvw = 10, vww = 11,
+    wuu = 12, wuv = 13, wuw = 14, wvv = 15, wvw = 16, www = 17
+  };
+
+  double& operator[](index i) {return data_[i];}
+  const double& operator[](index i) const {return data_[i];}
+  template <typename T>
+  ddIR3& operator=(const T& expr) {
+    for(size_t i = 0;i < 18;i++) data_[i] = expr[i];
+    return *this;
+  }
+
+  std::array<double, 18> data_;
+};
+
+//! Inverse of a dIR3 matrix.
+dIR3 inverse(const dIR3& m);
 
 //! Binary operation between two arbitrary types with `operator[i]`.
 /*!

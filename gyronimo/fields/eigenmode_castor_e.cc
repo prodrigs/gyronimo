@@ -73,7 +73,7 @@ eigenmode_castor_e::eigenmode_castor_e(
 IR3 eigenmode_castor_e::covariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double phi = position[IR3::w];
-  double chi = metric_->reduce_chi(position[IR3::v]);
+  double chi = metric_->parser()->reduce_chi(position[IR3::v]);
   std::complex<double> factor =
       -eigenvalue_*native_factor_*std::exp(eigenvalue_*time + i_n_tor_*phi);
   return {

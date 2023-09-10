@@ -31,6 +31,7 @@
 #include <gyronimo/version.hh>
 #include <gyronimo/core/linspace.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
+#include <gyronimo/metrics/morphism_vmec.hh>
 #include <gyronimo/metrics/metric_vmec.hh>
 #include <gyronimo/fields/equilibrium_vmec.hh>
 #include <gyronimo/interpolators/cubic_gsl.hh>
@@ -51,7 +52,7 @@ void print_help() {
   std::cout << "      -phi               - phi coordinate\n";
   std::cout << "      -Z                 - Z coordinate\n";
   std::cout << "      -jacobian          - jacobian of the metric\n";
-  std::cout << "      -jacobian_vmec     - jacobian of the metric (from vmec)\n";
+//   std::cout << "      -jacobian_vmec     - jacobian of the metric (from vmec)\n";
   std::cout << "  -radius         Prints radial grid.\n";
   std::cout << "  -iota           Prints 'iota' profile.\n";
   std::cout << "  -q              Prints 'q' safety factor profile.\n";
@@ -60,7 +61,7 @@ void print_help() {
   std::exit(0);
 }
 
-enum Scalar { R_cyl, phi_cyl, Z_cyl, Bnorm, Bnorm_vmec, jacobian, jacobian_vmec };
+enum Scalar { R_cyl, phi_cyl, Z_cyl, Bnorm, Bnorm_vmec, jacobian/*, jacobian_vmec*/ };
 typedef std::valarray<double> narray_type;
 enum class Out_format {table, python};
 
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]) {
     if (command_line["R"]) scalar = R_cyl;
     if (command_line["Z"]) scalar = Z_cyl;
     if (command_line["jacobian"]) scalar = jacobian;
-    if (command_line["jacobian_vmec"]) scalar = jacobian_vmec;
+    // if (command_line["jacobian_vmec"]) scalar = jacobian_vmec;
 
     print_surface(scalar, vmec, &ifactory, ntheta, nzeta);
     std::exit(0);
@@ -169,7 +170,8 @@ void print_surface(const Scalar scalar,
                    const gyronimo::interpolator1d_factory *ifactory,
                    const int ntheta, const int nzeta) {
 
-  gyronimo::metric_vmec g(&vmap, ifactory);
+  gyronimo::morphism_vmec m(&vmap, ifactory);
+  gyronimo::metric_vmec g(&m, ifactory);
   gyronimo::equilibrium_vmec veq(&g, ifactory);
   gyronimo::dblock_adapter s_range(vmap.radius());
   gyronimo::interpolator1d **Rmnc = new gyronimo::interpolator1d* [vmap.xm().size()];
@@ -203,7 +205,7 @@ void print_surface(const Scalar scalar,
           case R_cyl: std::cout << R ; break;
           case Z_cyl: std::cout << Z ; break;
           case jacobian: std::cout << g.jacobian(p); break;
-          case jacobian_vmec: std::cout << g.jacobian_vmec(p); break;
+        //   case jacobian_vmec: std::cout << g.jacobian_vmec(p); break;
         }
         if(++j < nzeta) std::cout << " ";
       }
@@ -261,11 +263,12 @@ void debug(const gyronimo::parser_vmec& vmec ) {
   std::cin >> u >> v >> w;
   gyronimo::IR3 x {u, v, w};
   gyronimo::cubic_gsl_factory ifactory;
-  gyronimo::metric_vmec g(&vmec, &ifactory);
+  gyronimo::morphism_vmec m(&vmec, &ifactory);
+  gyronimo::metric_vmec g(&m, &ifactory);
   auto metric_at_x = g(x);
   auto dmetric_at_x = g.del(x);
   auto jacobian_at_x = g.jacobian(x);
-  auto J_at_x = g.jacobian_vmec(x);
+//   auto J_at_x = g.jacobian_vmec(x);
   gyronimo::equilibrium_vmec veq(&g, &ifactory);
   auto B_at_x = veq.contravariant(x, 0.0);
   auto norm_b = veq.magnitude(x, 0.0);
@@ -304,7 +307,7 @@ void debug(const gyronimo::parser_vmec& vmec ) {
       << dmetric_at_x[gyronimo::dSM3::www] << "] "
       << std::endl;
   std::cout << "J = " << jacobian_at_x << std::endl;
-  std::cout << "J (vmec)= " << J_at_x << std::endl;
+//   std::cout << "J (vmec)= " << J_at_x << std::endl;
   std::cout << "B = ("
         << B_at_x[gyronimo::IR3::u] << ", "
         << B_at_x[gyronimo::IR3::v] << ", "

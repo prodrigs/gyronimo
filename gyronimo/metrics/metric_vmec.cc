@@ -21,17 +21,18 @@
 
 namespace gyronimo{
 
-metric_vmec::metric_vmec(
-    const parser_vmec *p, const interpolator1d_factory *ifactory) 
-    : parser_(p), b0_(p->B_0()), mnmax_(p->mnmax()), mnmax_nyq_(p->mnmax_nyq()),
-      ns_(p->ns()), mpol_(p->mpol()), ntor_(p->ntor()), 
-      signsgs_(p->signgs()), nfp_(p->nfp()),
-      xm_(p->xm()), xn_(p->xn()), xm_nyq_(p->xm_nyq()), xn_nyq_(p->xn_nyq()),
+metric_vmec::metric_vmec(const morphism_vmec* morph, 
+        const interpolator1d_factory *ifactory) 
+    : metric_connected(morph), parser_(morph->parser()),
+      mnmax_(parser_->mnmax()), mnmax_nyq_(parser_->mnmax_nyq()),
+      ns_(parser_->ns()), mpol_(parser_->mpol()), ntor_(parser_->ntor()), 
+      signsgs_(parser_->signgs()), nfp_(parser_->nfp()),
+      xm_(parser_->xm()), xn_(parser_->xn()), xm_nyq_(parser_->xm_nyq()), xn_nyq_(parser_->xn_nyq()),
       Rmnc_(nullptr), Zmns_(nullptr), gmnc_(nullptr)
       {
     // set radial grid block
-    dblock_adapter s_range(p->radius());
-    dblock_adapter s_half_range(p->radius_half());
+    dblock_adapter s_range(parser_->radius());
+    dblock_adapter s_half_range(parser_->radius_half());
     // set spectral components 
     Rmnc_ = new interpolator1d* [xm_.size()];
     Zmns_ = new interpolator1d* [xm_.size()];
@@ -40,13 +41,13 @@ metric_vmec::metric_vmec(
     #pragma omp parallel for
     for(size_t i=0; i<xm_.size(); i++) {
       std::slice s_cut (i, s_range.size(), xm_.size());
-      std::valarray<double> rmnc_i = (p->rmnc())[s_cut];
+      std::valarray<double> rmnc_i = (parser_->rmnc())[s_cut];
       Rmnc_[i] = ifactory->interpolate_data( s_range, dblock_adapter(rmnc_i));
-      std::valarray<double> zmnc_i = (p->zmns())[s_cut];
+      std::valarray<double> zmnc_i = (parser_->zmns())[s_cut];
       Zmns_[i] = ifactory->interpolate_data( s_range, dblock_adapter(zmnc_i));
       // note that gmnc is defined at half mesh
       std::slice s_h_cut (i+xm_nyq_.size(), s_half_range.size(), xm_nyq_.size());
-      std::valarray<double> gmnc_i = (p->gmnc())[s_h_cut];
+      std::valarray<double> gmnc_i = (parser_->gmnc())[s_h_cut];
       gmnc_[i] = ifactory->interpolate_data( s_half_range, dblock_adapter(gmnc_i));
     };
 }
@@ -153,38 +154,8 @@ dSM3 metric_vmec::del(const IR3& position) const {
       dR_dtheta * d2R_dthetadzeta + dR_dzeta * d2R_dtheta2      + dZ_dtheta * d2Z_dthetadzeta  + dZ_dzeta * d2Z_dtheta2,  
       2 * (dR_dtheta * d2R_dsdtheta     + dZ_dtheta * d2Z_dsdtheta), 
       2 * (dR_dtheta * d2R_dthetadzeta  + dZ_dtheta * d2Z_dthetadzeta), // d_i g_ww
-      2 * (dR_dtheta * d2R_dtheta2      + dZ_dtheta * d2Z_dtheta2),  
+      2 * (dR_dtheta * d2R_dtheta2      + dZ_dtheta * d2Z_dtheta2)
   };
 }
 
-IR3 metric_vmec::transform2cylindrical(const IR3& position) const {
-    double u = position[gyronimo::IR3::u];
-    double v = position[gyronimo::IR3::v];
-    double w = position[gyronimo::IR3::w];
-    double R = 0.0, Z = 0.0;
-  
-    #pragma omp parallel for reduction(+: R, Z)
-    for (size_t i = 0; i<xm_.size(); i++) {
-      double m = xm_[i]; double n = xn_[i];
-      R+= (*Rmnc_[i])(u) * std::cos( m*w - n*v ); 
-      Z+= (*Zmns_[i])(u) * std::sin( m*w - n*v );
-    }
-    return  {R, v, Z};
-}
- 
-//@todo move this to jacobian and think about testing this by calling the parent
-double metric_vmec::jacobian_vmec(const IR3& position) const {
-  double s = position[IR3::u];
-  double zeta = position[IR3::v];
-  double theta = position[IR3::w];
-  double J = 0.0;
-  #pragma omp parallel for reduction(+: J)
-  for (size_t i = 0; i < xm_nyq_.size(); i++) {  
-    J += (*gmnc_[i])(s) * std::cos( xm_nyq_[i]*theta - xn_nyq_[i]*zeta );
-  };
-  // left-handed VMEC coordinate system is re-oriented 
-  // to u = Phi/Phi_bnd, v = zeta, w = theta for J>0
-  // should we check/assume that signgs is always negative?
-  return -J;
-}
 } // end namespace gyronimo

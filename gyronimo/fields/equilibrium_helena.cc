@@ -41,17 +41,17 @@ equilibrium_helena::~equilibrium_helena() {
 }
 IR3 equilibrium_helena::contravariant(const IR3& position, double time) const {
   double s = position[IR3::u];
-  double chi = this->metric_->reduce_chi(position[IR3::v]);
+  double chi = this->metric_->parser()->reduce_chi(position[IR3::v]);
   return {0.0, (*Bchi_)(s, chi), (*Bphi_)(s, chi)};
 }
 dIR3 equilibrium_helena::del_contravariant(
     const IR3& position, double time) const {
   double s = position[IR3::u];
-  double chi = this->metric_->reduce_chi(position[IR3::v]);
+  double chi = this->metric_->parser()->reduce_chi(position[IR3::v]);
   return {
       0.0, 0.0, 0.0, 
-	  Bchi_->partial_u(s, chi), Bchi_->partial_v(s, chi) , 0.0, 
-	  Bphi_->partial_u(s, chi), Bphi_->partial_v(s, chi) , 0.0};
+      Bchi_->partial_u(s, chi), Bchi_->partial_v(s, chi) , 0.0, 
+      Bphi_->partial_u(s, chi), Bphi_->partial_v(s, chi) , 0.0};
 }
 
 }// end namespace gyronimo.

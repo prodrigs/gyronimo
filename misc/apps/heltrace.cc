@@ -140,7 +140,8 @@ int main(int argc, char* argv[]) {
   gyronimo::parser_helena hmap(command_line[1]);
   gyronimo::bicubic_gsl_factory ifactory(false,
       (hmap.is_symmetric() ? 0 : 9), (hmap.is_symmetric() ? 9 : 0));
-  gyronimo::metric_helena g(&hmap, &ifactory);
+  gyronimo::morphism_helena m(&hmap, &ifactory);
+  gyronimo::metric_helena g(&m, &ifactory);
   gyronimo::equilibrium_helena heq(&g, &ifactory);
 
 // Reads parameters from the command line:
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]) {
 
 // Builds the guiding_centre object:
   gyronimo::guiding_centre gc(
-      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &heq);
+      Lref, Valfven, charge/mass, lambda*energySI/Ualfven, &heq, nullptr);
 
 // Computes the initial conditions from the supplied constants of motion:
   double zstar = charge*g.parser()->cpsurf()*heq.B0()*heq.R0()*heq.R0();
@@ -187,7 +188,7 @@ int main(int argc, char* argv[]) {
   gyronimo::guiding_centre::state initial_state = gc.generate_state(
       {initial_radial_position, 0.0, 0.0}, energySI/Ualfven,
       (vpp_sign > 0 ?
-        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus));
+        gyronimo::guiding_centre::plus : gyronimo::guiding_centre::minus), 0);
 
 // integrates for t in [0,Tfinal], with dt=Tfinal/nsamples, using RK4.
   std::cout.precision(16);
