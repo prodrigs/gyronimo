@@ -95,7 +95,7 @@ private:
    and all variables are in SI units, except \Psi in Wb/rad. Writting P_\phi in
    eV.s and the energy E in eV, with e the electron charge, one gets:
      P_phi = - (q_s/e) \Psi +
-         \sigma_\parallel b_\phi \sqrt{2 m_s (E/e) \Lambda (1 - B/B_0)}
+         \sigma_\parallel b_\phi \sqrt{2 m_s (E/e) (1 - \Lambda B/B_0)}
    Function arguments:
    pphi: \P_\phi in eV.s;
    zstar: (q_s/e) \Psi_b, with \Psi_b the boundary flux, q_s the species charge;

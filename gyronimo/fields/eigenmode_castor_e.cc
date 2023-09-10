@@ -17,6 +17,7 @@
 
 // @eigenmode_castor_e.cc, this file is part of ::gyronimo::
 
+#include <numbers>
 #include <gyronimo/fields/eigenmode_castor_e.hh>
 #include <gyronimo/fields/eigenmode_castor_b.hh>
 

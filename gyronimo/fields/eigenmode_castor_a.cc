@@ -18,6 +18,7 @@
 // @eigenmode_castor_a.cc, this file is part of ::gyronimo::
 
 #include <ranges>
+#include <numbers>
 #include <gyronimo/fields/eigenmode_castor_a.hh>
 
 namespace gyronimo{

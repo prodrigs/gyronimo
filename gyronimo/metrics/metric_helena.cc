@@ -18,7 +18,6 @@
 // @metric_helena.cc, this file is part of ::gyronimo::
 
 #include <numbers>
-#include <gyronimo/core/transpose.hh>
 #include <gyronimo/metrics/metric_helena.hh>
 
 namespace gyronimo{
