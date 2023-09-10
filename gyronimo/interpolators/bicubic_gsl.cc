@@ -17,6 +17,7 @@
 
 // @bicubic_gsl.cc, this file is part of ::gyronimo::
 
+#include <algorithm>
 #include <gyronimo/core/error.hh>
 #include <gyronimo/core/transpose.hh>
 #include <gyronimo/interpolators/bicubic_gsl.hh>

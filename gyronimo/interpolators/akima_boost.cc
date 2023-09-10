@@ -34,7 +34,6 @@ interpolator1d* akima_boost_factory::interpolate_data(
   switch(policy_) {
     case native:
       return new akima_boost(abcissas, ordinates);
-      break;
     case periodic: {
       size_t n = std::size(ordinates);
       double double_step =
@@ -43,7 +42,6 @@ interpolator1d* akima_boost_factory::interpolate_data(
           (ordinates[1] - ordinates[n - 2])/double_step;
       return new akima_boost(
           abcissas, ordinates, left_right_prime, left_right_prime);
-      break;
     }
     default: error(__func__, __FILE__, __LINE__, "unknown policy", 1);
   }

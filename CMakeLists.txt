@@ -27,6 +27,7 @@ endif()
 # extracts the version numbers from version.hh:
 set(version_major_regex "[ \t]*constexpr int version_major = ([0-9]+);")
 set(version_minor_regex "[ \t]*constexpr int version_minor = ([0-9]+);")
+set(version_patch_regex "[ \t]*constexpr int version_patch = ([0-9]+);")
 file(STRINGS ${CMAKE_SOURCE_DIR}/gyronimo/version.hh
   string_to_replace REGEX ${version_major_regex})
 string(REGEX REPLACE
@@ -35,11 +36,20 @@ file(STRINGS ${CMAKE_SOURCE_DIR}/gyronimo/version.hh
   string_to_replace REGEX ${version_minor_regex})
 string(REGEX REPLACE
   ${version_minor_regex} "\\1" version_minor ${string_to_replace})
-string(APPEND version_string ${version_major} "." ${version_minor})
+file(STRINGS ${CMAKE_SOURCE_DIR}/gyronimo/version.hh
+  string_to_replace REGEX ${version_patch_regex})
+string(REGEX REPLACE
+  ${version_patch_regex} "\\1" version_patch ${string_to_replace})
+string(APPEND version_string
+  ${version_major} "." ${version_minor} "." ${version_patch})
 
-# defaults to Release build type:
+# checks and sets build type (defaults to Plain):
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_BUILD_TYPE "Plain")
+endif()
+string(FIND "Debug Release Plain" ${CMAKE_BUILD_TYPE} KNOWN_BUILD_TYPE)
+if(${KNOWN_BUILD_TYPE} LESS "0")
+  message(FATAL_ERROR "Unknown build type " ${CMAKE_BUILD_TYPE} ".")
 endif()
 message("*  Configuring gyronimo-"
   ${version_string} " in " ${CMAKE_BUILD_TYPE} " mode:")
@@ -82,9 +92,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   add_compile_options(-Wfatal-errors -Wpedantic)
   if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_compile_options(-Og -ggdb3)
-  endif()
-  if(CMAKE_BUILD_TYPE MATCHES "Release")
-    add_compile_options(-march=native)
+  elseif(CMAKE_BUILD_TYPE MATCHES "Release")
+# nothing to be done here!
+  elseif(CMAKE_BUILD_TYPE MATCHES "Plain")
+# nothing to be done here!
   endif()
 endif()
 
@@ -206,8 +217,7 @@ endif()
 install(TARGETS gyronimo LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/gyronimo
-  TYPE INCLUDE MESSAGE_NEVER
-  FILES_MATCHING PATTERN "*.hh")
+  TYPE INCLUDE MESSAGE_NEVER FILES_MATCHING PATTERN "*.hh")
 
 # pkg-config support
 #configure_file(

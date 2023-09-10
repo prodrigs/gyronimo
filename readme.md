@@ -103,7 +103,8 @@ HTML-formatted documentation can be generated from the source code by
 #### Some useful `cmake` options:
 
 + `-DCMAKE_CXX_COMPILER=my_c++_compiler` selects a specific compiler;
-+ `-DCMAKE_BUILD_TYPE={Release,Debug}` (default `Release`);
++ `-DCMAKE_CXX_FLAGS="flag1 flag2 ..."` provides specific compiler flags;
++ `-DCMAKE_BUILD_TYPE={Release,Debug,Plain}` (default `Plain`);
 + `-DSUPPORT_OPENMP={ON,OFF}` (default `OFF`);
 + `-DSUPPORT_VMEC={ON,OFF}` (default `OFF`);
 
