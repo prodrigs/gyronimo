@@ -45,13 +45,13 @@ class morphism_helena : public morphism {
   morphism_helena(
       const parser_helena* parser, const interpolator2d_factory* ifactory);
   virtual ~morphism_helena() override;
-  virtual IR3 operator()(const IR3& q) const override final;
-  virtual IR3 inverse(const IR3& x) const override final;
-  virtual dIR3 del(const IR3& q) const override final;
-  virtual ddIR3 ddel(const IR3& q) const override final;
+  virtual IR3 operator()(const IR3& q) const override;
+  virtual IR3 inverse(const IR3& x) const override;
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-  virtual double jacobian(const IR3& q) const override final;
-  virtual IR3 translation(const IR3& q, const IR3& delta) const override final;
+  virtual double jacobian(const IR3& q) const override;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
   const parser_helena* parser() const { return parser_; };
  private:
   const parser_helena* parser_;

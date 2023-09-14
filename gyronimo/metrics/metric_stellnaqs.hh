@@ -46,8 +46,8 @@ class metric_stellnaqs : public metric_covariant {
       const dblock& dldphi, const dblock& torsion, const dblock& curvature,
       const interpolator1d_factory* ifactory);
   virtual ~metric_stellnaqs() override;
-  virtual SM3 operator()(const IR3& position) const override final;
-  virtual dSM3 del(const IR3& position) const override final;
+  virtual SM3 operator()(const IR3& position) const override;
+  virtual dSM3 del(const IR3& position) const override;
 
   const interpolator1d* curvature() const {return curvature_;};
   const interpolator1d* torsion() const {return torsion_;};

@@ -36,13 +36,13 @@ class morphism_cylindrical : public morphism {
   morphism_cylindrical(const double& Lref);
   virtual ~morphism_cylindrical() override {};
 
-  virtual IR3 operator()(const IR3& q) const override final;
-  virtual IR3 inverse(const IR3& x) const override final;
-  virtual dIR3 del(const IR3& q) const override final;
-  virtual ddIR3 ddel(const IR3& q) const override final;
+  virtual IR3 operator()(const IR3& q) const override;
+  virtual IR3 inverse(const IR3& x) const override;
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-  virtual double jacobian(const IR3& q) const override final;
-  virtual dIR3 del_inverse(const IR3& q) const override final;
+  virtual double jacobian(const IR3& q) const override;
+  virtual dIR3 del_inverse(const IR3& q) const override;
 
   double Lref() const { return Lref_; };
  private:

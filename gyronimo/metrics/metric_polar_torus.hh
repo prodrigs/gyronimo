@@ -39,12 +39,12 @@ class metric_polar_torus : public metric_connected {
  public:
   metric_polar_torus(const morphism_polar_torus* morph);
   virtual ~metric_polar_torus() override {};
-  virtual SM3 operator()(const IR3& q) const override final;
-  virtual SM3 inverse(const IR3& q) const override final;
-  virtual dSM3 del(const IR3& q) const override final;
-  virtual double jacobian(const IR3& q) const override final;
-  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override final;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override final;
+  virtual SM3 operator()(const IR3& q) const override;
+  virtual SM3 inverse(const IR3& q) const override;
+  virtual dSM3 del(const IR3& q) const override;
+  virtual double jacobian(const IR3& q) const override;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
 
   double minor_radius() const { return minor_radius_; };
   double major_radius() const { return major_radius_; };

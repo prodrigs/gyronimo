@@ -36,17 +36,16 @@ class metric_spherical : public metric_connected {
  public:
   metric_spherical(const morphism_spherical* morph);
   virtual ~metric_spherical() override {};
-  virtual SM3 operator()(const IR3& q) const override final;
-  virtual SM3 inverse(const IR3& q) const override final;
-  virtual dSM3 del(const IR3& q) const override final;
-  virtual double jacobian(const IR3& q) const override final;
-  virtual IR3 del_jacobian(const IR3& q) const override final;
-  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override final;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override final;
-  virtual ddIR3 christoffel_first_kind(const IR3& q) const override final;
-  virtual ddIR3 christoffel_second_kind(const IR3& q) const override final;
-  virtual IR3 inertial_force(
-      const IR3& q, const IR3& dot_q) const override final;
+  virtual SM3 operator()(const IR3& q) const override;
+  virtual SM3 inverse(const IR3& q) const override;
+  virtual dSM3 del(const IR3& q) const override;
+  virtual double jacobian(const IR3& q) const override;
+  virtual IR3 del_jacobian(const IR3& q) const override;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
+  virtual IR3 inertial_force(const IR3& q, const IR3& dot_q) const override;
 
   double Lref() const { return Lref_; };
   const morphism_spherical* my_morphism() const {

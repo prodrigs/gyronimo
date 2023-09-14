@@ -51,7 +51,11 @@ class equilibrium_vmec : public IR3field_c1{
   virtual dIR3 del_contravariant(
       const IR3& position, double time) const override;
   virtual IR3 partial_t_contravariant(
-      const IR3& position, double time) const override {return {0.0,0.0,0.0};};
+      const IR3& position, double time) const override {return {0, 0, 0};};
+  virtual IR3 partial_t_covariant(
+      const IR3& position, double time) const override {return {0, 0, 0};};
+  virtual double partial_t_magnitude(
+      const IR3& position, double time) const override {return 0;};
   double magnitude_vmec(const IR3& position, double time) const;
 
   double R_0() const {return metric_->parser()->R_0();};

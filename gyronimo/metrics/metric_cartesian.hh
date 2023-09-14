@@ -30,18 +30,18 @@ class metric_cartesian : public metric_connected {
  public:
   metric_cartesian(const morphism_cartesian* m) : metric_connected(m) {};
   virtual ~metric_cartesian() override {};
-  virtual SM3 operator()(const IR3& q) const override final;
-  virtual SM3 inverse(const IR3& q) const override final;
-  virtual dSM3 del(const IR3& q) const override final;
-  virtual dSM3 del_inverse(const IR3& q) const override final;
-  virtual double jacobian(const IR3& q) const override final;
-  virtual IR3 del_jacobian(const IR3& q) const override final;
-  virtual ddIR3 christoffel_first_kind(const IR3& q) const override final;
-  virtual ddIR3 christoffel_second_kind(const IR3& q) const override final;
-  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override final;
-  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override final;
+  virtual SM3 operator()(const IR3& q) const override;
+  virtual SM3 inverse(const IR3& q) const override;
+  virtual dSM3 del(const IR3& q) const override;
+  virtual dSM3 del_inverse(const IR3& q) const override;
+  virtual double jacobian(const IR3& q) const override;
+  virtual IR3 del_jacobian(const IR3& q) const override;
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
+  virtual IR3 to_covariant(const IR3& B, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& B, const IR3& q) const override;
   virtual IR3 inertial_force(
-      const IR3& q, const IR3& dot_q) const override final;
+      const IR3& q, const IR3& dot_q) const override;
 
   const morphism_cartesian* my_morphism() const {
     return static_cast<const morphism_cartesian*>(

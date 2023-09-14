@@ -30,19 +30,19 @@ class morphism_cartesian : public morphism {
   morphism_cartesian() : morphism() {};
   virtual ~morphism_cartesian() override {};
 
-  virtual IR3 operator()(const IR3& q) const override final { return q; };
-  virtual IR3 inverse(const IR3& x) const override final { return x; };
-  virtual dIR3 del(const IR3& q) const override final;
-  virtual ddIR3 ddel(const IR3& q) const override final;
+  virtual IR3 operator()(const IR3& q) const override { return q; };
+  virtual IR3 inverse(const IR3& x) const override { return x; };
+  virtual dIR3 del(const IR3& q) const override;
+  virtual ddIR3 ddel(const IR3& q) const override;
 
-  virtual double jacobian(const IR3& q) const override final { return 1; };
-  virtual dIR3 del_inverse(const IR3& q) const override final;
-  virtual IR3 to_covariant(const IR3& A, const IR3& q) const override final;
-  virtual IR3 to_contravariant(const IR3& A, const IR3& q) const override final;
-  virtual IR3 from_covariant(const IR3& A, const IR3& q) const override final;
+  virtual double jacobian(const IR3& q) const override { return 1; };
+  virtual dIR3 del_inverse(const IR3& q) const override;
+  virtual IR3 to_covariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 to_contravariant(const IR3& A, const IR3& q) const override;
+  virtual IR3 from_covariant(const IR3& A, const IR3& q) const override;
   virtual IR3 from_contravariant(
-      const IR3& A, const IR3& q) const override final;
-  virtual IR3 translation(const IR3& q, const IR3& delta) const override final;
+      const IR3& A, const IR3& q) const override;
+  virtual IR3 translation(const IR3& q, const IR3& delta) const override;
 };
 
 inline IR3 morphism_cartesian::translation(

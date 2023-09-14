@@ -50,10 +50,10 @@ class metric_helena : public metric_connected {
   metric_helena(
       const morphism_helena* morph, const interpolator2d_factory* ifactory);
   virtual ~metric_helena() override;
-  virtual SM3 operator()(const IR3& q) const override final;
-  virtual dSM3 del(const IR3& q) const override final;
-  virtual ddIR3 christoffel_first_kind(const IR3& q) const override final;
-  virtual ddIR3 christoffel_second_kind(const IR3& q) const override final;
+  virtual SM3 operator()(const IR3& q) const override;
+  virtual dSM3 del(const IR3& q) const override;
+  virtual ddIR3 christoffel_first_kind(const IR3& q) const override;
+  virtual ddIR3 christoffel_second_kind(const IR3& q) const override;
 
   const parser_helena* parser() const { return parser_; };
   const morphism_helena* my_morphism() const {

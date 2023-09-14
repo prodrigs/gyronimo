@@ -51,7 +51,7 @@ class equilibrium_circular : public IR3field_c1 {
   virtual dIR3 del_contravariant(
       const IR3& position, double time) const override;
   virtual IR3 partial_t_contravariant(
-      const IR3& position, double time) const override {return {0.0,0.0,0.0};};
+      const IR3& position, double time) const override {return {0, 0, 0};};
 
   virtual IR3 covariant(const IR3& position, double time) const override;
   virtual double magnitude(const IR3& position, double time) const override;
@@ -60,8 +60,10 @@ class equilibrium_circular : public IR3field_c1 {
       const IR3& position, double time) const override;
 
   virtual IR3 del_magnitude(const IR3& position, double time) const override;
+  virtual IR3 partial_t_covariant(
+      const IR3& position, double time) const override {return {0, 0, 0};};
   virtual double partial_t_magnitude(
-      const IR3& position, double time) const override {return 0.0;};
+      const IR3& position, double time) const override {return 0;};
   virtual IR3 curl(const IR3& position, double time) const override;
 
   double q(double r) const {return q_(r);};
