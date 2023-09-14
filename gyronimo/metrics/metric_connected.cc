@@ -36,29 +36,29 @@ SM3 metric_connected::operator()(const IR3& q) const {
 /*!
     Extracts the metric derivatives from the Christoffel symbol of the first
     kind following the rule @f$\partial_k \, g_{ij} = \Gamma_{ijk} +
-    \Gamma_{ijk}@f$.
+    \Gamma_{jik}@f$.
 */
 dSM3 metric_connected::del(const IR3& q) const {
-  ddIR3 CF = christoffel_first_kind(q);
+  ddIR3 gamma = christoffel_first_kind(q);
   return {
-      CF[ddIR3::uuu] + CF[ddIR3::uuu],  // uuu
-      CF[ddIR3::uuv] + CF[ddIR3::uuv],  // uuv
-      CF[ddIR3::uuw] + CF[ddIR3::uuw],  // uuw
-      CF[ddIR3::uuv] + CF[ddIR3::vuu],  // uvu
-      CF[ddIR3::uvv] + CF[ddIR3::vuv],  // uvv
-      CF[ddIR3::uvw] + CF[ddIR3::vuw],  // uvw
-      CF[ddIR3::uuw] + CF[ddIR3::wuu],  // uwu
-      CF[ddIR3::uvw] + CF[ddIR3::wuv],  // uwv
-      CF[ddIR3::uww] + CF[ddIR3::wuw],  // uww
-      CF[ddIR3::vuv] + CF[ddIR3::vuv],  // vvu
-      CF[ddIR3::vvv] + CF[ddIR3::vvv],  // vvv
-      CF[ddIR3::vvw] + CF[ddIR3::vvw],  // vvw
-      CF[ddIR3::vuw] + CF[ddIR3::wuv],  // vwu
-      CF[ddIR3::vvw] + CF[ddIR3::wvv],  // vwv
-      CF[ddIR3::vww] + CF[ddIR3::wvw],  // vww
-      CF[ddIR3::wuw] + CF[ddIR3::wuw],  // wwu
-      CF[ddIR3::wvw] + CF[ddIR3::wvw],  // wwv
-      CF[ddIR3::www] + CF[ddIR3::www]  // www
+      gamma[ddIR3::uuu] + gamma[ddIR3::uuu],  // uuu
+      gamma[ddIR3::uuv] + gamma[ddIR3::uuv],  // uuv
+      gamma[ddIR3::uuw] + gamma[ddIR3::uuw],  // uuw
+      gamma[ddIR3::uuv] + gamma[ddIR3::vuu],  // uvu
+      gamma[ddIR3::uvv] + gamma[ddIR3::vuv],  // uvv
+      gamma[ddIR3::uvw] + gamma[ddIR3::vuw],  // uvw
+      gamma[ddIR3::uuw] + gamma[ddIR3::wuu],  // uwu
+      gamma[ddIR3::uvw] + gamma[ddIR3::wuv],  // uwv
+      gamma[ddIR3::uww] + gamma[ddIR3::wuw],  // uww
+      gamma[ddIR3::vuv] + gamma[ddIR3::vuv],  // vvu
+      gamma[ddIR3::vvv] + gamma[ddIR3::vvv],  // vvv
+      gamma[ddIR3::vvw] + gamma[ddIR3::vvw],  // vvw
+      gamma[ddIR3::vuw] + gamma[ddIR3::wuv],  // vwu
+      gamma[ddIR3::vvw] + gamma[ddIR3::wvv],  // vwv
+      gamma[ddIR3::vww] + gamma[ddIR3::wvw],  // vww
+      gamma[ddIR3::wuw] + gamma[ddIR3::wuw],  // wwu
+      gamma[ddIR3::wvw] + gamma[ddIR3::wvw],  // wwv
+      gamma[ddIR3::www] + gamma[ddIR3::www]  // www
   };
 }
 
