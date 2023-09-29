@@ -148,6 +148,7 @@ else()
   list(REMOVE_ITEM gyronimo_sources
       ${PROJECT_SOURCE_DIR}/gyronimo/metrics/metric_vmec.cc
       ${PROJECT_SOURCE_DIR}/gyronimo/parsers/parser_vmec.cc
+      ${PROJECT_SOURCE_DIR}/gyronimo/metrics/morphism_vmec.cc
       ${PROJECT_SOURCE_DIR}/gyronimo/fields/equilibrium_vmec.cc)
   list(REMOVE_ITEM apps_sources
       ${PROJECT_SOURCE_DIR}/misc/apps/vmecdump.cc

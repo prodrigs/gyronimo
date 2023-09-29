@@ -42,7 +42,7 @@ IR3 equilibrium_vmec::contravariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  auto cis_mn = equilibrium_vmec::cached_cis(theta, zeta);
+  const auto& cis_mn = equilibrium_vmec::cached_cis(theta, zeta);
   auto out = std::transform_reduce(
       index_.begin(), index_.end(), auxiliar1_t {0, 0}, std::plus<>(),
       [&](size_t i) -> auxiliar1_t {
@@ -57,7 +57,7 @@ dIR3 equilibrium_vmec::del_contravariant(
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  auto cis_mn = equilibrium_vmec::cached_cis(theta, zeta);
+  const auto& cis_mn = equilibrium_vmec::cached_cis(theta, zeta);
   auto out = std::transform_reduce(
       index_.begin(), index_.end(), auxiliar2_t {0, 0, 0, 0, 0, 0},
       std::plus<>(), [&](size_t i) -> auxiliar2_t {

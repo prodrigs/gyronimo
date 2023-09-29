@@ -33,7 +33,8 @@ namespace gyronimo {
 */
 class morphism_cylindrical : public morphism {
  public:
-  morphism_cylindrical(const double& Lref);
+  morphism_cylindrical(const double& Lref)
+    : morphism(), Lref_(Lref), iLref_(1 / Lref), Lref3_(Lref * Lref * Lref) {};
   virtual ~morphism_cylindrical() override {};
 
   virtual IR3 operator()(const IR3& q) const override;

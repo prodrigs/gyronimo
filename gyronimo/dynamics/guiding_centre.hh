@@ -120,7 +120,7 @@ class guiding_centre {
 };
 
 //! Returns the parallel energy, normalised to `Uref`.
-double guiding_centre::energy_parallel(const state& s) const {
+inline double guiding_centre::energy_parallel(const state& s) const {
   return s[3] * s[3];
 }
 

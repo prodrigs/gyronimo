@@ -111,7 +111,7 @@ inline IR3 curvilinear_boris::get_velocity(const state& s) const {
 }
 inline IR3 curvilinear_boris::get_dot_q(const state& s) const {
   return classical_boris_.get_dot_q(s);
-};
+}
 inline curvilinear_boris::state curvilinear_boris::generate_state(
     const IR3& q, const IR3& v) const {
   return classical_boris_.generate_state(q, v);

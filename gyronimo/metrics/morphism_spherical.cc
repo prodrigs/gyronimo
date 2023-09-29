@@ -23,8 +23,6 @@
 
 namespace gyronimo {
 
-morphism_spherical::morphism_spherical(const double& Lref)
-    : morphism(), Lref_(Lref), iLref_(1 / Lref), Lref3_(Lref * Lref * Lref) {};
 IR3 morphism_spherical::operator()(const IR3& q) const {
   double r_si = Lref_ * q[IR3::u], phi = q[IR3::v], theta = q[IR3::w];
   double cos_phi = std::cos(phi), sin_phi = std::sin(phi);

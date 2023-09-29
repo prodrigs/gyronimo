@@ -23,8 +23,6 @@
 
 namespace gyronimo {
 
-morphism_cylindrical::morphism_cylindrical(const double& Lref)
-    : morphism(), Lref_(Lref), iLref_(1 / Lref), Lref3_(Lref * Lref * Lref) {};
 dIR3 morphism_cylindrical::del(const IR3& q) const {
   double r = q[IR3::u], phi = q[IR3::v];
   double Lref_sin = Lref_ * std::sin(phi), Lref_cos = Lref_ * std::cos(phi);

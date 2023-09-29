@@ -73,7 +73,7 @@ IR3 morphism_vmec::inverse(const IR3& X) const {
 
 std::pair<double, double> morphism_vmec::get_rz(const IR3& q) const {
   double flux = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
-  auto cis_mn = morphism_vmec::cached_cis(theta, zeta);
+  const auto& cis_mn = morphism_vmec::cached_cis(theta, zeta);
   auto [r, z] = std::transform_reduce(
       index_.begin(), index_.end(), aux_rz_t {0, 0}, std::plus<>(),
       [&](size_t i) -> aux_rz_t {
@@ -102,7 +102,7 @@ IR3 morphism_vmec::inverse(
 
 dIR3 morphism_vmec::del(const IR3& q) const {
   double s = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
-  auto cis_mn = morphism_vmec::cached_cis(theta, zeta);
+  const auto& cis_mn = morphism_vmec::cached_cis(theta, zeta);
   auto a = std::transform_reduce(
       index_.begin(), index_.end(), aux_del_t {0, 0, 0, 0, 0, 0, 0},
       std::plus<>(), [&](size_t i) -> aux_del_t {
@@ -127,7 +127,7 @@ dIR3 morphism_vmec::del(const IR3& q) const {
 
 ddIR3 morphism_vmec::ddel(const IR3& q) const {
   double s = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
-  auto cis_mn = morphism_vmec::cached_cis(theta, zeta);
+  const auto& cis_mn = morphism_vmec::cached_cis(theta, zeta);
   auto a = std::transform_reduce(
       index_.begin(), index_.end(),
       aux_ddel_t {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
