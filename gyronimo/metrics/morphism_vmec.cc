@@ -100,6 +100,26 @@ IR3 morphism_vmec::inverse(
   return {flux, zeta, theta};
 }
 
+double morphism_vmec::jacobian(const IR3& q) const {
+  double s = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
+  auto cis_mn = morphism_vmec::cached_cis(theta, zeta);
+  auto a = std::transform_reduce(
+      index_.begin(), index_.end(), aux_rz_del_t{0, 0, 0, 0, 0, 0},
+      std::plus<>(), [&](size_t i) -> aux_rz_del_t {
+        double r_mn_i = (*r_mn_[i])(s);
+        double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
+        return {
+            r_mn_i * cos_mn_i,  // r_mn_i
+            0,  // no need for z_mn_i
+            (*r_mn_[i]).derivative(s) * cos_mn_i,  // drdu_mn_i
+            -m_[i] * r_mn_i * sin_mn_i,  // drdw_mn_i
+            (*z_mn_[i]).derivative(s) * sin_mn_i,  // dzdu_mn_i
+            m_[i] * (*z_mn_[i])(s) * cos_mn_i  // dzdw_mn_i
+        };
+      });
+  return a.r * (a.drdu * a.dzdw - a.drdw * a.dzdu);
+}
+
 dIR3 morphism_vmec::del(const IR3& q) const {
   double s = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
   const auto& cis_mn = morphism_vmec::cached_cis(theta, zeta);
