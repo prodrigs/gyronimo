@@ -88,14 +88,14 @@ IR3 morphism_vmec::inverse(
     const IR3& X, const std::pair<double, double>& guess) const {
   double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
   double r = std::sqrt(x * x + y * y), zeta = std::atan2(y, x);
+  multiroot root_finder(gsl_multiroot_fsolver_hybrids, 1.0e-12, 75);
   using IR2 = std::array<double, 2>;
   std::function<IR2(const IR2&)> zero_function = [&](const IR2& args) -> IR2 {
     auto [flux, theta] = reflection_past_axis(args[0], args[1]);
     auto [r_trial, z_trial] = get_rz({flux, zeta, theta});
     return {r_trial - r, z_trial - z};
   };
-  auto roots =
-      multiroot(1.0e-12, 100)(zero_function, IR2 {guess.first, guess.second});
+  auto roots = root_finder(zero_function, IR2 {guess.first, guess.second});
   auto [flux, theta] = reflection_past_axis(roots[0], roots[1]);
   return {flux, zeta, theta};
 }
