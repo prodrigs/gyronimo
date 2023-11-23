@@ -34,8 +34,7 @@ include(ExternalProject)
 include(${CMAKE_SOURCE_DIR}/cmake/compiler.cmake)
 
 # define build options and their default values:
-option(SUPPORT_VMEC "Supports VMEC equilibria (requires netcdf-cxx4)" OFF)
-option(SUPPORT_DOXYGEN "Configures doc generation by doxygen" OFF)
+option(SUPPORT_VMEC "Add support to VMEC equilibria" OFF)
 
 # check required dependencies, updates include and lib directories:
 include(${CMAKE_SOURCE_DIR}/cmake/dependencies.cmake)
@@ -45,7 +44,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
 file(GLOB gyronimo_sources ${PROJECT_SOURCE_DIR}/gyronimo/*/*.cc)
 add_library(gyronimo SHARED ${gyronimo_sources})
 set_target_properties(gyronimo PROPERTIES VERSION ${PROJECT_VERSION})
-include_directories(${PROJECT_SOURCE_DIR})
 install(TARGETS gyronimo LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/gyronimo

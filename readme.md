@@ -84,8 +84,18 @@ follow this requirement, you can choose an alternative one either by
 setting the environment variable `CXX=my_c++_compiler` or by providing
 the option `-DCMAKE_CXX_COMPILER=my_c++_compiler` to `cmake`.
 
+Although `cmake` is usually quite efficient when figuring out the
+locations of installed dependency libraries and include files, there are
+some circumstances (e.g., multiple installations with different versions
+and/or compiler combinations) in which all hints provided are greatly
+appreciated. Most often, this goal can be achieved by supplying flags of
+the type `-D<my-lib>_ROOT_DIR=/path/to/favourite/my-lib/installation` or
+maybe `-DCMAKE_PREFIX_PATH=/path/to/preferred/installation`. For further
+details, check the documentation of your particular `cmake` version.
+
 HTML-formatted documentation can be generated from the source code by
-`doxygen` if the latter is installed.
+`doxygen` if the latter is installed in the target system and support
+for it has been explicitly requested by setting `-DSUPPORT_DOXYGEN=ON`.
 
 #### Basic build and install procedure:
 
@@ -93,7 +103,7 @@ HTML-formatted documentation can be generated from the source code by
    (**outside** the repository) to configure the installation;
 2. Run `cmake --build . [options]` to generate the shared library
    `libgyronimo` and any available apps;
-3. Optionally, run `cmake --build . --target doc` to extract the API
+3. If configured, run `cmake --build . --target doc` to extract the API
    documentation from source files with `doxygen`;
 4. Run `cmake --install . --prefix path/to/install/dir [options]` to
    install include files (prefix/include/gyronimo), shared library
@@ -104,8 +114,8 @@ HTML-formatted documentation can be generated from the source code by
 
 + `-DCMAKE_CXX_COMPILER=my_c++_compiler` selects a specific compiler;
 + `-DCMAKE_CXX_FLAGS="flag1 flag2 ..."` provides specific compiler flags;
-+ `-DCMAKE_BUILD_TYPE={Release,Debug,Plain}` (default `Plain`);
-+ `-DSUPPORT_OPENMP={ON,OFF}` (default `OFF`);
++ `-DCMAKE_BUILD_TYPE={Release,Debug,Plain}` (default `Release`);
++ `-DSUPPORT_DOXYGEN={ON,OFF}` (default `OFF`);
 + `-DSUPPORT_VMEC={ON,OFF}` (default `OFF`);
 
 After installing, and before using the library, make sure to update
