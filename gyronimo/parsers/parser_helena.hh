@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -97,6 +97,7 @@ class parser_helena {
   const narray_type& covariant_B3() const {return covariant_B3_;};
   const narray_type& contravariant_B2() const {return contravariant_B2_;};
   const narray_type& contravariant_B3() const {return contravariant_B3_;};
+  double reduce_chi(double chi) const;
 
  private:
   bool is_symmetric_;

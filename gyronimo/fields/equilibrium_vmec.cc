@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022 Jorge Ferreira and Paulo Rodrigues.
+// Copyright (C) 2022-2023 Jorge Ferreira and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,96 +20,92 @@
 #include <gyronimo/core/dblock.hh>
 #include <gyronimo/fields/equilibrium_vmec.hh>
 
-namespace gyronimo{
+#include <cmath>
+#include <numeric>
+
+namespace gyronimo {
 
 equilibrium_vmec::equilibrium_vmec(
-    const metric_vmec *g, const interpolator1d_factory *ifactory)
-    : IR3field_c1(abs(g->parser()->B_0()), 1.0, g), metric_(g),
-      xm_nyq_(g->parser()->xm_nyq()), xn_nyq_(g->parser()->xn_nyq()),   
-      bmnc_(nullptr), bsupumnc_(nullptr), bsupvmnc_(nullptr) {
-  const parser_vmec *p = metric_->parser();
-  dblock_adapter s_range(p->radius());
-  dblock_adapter s_half_range(p->radius_half());
-  // set spectral interpolators 
-  bmnc_ = new interpolator1d* [xm_nyq_.size()];
-  bsupumnc_ = new interpolator1d* [xm_nyq_.size()];
-  bsupvmnc_ = new interpolator1d* [xm_nyq_.size()];
-//@todo NEED TO FIX AXIS AND EDGE! TBI! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  #pragma omp parallel for
-  for(size_t i=0; i<xm_nyq_.size(); i++) {
-    std::slice s_cut (i, s_range.size(), xm_nyq_.size());
-    std::valarray<double> bsupumnc_i = (p->bsupumnc())[s_cut] / this->m_factor();
-    bsupumnc_[i] = ifactory->interpolate_data( s_range, dblock_adapter(bsupumnc_i));
-    std::valarray<double> bsupvmnc_i = (p->bsupvmnc())[s_cut] / this->m_factor();
-    bsupvmnc_[i] = ifactory->interpolate_data( s_range, dblock_adapter(bsupvmnc_i));
-    // bmnc is defined a half radius
-    std::slice s_h_cut (i+xm_nyq_.size(), s_half_range.size(), xm_nyq_.size());
-    std::valarray<double> bmnc_i = (p->bmnc())[s_h_cut] / this->m_factor();
-    bmnc_[i] = ifactory->interpolate_data( s_half_range, dblock_adapter(bmnc_i));
-  };
+    const metric_vmec* g, const interpolator1d_factory* ifactory)
+    : IR3field_c1(std::abs(g->my_parser()->B0()), 1.0, g),
+      metric_(g), parser_(g->my_parser()), harmonics_(parser_->mnmax_nyq()),
+      m_(parser_->xm_nyq()), n_(parser_->xn_nyq()), index_(harmonics_),
+      btheta_mn_(parser_->mnmax_nyq()), bzeta_mn_(parser_->mnmax_nyq()) {
+  std::iota(index_.begin(), index_.end(), 0);
+  this->build_interpolator_array(
+      bzeta_mn_, parser_->bsupvmnc() / this->m_factor(), ifactory);
+  this->build_interpolator_array(
+      btheta_mn_, parser_->bsupumnc() / this->m_factor(), ifactory);
 }
-equilibrium_vmec::~equilibrium_vmec() {
-  if(bmnc_) delete bmnc_;
-  if(bsupumnc_) delete bsupumnc_;
-  if(bsupvmnc_) delete bsupvmnc_;
-}
+
 IR3 equilibrium_vmec::contravariant(const IR3& position, double time) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  double B_theta = 0.0, B_zeta = 0.0;
-  #pragma omp parallel for reduction(+: B_zeta, B_theta)
-  for (size_t i = 0; i < xm_nyq_.size(); i++) {  
-    double m = xm_nyq_[i]; double n = xn_nyq_[i];
-    double cosmn = std::cos( m*theta - n*zeta );
-    B_zeta += (*bsupvmnc_[i])(s) * cosmn;
-    B_theta += (*bsupumnc_[i])(s) * cosmn; 
-  };
-  return {0.0,  B_zeta, B_theta};
+  const auto& cis_mn = equilibrium_vmec::cached_cis(theta, zeta);
+  auto out = std::transform_reduce(
+      index_.begin(), index_.end(), auxiliar1_t {0, 0}, std::plus<>(),
+      [&](size_t i) -> auxiliar1_t {
+        double cos_mn = std::real(cis_mn[i]);
+        return {(*bzeta_mn_[i])(s)*cos_mn, (*btheta_mn_[i])(s)*cos_mn};
+      });
+  return {0, out.bzeta, out.btheta};
 }
+
 dIR3 equilibrium_vmec::del_contravariant(
     const IR3& position, double time) const {
   double s = position[IR3::u];
   double zeta = position[IR3::v];
   double theta = position[IR3::w];
-  double B_theta = 0.0, B_zeta = 0.0;
-  double dB_theta_ds = 0.0, dB_theta_dtheta = 0.0, dB_theta_dzeta = 0.0;
-  double dB_zeta_ds = 0.0, dB_zeta_dtheta = 0.0, dB_zeta_dzeta = 0.0;
-  #pragma omp parallel for reduction(+: B_zeta, B_theta, dB_theta_ds, dB_theta_dtheta, dB_theta_dzeta, dB_zeta_ds, dB_zeta_dtheta, dB_zeta_dzeta)
-  for (size_t i = 0; i < xm_nyq_.size(); i++) {  
-    double m = xm_nyq_[i]; double n = xn_nyq_[i];
-    double cosmn = std::cos( m*theta - n*zeta );
-    double sinmn = std::sin( m*theta - n*zeta );
-    double bsupumnc_i = (*bsupumnc_[i])(s);
-    double bsupvmnc_i = (*bsupvmnc_[i])(s);
-    B_theta += bsupumnc_i * cosmn; 
-    B_zeta += bsupvmnc_i * cosmn;
-    dB_theta_ds += (*bsupumnc_[i]).derivative(s) * cosmn;
-    dB_theta_dtheta -= m * bsupumnc_i * sinmn;
-    dB_theta_dzeta += n * bsupumnc_i * sinmn;
-    dB_zeta_ds += (*bsupvmnc_[i]).derivative(s) * cosmn;
-    dB_zeta_dtheta -= m * bsupvmnc_i * sinmn;
-    dB_zeta_dzeta += n * bsupvmnc_i * sinmn;
-  };
-  return {
-      0.0, 0.0, 0.0, 
-	    dB_zeta_ds, dB_zeta_dzeta, dB_zeta_dtheta,
-      dB_theta_ds, dB_theta_dzeta, dB_theta_dtheta
-  };
-}
-//@todo we can actually override the methods to calculate the covariant components of the field
-//@todo move this to magnitude after the half radius issue is sorted out
-double equilibrium_vmec::magnitude_vmec(
-    const IR3& position, double time) const {
-  double s = position[IR3::u];
-  double zeta = position[IR3::v];
-  double theta = position[IR3::w];
-  double Bnorm = 0.0;
-  #pragma omp parallel for reduction(+: Bnorm)
-  for (size_t i = 0; i < xm_nyq_.size(); i++) {  
-    Bnorm += (*bmnc_[i])(s) * std::cos( xm_nyq_[i] * theta - xn_nyq_[i] *zeta );
-  };
-  return Bnorm;
+  const auto& cis_mn = equilibrium_vmec::cached_cis(theta, zeta);
+  auto out = std::transform_reduce(
+      index_.begin(), index_.end(), auxiliar2_t {0, 0, 0, 0, 0, 0},
+      std::plus<>(), [&](size_t i) -> auxiliar2_t {
+        double bzeta_mn_i = (*bzeta_mn_[i])(s);
+        double btheta_mn_i = (*btheta_mn_[i])(s);
+        double cos_mn_i = std::real(cis_mn[i]), sin_mn_i = std::imag(cis_mn[i]);
+        return {
+            (*bzeta_mn_[i]).derivative(s) * cos_mn_i,
+            n_[i] * bzeta_mn_i * sin_mn_i,
+            -m_[i] * bzeta_mn_i * sin_mn_i,
+            (*btheta_mn_[i]).derivative(s) * cos_mn_i,
+            n_[i] * btheta_mn_i * sin_mn_i,
+            -m_[i] * btheta_mn_i * sin_mn_i};
+      });
+  return {0.0, 0.0, 0.0,
+      out.dbzetadu, out.dbzetadv, out.dbzetadw,
+      out.dbthetadu, out.dbthetadv, out.dbthetadw};
 }
 
-}// end namespace gyronimo.
+void equilibrium_vmec::build_interpolator_array(
+    std::vector<std::unique_ptr<interpolator1d>>& interpolator_array,
+    const narray_type& samples_array, const interpolator1d_factory* ifactory) {
+  dblock_adapter sgrid(parser_->sgrid());
+  std::transform(
+      index_.begin(), index_.end(), interpolator_array.begin(), [&](size_t i) {
+        std::slice mask_i(i, sgrid.size(), harmonics_);
+        narray_type data = samples_array[mask_i];
+        return std::move(std::unique_ptr<interpolator1d>(
+            ifactory->interpolate_data(sgrid, dblock_adapter(data))));
+      });
+}
+
+//! Cached evaluation of trigonometric coefficients for internal Fourier series.
+const equilibrium_vmec::cis_container_t& equilibrium_vmec::cached_cis(
+    double theta, double zeta) const {
+  thread_local double cached_theta = -1e6, cached_zeta = -1e6;
+  thread_local cis_container_t cis_mn(harmonics_);
+  if (theta != cached_theta || zeta != cached_zeta) {
+    std::transform(
+        index_.begin(), index_.end(), cis_mn.begin(),
+        [&](size_t i) -> cis_container_t::value_type {
+          double angle_mn = m_[i] * theta - n_[i] * zeta;
+          return {std::cos(angle_mn), std::sin(angle_mn)};
+        });
+    cached_theta = theta;
+    cached_zeta = zeta;
+  }
+  return cis_mn;
+}
+
+}  // end namespace gyronimo.

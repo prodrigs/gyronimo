@@ -28,7 +28,7 @@ namespace gyronimo{
 //! Quasi-symmetric stellarator Boozer coordinates via near-axis expansion.
 /*!
     Implements the coordinate set @f$\{r, \vartheta, \varphi\}@f$ as defined in
-    M.~Landreman and W.~Sengupta, J.~Plasma.~Phys. **85**, 815850601 (2019).
+    M. Landreman and W. Sengupta, J. Plasma. Phys. **85**, 815850601 (2019).
     Metric coefficients are obtained taking derivatives of the transformation in
     equation 2.13, which is expanded around a magnetic axis defined (as any line
     in @f$\mathbb{R}^3@f$) by some curvature, torsion, and arclength (actually
@@ -46,7 +46,6 @@ class metric_stellnaqs : public metric_covariant {
       const dblock& dldphi, const dblock& torsion, const dblock& curvature,
       const interpolator1d_factory* ifactory);
   virtual ~metric_stellnaqs() override;
-
   virtual SM3 operator()(const IR3& position) const override;
   virtual dSM3 del(const IR3& position) const override;
 
@@ -56,7 +55,6 @@ class metric_stellnaqs : public metric_covariant {
   const interpolator1d* sigma() const {return sigma_;};
   int field_periods() const {return field_periods_;};
   double reduce_phi(double phi) const;
-
  private:
   const int field_periods_;
   const double eta_bar_, phi_modulus_factor_;

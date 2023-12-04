@@ -20,8 +20,9 @@
 #ifndef GYRONIMO_GUIDING_CENTRE
 #define GYRONIMO_GUIDING_CENTRE
 
-#include <array>
 #include <gyronimo/fields/IR3field_c1.hh>
+
+#include <array>
 
 namespace gyronimo {
 
@@ -32,7 +33,7 @@ namespace gyronimo {
     @f{gather*}{
       \biggl[ 1 + \frac{\tilde{v}_\parallel}{\tilde{\Omega}}
         \Bigl( \mathbf{b} \cdot \tilde{\nabla} \times \mathbf{b} \Bigr) \biggr]
-          \frac{d\mathbf{X}}{d\tau} =
+          \frac{d\tilde{\mathbf{X}}}{d\tau} =
       \tilde{v}_\parallel \mathbf{b} + \frac{1}{\tilde{\Omega}} \biggl[
         \tilde{v}_\parallel^2 \tilde{\nabla} \times \mathbf{b} +
         \mathbf{b}\times\Bigl(
@@ -49,19 +50,20 @@ namespace gyronimo {
               \tilde{v}_\parallel\partial_\tau\mathbf{b} -
                 \tilde{\mathbf{E}} \Bigr).
     @f}
-    All variables are adimensional: the position `X` of the guiding centre is
-    normalised to a reference length `Lref`, the time to `Tref`, and the
-    parallel velocity to `Vref`=`Lref`/`Tref`. Reference length and velocity are
-    supplied to the constructor in SI units, further normalisations are done
-    internally assuming *bona-fide* electromagnetic fields derived from
-    `IR3field`: @f$\tilde{B} = B/B_{ref}@f$ and @f$\tilde{\mathbf{E}} =
-    \tilde{E}_{ref} (\mathbf{E}/E_{ref})@f$, with @f$\tilde{E}_{ref} =
-    \tilde{\Omega}_{ref} (E_{ref} V_{ref}^{-1} B_{ref}^{-1})@f$ an adimensional
-    constant. Other normalisations are @f$\tilde{\Omega} = \Omega T_{ref} =
-    \tilde{\Omega}_{ref} \tilde{B}@f$, while the magnetic moment is normalised
-    to the ratio `Uref`/`Bref` and `Uref` is the kinetic energy corresponding to
-    `Vref`.  Moreover, @f$\tilde{\nabla} = L_{ref} \nabla@f$ and @f$\mathbf{b} =
-    \mathbf{B}/B@f$.
+    All variables are adimensional: the position of the guiding centre is
+    normalised as @f$\tilde{\mathbf{X}} = \mathbf{X}/L_{ref}@f$, its parallel
+    velocity as @f$\tilde{v_\parallel} = v_\parallel/V_{ref}@f$, and the time as
+    @f$\tau = t/T_{ref}@f$, with the reference length `Lref` and velocity
+    `Vref`=`Lref`/`Tref` being supplied to the constructor in SI units. Other
+    normalisations are done internally assuming *bona-fide* electromagnetic
+    fields derived from `IR3field`, with @f$\tilde{B} = B/B_{ref}@f$ whilst
+    Faraday's law demands the ratio between the reference magnitudes of the
+    electric and magnetic fields to match `Vref`. Other normalisations are
+    @f$\tilde{\Omega} = \Omega T_{ref} = \tilde{\Omega}_{ref} \tilde{B}@f$,
+    @f$\tilde{\mathbf{E}} = \tilde{\Omega}_{ref} (\mathbf{E}/E_{ref})@f$, and
+    the magnetic moment is normalised to the ratio `Uref`/`Bref`, where `Uref`
+    is the kinetic energy corresponding to `Vref`. Moreover, @f$\tilde{\nabla} =
+    L_{ref} \nabla@f$ and @f$\mathbf{b} = \mathbf{B}/B@f$.
 
     The equations are implemented in a coordinate-invariant form and will work
     out-of-the-box with any coordinates defined in the `metric_covariant` object
@@ -70,51 +72,63 @@ namespace gyronimo {
     `metric_covariant`, `IR3field`, and `IR3field_c1`, which can eventually be
     specialised and optimised in further derived classes. The type
     `guiding_centre::state` implements the state of the dynamical system,
-    storing the three contravariant components of the normalised guiding-centre
-    position @f$\mathbf{X}@f$ and the normalised parallel velocity. Member
-    functions are provided to convert between `state` values, `IR3` positions,
-    and parallel velocities [`get_position(state)`, `get_vpp(state)`,
-    `generate_state(...)`].
+    storing the curvilinear position divided by the reference length
+    (@f$\tilde{q}^\gamma = q^\gamma/L_{ref}@f$) and the normalised parallel
+    velocity. Member functions are provided to convert between these types
+    [i.e., `get_position(state)`, `get_vpp(state)`, `generate_state(q, v)`].
 */
 class guiding_centre {
  public:
-  typedef std::array<double, 4> state;
-  enum vpp_sign : int {minus = -1, plus = 1};
+  using state = std::array<double, 4>;
+  enum vpp_sign { minus = -1, plus = 1 };
 
   guiding_centre(
-      double Lref, double Vref, double qom, double mu,
-      const IR3field_c1* B, const IR3field* E = nullptr);
+      double Lref, double Vref, double qom, double mu, const IR3field_c1* B,
+      const IR3field* E);
   ~guiding_centre() {};
+  state operator()(const state& s, const double& time) const;
 
-  state operator()(const state& x, double t) const;
-
-  double get_vpp(const state& s) const;
-  IR3 get_position(const state& s) const;
+  double Lref() const { return Lref_; };
+  double Tref() const { return Tref_; };
+  double Vref() const { return Vref_; };
+  double mu_tilde() const { return mu_tilde_; };
+  double qom_tilde() const { return qom_tilde_; };
+  double Oref_tilde() const { return Oref_tilde_; };
+  double get_vpp(const state& s) const { return s[3]; };
   double energy_parallel(const state& s) const;
-  double energy_perpendicular(const state& s, double time) const;
+  double energy_perpendicular(const state& s, const double& time) const;
+  IR3 get_position(const state& s) const;
   state generate_state(
-      const IR3& position,
-      double energy_tilde, vpp_sign sign, double time = 0) const;
-
-  double Lref() const {return Lref_;};
-  double Tref() const {return Tref_;};
-  double Vref() const {return Vref_;};
-  double mu_tilde() const {return mu_tilde_;};
-  double qom_tilde() const {return qom_tilde_;};
-  double Eref_tilde() const {return Eref_tilde_;};
-  double Oref_tilde() const {return 1.0/iOref_tilde_;};
-  const IR3field* electric_field() const {return electric_field_;};
-  const IR3field_c1* magnetic_field() const {return magnetic_field_;};
-
+      const IR3& position, const double& energy_tilde, const vpp_sign& sign,
+      const double& time) const;
+  const IR3field* electric_field() const { return electric_field_; };
+  const IR3field_c1* magnetic_field() const { return magnetic_field_; };
  private:
-  const IR3field* electric_field_;
+  const double Lref_, Vref_, qom_tilde_, mu_tilde_;
   const IR3field_c1* magnetic_field_;
-  const double qom_tilde_, mu_tilde_;
-  const double Lref_, Vref_, Tref_;
-  const double Bfield_time_factor_, Efield_time_factor_;
-  double iOref_tilde_, Eref_tilde_;
+  const IR3field* electric_field_;
+  const double Tref_;
+  const double iB_time_factor_, iE_time_factor_;
+  const double Oref_tilde_, iOref_tilde_;
+
+  std::tuple<double, double, IR3, IR3> dynamical_system_coefficients(
+      IR3& q, double vpp, double B_time, double jacobian,
+      IR3& covariant_b) const;
+  std::array<IR3, 2> del_versor_b(
+      IR3& q, double B_time, double inverseB, double jacobian, IR3& gradB,
+      IR3& covariant_b) const;
 };
 
-} // end namespace gyronimo.
+//! Returns the parallel energy, normalised to `Uref`.
+inline double guiding_centre::energy_parallel(const state& s) const {
+  return s[3] * s[3];
+}
 
-#endif // GYRONIMO_GUIDING_CENTRE.
+//! Extracts curvilinear position from state.
+inline IR3 guiding_centre::get_position(const state& s) const {
+  return {Lref_ * s[0], Lref_ * s[1], Lref_ * s[2]};
+}
+
+}  // end namespace gyronimo.
+
+#endif  // GYRONIMO_GUIDING_CENTRE.

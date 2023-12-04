@@ -24,14 +24,14 @@
 namespace gyronimo {
 
 //! Prints a warning message to `stderr`.
-void warning(const char* message) {
+void warning(const std::string& message) {
   std::cerr << "gyronimo::warning: " << message << std::endl;
 }
 
 //! Prints an error message to `stderr` and exits execution with `exit_code`.
 void error(
     const char* caller_name, const char* file_name,
-    const int line_num, const char* message, const int exit_code) {
+    const int line_num, const std::string& message, const int exit_code) {
   std::cerr << "gyronimo::" << caller_name << ": " << message << std::endl;
   std::cerr << file_name << ", line " << line_num << ".\n";
   std::cerr << "error code: " << exit_code << ".\n";

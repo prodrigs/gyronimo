@@ -20,12 +20,14 @@
 #ifndef GYRONIMO_ERROR
 #define GYRONIMO_ERROR
 
+#include <string>
+
 namespace gyronimo {
 
 void warning(const char* message);
 void error(
     const char* caller_name, const char* file_name,
-    const int line_num, const char* message, const int exit_code);
+    const int line_num, const std::string& message, const int exit_code);
 
 } // end namespace gyronimo.
 

@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2023 Paulo Rodrigues.
+// Copyright (C) 2021-2023 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 
 // @metric_covariant.cc, this file is part of ::gyronimo::
 
-#include <cmath>
-#include <gyronimo/core/contraction.hh>
 #include <gyronimo/metrics/metric_covariant.hh>
+
+#include <cmath>
 
 namespace gyronimo {
 
@@ -76,78 +76,47 @@ IR3 metric_covariant::del_jacobian(const IR3& r) const {
   return (0.5/std::sqrt(det_g))*grad_det_g;
 }
 
-//! General-purpose product of a covariant metric and a contravariant vector.
-/*!
-    Returns the *covariant* product of the *covariant* metric, evaluated at a
-    contravariant position, by the *contravariant* vector `B`.
-*/
-IR3 metric_covariant::to_covariant(const IR3& B, const IR3& r) const {
-  return contraction((*this)(r), B);
+//! General derivative @f$\partial_k g^{ij} = -g^{im}\partial_k g_{mn}g^{nj}@f$.
+dSM3 metric_covariant::del_inverse(const IR3& q) const {
+  SM3 ig = this->inverse(q);
+  dSM3 dg = contraction(ig, this->del(q), ig);
+  return {-dg[dSM3::uuu], -dg[dSM3::uuv], -dg[dSM3::uuw], -dg[dSM3::uvu],
+          -dg[dSM3::uvv], -dg[dSM3::uvw], -dg[dSM3::uwu], -dg[dSM3::uwv],
+          -dg[dSM3::uww], -dg[dSM3::vvu], -dg[dSM3::vvv], -dg[dSM3::vvw],
+          -dg[dSM3::vwu], -dg[dSM3::vwv], -dg[dSM3::vww], -dg[dSM3::wwu],
+          -dg[dSM3::wwv], -dg[dSM3::www]};
 }
 
-//! General-purpose product of a contravariant metric and a covariant vector.
-/*!
-    Returns the *contravariant* product of the *contravariant* metric, evaluated
-    at a contravariant position, with the *covariant* vector `B`. This method is
-    significantly more expensive than `to_covariant` because it involves the
-    covariant-metric inversion.
+//! General Christoffel symbol @f$\Gamma_{ijk}@f$.
+/*! @f{equation*}{
+      \Gamma_{ijk} = \frac{1}{2} \left(
+                \frac{\partial g_{ij}}{\partial q^k} +
+                \frac{\partial g_{ik}}{\partial q^j} -
+                \frac{\partial g_{jk}}{\partial q^i} \right)
+    @f}
 */
-IR3 metric_covariant::to_contravariant(const IR3& B, const IR3& r) const {
-  SM3 g = (*this)(r);
-  double denominator1 = g[SM3::uw]*g[SM3::uw]*g[SM3::vv] -
-      2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] + g[SM3::uv]*g[SM3::uv]*g[SM3::ww] +
-      g[SM3::uu]*( g[SM3::vw]*g[SM3::vw] - g[SM3::vv]*g[SM3::ww]);
-  double denominator2 = g[SM3::uw]*g[SM3::uw]*g[SM3::vv] -
-      2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] + g[SM3::uu]*g[SM3::vw]*g[SM3::vw] +
-      g[SM3::uv]*g[SM3::uv]*g[SM3::ww] - g[SM3::uu]*g[SM3::vv]*g[SM3::ww];
-  return {(
-      g[SM3::vw]*g[SM3::vw]*B[IR3::u] - g[SM3::vv]*g[SM3::ww]*B[IR3::u] +
-      g[SM3::uv]*g[SM3::ww]*B[IR3::v] + g[SM3::uw]*g[SM3::vv]*B[IR3::w] -
-      g[SM3::vw]*(g[SM3::uw]*B[IR3::v] + g[SM3::uv]*B[IR3::w]))/denominator1,(
-      g[SM3::uv]*g[SM3::ww]*B[IR3::u] + g[SM3::uw]*g[SM3::uw]*B[IR3::v] -
-      g[SM3::uu]*g[SM3::ww]*B[IR3::v] + g[SM3::uu]*g[SM3::vw]*B[IR3::w] -
-      g[SM3::uw]*(g[SM3::vw]*B[IR3::u] + g[SM3::uv]*B[IR3::w]))/denominator1,(
-      g[SM3::uw]*g[SM3::vv]*B[IR3::u] - g[SM3::uv]*g[SM3::vw]*B[IR3::u] -
-      g[SM3::uv]*g[SM3::uw]*B[IR3::v] + g[SM3::uu]*g[SM3::vw]*B[IR3::v] +
-      g[SM3::uv]*g[SM3::uv]*B[IR3::w] - g[SM3::uu]*g[SM3::vv]*B[IR3::w]
-      )/denominator2};
-}
-
-//! General-purpose implementation of the inverse (i.e., contravariant metric).
-SM3 metric_covariant::inverse(const IR3& r) const {
-  SM3 g = (*this)(r);
-  double factor = 1.0/(
-      g[SM3::uw]*g[SM3::uw]*g[SM3::vv] - 2.0*g[SM3::uv]*g[SM3::uw]*g[SM3::vw] +
-      g[SM3::uv]*g[SM3::uv]*g[SM3::ww] + g[SM3::uu]*(
-          g[SM3::vw]*g[SM3::vw] - g[SM3::vv]*g[SM3::ww]));
+ddIR3 metric_covariant::christoffel_first_kind(const IR3& q) const {
+  dSM3 dg = del(q);
   return {
-    factor*(g[SM3::vw]*g[SM3::vw] - g[SM3::vv]*g[SM3::ww]),
-    factor*(g[SM3::uv]*g[SM3::ww] - g[SM3::uw]*g[SM3::vw]),
-    factor*(g[SM3::uw]*g[SM3::vv] - g[SM3::uv]*g[SM3::vw]),
-    factor*(g[SM3::uw]*g[SM3::uw] - g[SM3::uu]*g[SM3::ww]),
-    factor*(g[SM3::uu]*g[SM3::vw] - g[SM3::uv]*g[SM3::uw]),
-    factor*(g[SM3::uv]*g[SM3::uv] - g[SM3::uu]*g[SM3::vv])};
-}
-
-//! General-purpose implementation of the inverse derivatives.
-/*!
-    Implements the rule
-    @f$ \partial_k g^{ij} = - g^{im} \partial_k g_{mn} g^{nj} @f$
-*/
-dSM3 metric_covariant::del_inverse(const IR3& r) const {
-  SM3 ig = this->inverse(r);
-  dSM3 dg = contraction(ig, this->del(r), ig);
-  return {
-    -dg[dSM3::uuu], -dg[dSM3::uuv], -dg[dSM3::uuw],
-    -dg[dSM3::uvu], -dg[dSM3::uvv], -dg[dSM3::uvw],
-    -dg[dSM3::uwu], -dg[dSM3::uwv], -dg[dSM3::uww],
-    -dg[dSM3::vvu], -dg[dSM3::vvv], -dg[dSM3::vvw],
-    -dg[dSM3::vwu], -dg[dSM3::vwv], -dg[dSM3::vww],
-    -dg[dSM3::wwu], -dg[dSM3::wwv], -dg[dSM3::www]};
-}
-
-IR3 metric_covariant::transform2cylindrical(const IR3& r) const {
-  return {0.0, 0.0, 0.0};
+      0.5 * (dg[dSM3::uuu] + dg[dSM3::uuu] - dg[dSM3::uuu]),  // uuu
+      0.5 * (dg[dSM3::uuv] + dg[dSM3::uvu] - dg[dSM3::uvu]),  // uuv
+      0.5 * (dg[dSM3::uuw] + dg[dSM3::uwu] - dg[dSM3::uwu]),  // uuw
+      0.5 * (dg[dSM3::uvv] + dg[dSM3::uvv] - dg[dSM3::vvu]),  // uvv
+      0.5 * (dg[dSM3::uvw] + dg[dSM3::uwv] - dg[dSM3::vwu]),  // uvw
+      0.5 * (dg[dSM3::uww] + dg[dSM3::uww] - dg[dSM3::wwu]),  // uww
+      0.5 * (dg[dSM3::uvu] + dg[dSM3::uvu] - dg[dSM3::uuv]),  // vuu
+      0.5 * (dg[dSM3::uvv] + dg[dSM3::vvu] - dg[dSM3::uvv]),  // vuv
+      0.5 * (dg[dSM3::uvw] + dg[dSM3::vwu] - dg[dSM3::uwv]),  // vuw
+      0.5 * (dg[dSM3::vvv] + dg[dSM3::vvv] - dg[dSM3::vvv]),  // vvv
+      0.5 * (dg[dSM3::vvw] + dg[dSM3::vwv] - dg[dSM3::vwv]),  // vvw
+      0.5 * (dg[dSM3::vww] + dg[dSM3::vww] - dg[dSM3::wwv]),  // vww
+      0.5 * (dg[dSM3::uwu] + dg[dSM3::uwu] - dg[dSM3::uuw]),  // wuu
+      0.5 * (dg[dSM3::uwv] + dg[dSM3::vwu] - dg[dSM3::uvw]),  // wuv
+      0.5 * (dg[dSM3::uww] + dg[dSM3::wwu] - dg[dSM3::uww]),  // wuw
+      0.5 * (dg[dSM3::vwv] + dg[dSM3::vwv] - dg[dSM3::vvw]),  // wvv
+      0.5 * (dg[dSM3::vww] + dg[dSM3::wwv] - dg[dSM3::vww]),  // wvw
+      0.5 * (dg[dSM3::www] + dg[dSM3::www] - dg[dSM3::www])  // www
+  };
 }
 
 } // end namespace gyronimo.

@@ -44,7 +44,11 @@ class equilibrium_stellnaqs : public IR3field_c1{
   virtual dIR3 del_contravariant(
       const IR3& position, double time) const override;
   virtual IR3 partial_t_contravariant(
-      const IR3& position, double time) const override {return {0.0,0.0,0.0};};
+      const IR3& position, double time) const override {return {0, 0, 0};};
+  virtual IR3 partial_t_covariant(
+      const IR3& position, double time) const override {return {0, 0, 0};};
+  virtual double partial_t_magnitude(
+      const IR3& position, double time) const override {return 0;};
 
   const metric_stellnaqs* metric() const {return metric_;};
   double axis_field() const {return this->m_factor();};
