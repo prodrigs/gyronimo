@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @mrophism_vmec.cc, this file is part of ::gyronimo::
+// @morphism_vmec.cc, this file is part of ::gyronimo::
 
-#include <gyronimo/core/multiroot.hh>
+#include <gyronimo/core/multiroot_c1.hh>
 #include <gyronimo/metrics/morphism_vmec.hh>
 
 #include <numeric>
@@ -88,14 +88,31 @@ IR3 morphism_vmec::inverse(
     const IR3& X, const std::pair<double, double>& guess) const {
   double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
   double r = std::sqrt(x * x + y * y), zeta = std::atan2(y, x);
-  multiroot root_finder(gsl_multiroot_fsolver_hybrids, 1.0e-12, 75);
+  multiroot_c1 root_finder(multiroot_c1::newton, 1.0e-12, 100);
   using IR2 = std::array<double, 2>;
-  std::function<IR2(const IR2&)> zero_function = [&](const IR2& args) -> IR2 {
-    auto [flux, theta] = reflection_past_axis(args[0], args[1]);
-    auto [r_trial, z_trial] = get_rz({flux, zeta, theta});
-    return {r_trial - r, z_trial - z};
-  };
-  auto roots = root_finder(zero_function, IR2 {guess.first, guess.second});
+  using IR4 = std::array<double, 4>;
+  std::function<std::pair<IR2,IR4>(const IR2&)> zero_fdf = 
+    [&](const IR2& args) -> std::pair<IR2,IR4> {
+      auto [s, theta] = reflection_past_axis(args[0], args[1]);
+      auto cis_mn = morphism_vmec::cached_cis(theta, zeta);
+      auto a = std::transform_reduce(index_.begin(), index_.end(), 
+        aux_rz_del_t{0, 0, 0, 0, 0, 0}, std::plus<>(), 
+        [&](size_t i) -> aux_rz_del_t {
+          double r_mn_i = (*r_mn_[i])(s), z_mn_i = (*z_mn_[i])(s);
+          double cos_mn_i = std::real(cis_mn[i]);
+          double sin_mn_i = std::imag(cis_mn[i]);
+          return {
+              r_mn_i * cos_mn_i,  // r_mn_i
+              z_mn_i * sin_mn_i,  // z_mn_i
+              (*r_mn_[i]).derivative(s) * cos_mn_i,  // drdu_mn_i
+              -m_[i] * r_mn_i * sin_mn_i,  // drdw_mn_i
+              (*z_mn_[i]).derivative(s) * sin_mn_i,  // dzdu_mn_i
+              m_[i] * z_mn_i * cos_mn_i  // dzdw_mn_i
+          };
+        });
+      return {{a.r - r, a.z - z}, {a.drdu, a.drdw, a.dzdu, a.dzdw}};
+    };
+  auto roots = root_finder(zero_fdf, IR2 {guess.first, guess.second});
   auto [flux, theta] = reflection_past_axis(roots[0], roots[1]);
   return {flux, zeta, theta};
 }
