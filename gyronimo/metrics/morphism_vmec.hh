@@ -48,6 +48,7 @@ class morphism_vmec : public morphism {
   virtual ~morphism_vmec() override {};
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
+  virtual double jacobian(const IR3& q) const override;
   virtual dIR3 del(const IR3& q) const override;
   virtual ddIR3 ddel(const IR3& q) const override;
   virtual IR3 translation(const IR3& q, const IR3& delta) const override;
@@ -69,14 +70,22 @@ class morphism_vmec : public morphism {
   void build_interpolator_array(
       std::vector<std::unique_ptr<interpolator1d>>& interpolator_array,
       const narray_type& samples_array, const interpolator1d_factory* ifactory);
-  struct aux_rz_t { double r, z; };
-  struct aux_del_t { double r, drdu, drdv, drdw, dzdu, dzdv, dzdw; };
+  struct aux_rz_t {
+    double r, z;
+  };
+  struct aux_rz_del_t {
+    double r, z, drdu, drdw, dzdu, dzdw;
+  };
+  struct aux_del_t {
+    double r, drdu, drdv, drdw, dzdu, dzdv, dzdw;
+  };
   struct aux_ddel_t {
     double r, drdu, drdv, drdw, dzdu, dzdv, dzdw;
     double d2rdudu, d2rdudv, d2rdudw, d2rdvdv, d2rdvdw, d2rdwdw;
     double d2zdudu, d2zdudv, d2zdudw, d2zdvdv, d2zdvdw, d2zdwdw;
   };
   friend aux_rz_t operator+(const aux_rz_t& x, const aux_rz_t& y);
+  friend aux_rz_del_t operator+(const aux_rz_del_t& x, const aux_rz_del_t& y);
   friend aux_del_t operator+(const aux_del_t& x, const aux_del_t& y);
   friend aux_ddel_t operator+(const aux_ddel_t& x, const aux_ddel_t& y);
 };
@@ -103,10 +112,19 @@ inline morphism_vmec::aux_rz_t operator+(
   return {x.r + y.r, x.z + y.z};
 }
 
+inline morphism_vmec::aux_rz_del_t operator+(
+    const morphism_vmec::aux_rz_del_t& x,
+    const morphism_vmec::aux_rz_del_t& y) {
+  return {
+      x.r + y.r, x.z + y.z, x.drdu + y.drdu, x.drdw + y.drdw, x.dzdu + y.dzdu,
+      x.dzdw + y.dzdw};
+}
+
 inline morphism_vmec::aux_del_t operator+(
     const morphism_vmec::aux_del_t& x, const morphism_vmec::aux_del_t& y) {
-  return {x.r + y.r, x.drdu + y.drdu, x.drdv + y.drdv, x.drdw + y.drdw,
-          x.dzdu + y.dzdu, x.dzdv + y.dzdv, x.dzdw + y.dzdw};
+  return {
+      x.r + y.r, x.drdu + y.drdu, x.drdv + y.drdv, x.drdw + y.drdw,
+      x.dzdu + y.dzdu, x.dzdv + y.dzdv, x.dzdw + y.dzdw};
 }
 
 inline morphism_vmec::aux_ddel_t operator+(
