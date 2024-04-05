@@ -1,6 +1,6 @@
 # ::gyronimo:: - gyromotion for the people, by the people -
 # An object-oriented library for gyromotion applications in plasma physics.
-# Copyright (C) 2021-2023 Jorge Ferreira and Paulo Rodrigues.
+# Copyright (C) 2021-2024 Jorge Ferreira and Paulo Rodrigues.
 
 # ::gyronimo:: is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,18 +41,31 @@ option(SUPPORT_DOXYGEN "Configures doc generation by doxygen" OFF)
 include(${CMAKE_SOURCE_DIR}/cmake/dependencies.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
 
-# defines source/build/install for gyronimo library:
+# project-wide resources:
+include_directories(BEFORE ${PROJECT_SOURCE_DIR})
+include_directories(BEFORE ${GSL_INCLUDE_DIRS})
+include_directories(BEFORE ${Boost_INCLUDE_DIRS})
+#link_libraries(${GSL_LIBRARIES})
+
+# defines the set of sources to compile and applies conditional exclusion:
 file(GLOB gyronimo_sources ${PROJECT_SOURCE_DIR}/gyronimo/*/*.cc)
+file(GLOB apps_sources ${PROJECT_SOURCE_DIR}/misc/apps/*.cc)
+include(${CMAKE_SOURCE_DIR}/cmake/conditional-sources.cmake)
+
+# defines build/install for gyronimo library:
 add_library(gyronimo SHARED ${gyronimo_sources})
 set_target_properties(gyronimo PROPERTIES VERSION ${PROJECT_VERSION})
-include_directories(${PROJECT_SOURCE_DIR})
+target_link_libraries(gyronimo PUBLIC ${GSL_LIBRARIES})
+if(SUPPORT_VMEC)
+  target_include_directories(gyronimo PUBLIC ${ncxx4_include_dirs})
+  target_link_libraries(gyronimo PUBLIC ${ncxx4_libraries})
+endif()
 install(TARGETS gyronimo LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/gyronimo
   TYPE INCLUDE MESSAGE_NEVER FILES_MATCHING PATTERN "*.hh")
 
-# defines source/build/install for the available apps:
-file(GLOB apps_sources ${PROJECT_SOURCE_DIR}/misc/apps/*.cc)
+# defines build/install for the available apps:
 foreach(target_file IN LISTS apps_sources)
   get_filename_component(target ${target_file} NAME_WE)
   add_executable(${target} ${target_file})
