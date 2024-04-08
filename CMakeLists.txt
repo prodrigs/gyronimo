@@ -19,8 +19,8 @@
 
 cmake_minimum_required(VERSION 3.19)
 include(${CMAKE_SOURCE_DIR}/cmake/preamble.cmake)
-message("*  Configuring ::gyronimo::v"
-  ${gyronimo_version} " in " ${CMAKE_BUILD_TYPE} " mode:")
+message("*  Configuring ::gyronimo::v" ${gyronimo_version}
+  " (git-commit:" ${GIT_COMMIT_HASH} ") in " ${CMAKE_BUILD_TYPE} " mode:")
 project(
   gyronimo
   VERSION ${gyronimo_version}
@@ -45,7 +45,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
 include_directories(BEFORE ${PROJECT_SOURCE_DIR})
 include_directories(BEFORE ${GSL_INCLUDE_DIRS})
 include_directories(BEFORE ${Boost_INCLUDE_DIRS})
-#link_libraries(${GSL_LIBRARIES})
 
 # defines the set of sources to compile and applies conditional exclusion:
 file(GLOB gyronimo_sources ${PROJECT_SOURCE_DIR}/gyronimo/*/*.cc)
@@ -56,6 +55,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/conditional-sources.cmake)
 add_library(gyronimo SHARED ${gyronimo_sources})
 set_target_properties(gyronimo PROPERTIES VERSION ${PROJECT_VERSION})
 target_link_libraries(gyronimo PUBLIC ${GSL_LIBRARIES})
+
 if(SUPPORT_VMEC)
   target_include_directories(gyronimo PUBLIC ${ncxx4_include_dirs})
   target_link_libraries(gyronimo PUBLIC ${ncxx4_libraries})

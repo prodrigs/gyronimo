@@ -20,12 +20,19 @@
 #ifndef GYRONIMO_VERSION
 #define GYRONIMO_VERSION
 
+#include <string_view>
+
 namespace gyronimo {
 
 constexpr int version_major = 0;
 constexpr int version_minor = 3;
 constexpr int version_patch = 1;
 
-} // end namespace gyronimo.
+#ifndef GYRONIMO_GIT_COMMIT_HASH
+#define GYRONIMO_GIT_COMMIT_HASH "unavailable"
+#endif
+constexpr std::string_view git_commit_hash = GYRONIMO_GIT_COMMIT_HASH;
 
-#endif // GYRONIMO_VERSION
+}  // end namespace gyronimo.
+
+#endif  // GYRONIMO_VERSION
