@@ -32,8 +32,8 @@ dIR3 IR3field_c1::del_covariant(const IR3& position, double time) const {
   const metric_covariant *g = this->metric();
   dIR3 c1 = contraction<second>(
       (*g).del(position), this->contravariant(position, time));
-  dIR3 c2 = contraction<second, first>(
-      (*g)(position), this->del_contravariant(position, time));
+  dIR3 c2 = contraction<first>(
+      this->del_contravariant(position, time), (*g)(position));
   return {
       c1[dIR3::uu] + c2[dIR3::uu], c1[dIR3::uv] + c2[dIR3::uv],
       c1[dIR3::uw] + c2[dIR3::uw], c1[dIR3::vu] + c2[dIR3::vu],
