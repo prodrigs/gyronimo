@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2023 Paulo Rodrigues.
+// Copyright (C) 2023-2024 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,13 +43,13 @@ class morphism_cache : public T {
   virtual ddIR3 ddel(const IR3& q) const override;
   virtual double jacobian(const IR3& q) const override;
   virtual dIR3 del_inverse(const IR3& q) const override;
-  virtual dIR3 tan_basis(const IR3& q) const override;
-  virtual dIR3 dual_basis(const IR3& q) const override;
   virtual IR3 to_covariant(const IR3& A, const IR3& q) const override;
   virtual IR3 to_contravariant(const IR3& A, const IR3& q) const override;
   virtual IR3 from_covariant(const IR3& A, const IR3& q) const override;
   virtual IR3 from_contravariant(const IR3& A, const IR3& q) const override;
   virtual IR3 translation(const IR3& q, const IR3& delta) const override;
+  virtual std::array<IR3, 3> tan_basis(const IR3& q) const override;
+  virtual std::array<IR3, 3> dual_basis(const IR3& q) const override;
  private:
   static inline IR3 un_init_ = {123456789., 987654321., 192837465.};
 };
@@ -102,17 +102,17 @@ dIR3 morphism_cache<T>::del_inverse(const IR3& q) const {
   return cache_eval = T::del_inverse(q);
 }
 template<typename T> requires std::derived_from<T, morphism>
-dIR3 morphism_cache<T>::tan_basis(const IR3& q) const {
+std::array<IR3, 3> morphism_cache<T>::tan_basis(const IR3& q) const {
   thread_local IR3 cache_q = un_init_;
-  thread_local dIR3 cache_eval = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+  thread_local std::array<IR3, 3> cache_eval = {un_init_, un_init_, un_init_};
   if (q == cache_q) return cache_eval;
   cache_q = q;
   return cache_eval = T::tan_basis(q);
 }
 template<typename T> requires std::derived_from<T, morphism>
-dIR3 morphism_cache<T>::dual_basis(const IR3& q) const {
+std::array<IR3, 3> morphism_cache<T>::dual_basis(const IR3& q) const {
   thread_local IR3 cache_q = un_init_;
-  thread_local dIR3 cache_eval = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+  thread_local std::array<IR3, 3> cache_eval = {un_init_, un_init_, un_init_};
   if (q == cache_q) return cache_eval;
   cache_q = q;
   return cache_eval = T::dual_basis(q);
