@@ -26,7 +26,7 @@ namespace gyronimo {
 
 //! Symmetric 3x3 matrix (i.e., SM3).
 /*!
-    *Aggregate* type, natively supporting list initialization. The index
+    _Aggregate_ type, natively supporting list initialization. The index
     operator `B[SM3::ij]` returns the component @f$B^{ij}@f$ (for contravariant
     tensors) or @f$B_{ij}@f$ (for covariant tensors) with `i,j = u, v, w`.
 */
@@ -42,10 +42,10 @@ class SM3 {
 
 //! Partial derivatives of a symmetric 3x3 matrix.
 /*!
-    *Aggregate* type, natively supporting list initialization. The index
-    operator `B[dSM3::ijk]` returns the value @f$\partial_k B^{ij}@f$ (for
-    contravariant tensors) or @f$\partial_k B_{ij}@f$ (for covariant tensors)
-    with `i,j,k = u, v, w`.
+    _Aggregate_ type, natively supporting list initialization. The index
+    operator `B[dSM3::ijk]` returns the value @f$ \partial_k B^{ij} \equiv
+    {B^{ij}}_{,k} @f$ (for contravariant tensors) or @f$ \partial_k B_{ij}
+    \equiv B_{ij,k} @f$ (for covariant tensors) with `i,j,k = u, v, w`.
 */
 class dSM3 {
  public:

@@ -26,7 +26,19 @@
 
 namespace gyronimo {
 
-//! Covariant metric connected to a defining `morphism`.
+//! Covariant metric connected to a defining `gyronimo::morphism`.
+/*!
+    Unlike `metric_covariant`, here the underlying transformation from the
+    specific curvilinear coordinates into the cartesian space is established by
+    the `gyronimo::morphism` object supplied at the construction. This
+    information is sufficient to override every abstract member function of the
+    parent class (and some non-abstract member functions also) with
+    general-purpose implementations. In this sense, `metric_connected` is
+    already a full functional (i.e., instantiable) object. However, it can be
+    used as a parent for derived classes intended to override some of its member
+    functions in order to have them specialised (and thus optimised) according
+    to the particular properties enjoyed by specific coordinate sets.
+*/
 class metric_connected : public metric_covariant {
  public:
   metric_connected(const morphism* m) : my_morphism_(m) {};
@@ -48,22 +60,14 @@ inline double metric_connected::jacobian(const IR3& q) const {
   return my_morphism_->jacobian(q);
 }
 
-//! General Christoffel symbol @f$\Gamma_{kij}@f$ from parent `morphism`.
-/*!
-    @f{equation*}{\Gamma_{kij} = \textbf{e}_k \cdot
-          \frac{\partial^2 \textbf{x}}{\partial q^i \, \partial q^j}@f}
-*/
+//! Christoffel @f$\Gamma_{kij}=\mathbf{e}_k\cdot\partial^2_{ij}\mathbf{x}@f$.
 inline ddIR3 metric_connected::christoffel_first_kind(const IR3& q) const {
-  return contraction<first, first>(my_morphism_->del(q), my_morphism_->ddel(q));
+  return contraction<first>(my_morphism_->del(q), my_morphism_->ddel(q));
 }
 
-//! General Christoffel symbol @f$\Gamma^k_{ij}@f$ from parent `morphism`.
-/*!
-    @f{equation*}{\Gamma^k_{ij} = \textbf{e}^k \cdot
-          \frac{\partial^2 \textbf{x}}{\partial q^i \, \partial q^j}@f}
-*/
+//! Christoffel @f$\Gamma^k_{ij}=\mathbf{e}^k\cdot\partial^2_{ij}\mathbf{x}@f$.
 inline ddIR3 metric_connected::christoffel_second_kind(const IR3& q) const {
-  return contraction<second, first>(
+  return contraction<second>(
       my_morphism_->del_inverse(q), my_morphism_->ddel(q));
 }
 

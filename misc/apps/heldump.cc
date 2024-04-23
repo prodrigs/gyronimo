@@ -38,7 +38,7 @@
 void print_help() {
   std::cout << "heldump, powered by ::gyronimo::v" << gyronimo::version_major
             << "." << gyronimo::version_minor << "." << gyronimo::version_patch
-            << ".\n";
+            << " (git-commit:" << gyronimo::git_commit_hash << ").\n";
   std::string help_message =
       "usage: heldump [options] helena_output_file\n"
       "reads an helena output file, prints required information to stdout.\n"

@@ -43,7 +43,7 @@
 void print_help() {
   std::cout << "heltrace, powered by ::gyronimo::v" << gyronimo::version_major
             << "." << gyronimo::version_minor << "." << gyronimo::version_patch
-            << ".\n";
+            << " (git-commit:" << gyronimo::git_commit_hash << ").\n";
   std::string help_message =
       "usage: heltrace [options] helena_output_file\n"
       "reads an helena output file, prints guiding-centre orbit to stdout.\n"
@@ -168,9 +168,9 @@ int main(int argc, char* argv[]) {
   double Lref = heq.R0();
 
   // Prints output header:
-  std::cout << "# heltrace, powered by ::gyronimo::v" << gyronimo::version_major
+  std::cout << "heltrace, powered by ::gyronimo::v" << gyronimo::version_major
             << "." << gyronimo::version_minor << "." << gyronimo::version_patch
-            << ".\n";
+            << " (git-commit:" << gyronimo::git_commit_hash << ").\n";
   std::cout << "# args: ";
   for (int i = 1; i < argc; i++) std::cout << argv[i] << " ";
   std::cout << std::endl;
@@ -193,8 +193,9 @@ int main(int argc, char* argv[]) {
       get_initial_radial_position(pphi, zstar, vdagger, lambda, vpp_sign, heq);
   gyronimo::guiding_centre::state initial_state = gc.generate_state(
       {initial_radial_position, 0.0, 0.0}, energySI / Ualfven,
-      (vpp_sign > 0 ? gyronimo::guiding_centre::plus
-                    : gyronimo::guiding_centre::minus), 0);
+      (vpp_sign > 0 ? gyronimo::guiding_centre::plus :
+                      gyronimo::guiding_centre::minus),
+      0);
 
   // integrates for t in [0,tfinal], with dt=tfinal/nsamples, using RK4.
   std::cout.precision(16);

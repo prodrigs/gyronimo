@@ -32,14 +32,9 @@ SM3 metric_connected::operator()(const IR3& q) const {
   return g;
 }
 
-//! General covariant-metric derivatives from parent `morphism`.
-/*!
-    Extracts the metric derivatives from the Christoffel symbol of the first
-    kind following the rule @f$\partial_k \, g_{ij} = \Gamma_{ijk} +
-    \Gamma_{jik}@f$.
-*/
+//! Metric derivatives via @f$\partial_k g_{ij}=\Gamma_{ijk}+\Gamma_{jik}@f$.
 dSM3 metric_connected::del(const IR3& q) const {
-  ddIR3 gamma = christoffel_first_kind(q);
+  ddIR3 gamma = this->christoffel_first_kind(q);
   return {
       gamma[ddIR3::uuu] + gamma[ddIR3::uuu],  // uuu
       gamma[ddIR3::uuv] + gamma[ddIR3::uuv],  // uuv
@@ -62,13 +57,7 @@ dSM3 metric_connected::del(const IR3& q) const {
   };
 }
 
-//! General jacobian gradient from parent `morphism`.
-/*!
-    @f{equation*}{
-    \partial_i J = J \left(
-        \Gamma^1_{i 1} + \Gamma^2_{i 2} + \Gamma^3_{i 3} \right)
-    @f}
-*/
+//! Jacobian gradient via @f$J^{-1} \partial_i J = \Gamma^j_{ij}@f$.
 IR3 metric_connected::del_jacobian(const IR3& q) const {
   dIR3 ee = my_morphism_->del_inverse(q);
   ddIR3 de = my_morphism_->ddel(q);
