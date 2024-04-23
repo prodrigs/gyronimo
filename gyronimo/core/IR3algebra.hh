@@ -27,7 +27,7 @@ namespace gyronimo {
 
 //! Vector in @f$\mathbb{R}^3@f$ (i.e., IR3).
 /*!
-    *Non-aggregate* type, with implemented support for list initialization.
+    _Non-aggregate_ type, with implemented support for list initialization.
     Vectorised algebraic operations are also supported by overloading the
     corresponding operators (+, -, *, /, +=, -=, *=, /=) and temporary storage
     is avoided with expression templates. The index operator `B[IR3::i]` returns
@@ -91,11 +91,11 @@ class IR3 : public  std::array<double, 3> {
 
 //! Partial derivatives of a @f$\mathbb{R}^3@f$ vector.
 /*!
-    **Aggregate** type supporting list initialization. Unlike `IR3`, no
-    vectorised algebraic operations are supported. The index operator
-    `B[dIR3::ij]` returns the value @f$\partial_j B^i@f$ (for contravariant
-    vectors) or @f$\partial_j B_i@f$ (for covariant vectors) with `i,j = u, v,
-    w`.
+    _Aggregate_ type supporting list initialization. Unlike `IR3`, no vectorised
+    algebraic operations are supported. The index operator `B[dIR3::ij]` returns
+    the value @f$ \partial_j B^i \equiv {B^i}_{,j} @f$ (for contravariant
+    vectors) or @f$ \partial_j B_i \equiv {B_i}_{,j} @f$ (for covariant vectors)
+    with `i,j = u, v, w`.
 */
 class dIR3 {
  public:
@@ -115,11 +115,12 @@ class dIR3 {
 
 //! Second partial derivatives of a @f$\mathbb{R}^3@f$ vector.
 /*!
-    **Aggregate** type supporting list initialization. Unlike `IR3`, no
-    vectorised algebraic operations are supported. The index operator
-    `B[ddIR3::ijk]` returns the value @f$\partial_j\partial_k B^i@f$ (for
-    contravariant vectors) or @f$\partial_j\partial_k B_i@f$ (for covariant
-    vectors) with `i,j,k = u, v, w`.
+    _Aggregate_ type supporting list initialization. Unlike `IR3`, no vectorised
+    algebraic operations are supported. The index operator `B[ddIR3::ijk]`
+    returns the value @f$ \partial^2_{jk} B^i \equiv {B^i}_{,jk} @f$ (for
+    contravariant vectors) or @f$ \partial^2_{jk} B_i \equiv {B_i}_{,jk} @f$
+    (for covariant vectors) with `i,j,k = u, v, w`. Notice the symmetry in the
+    last two indices.
 */
 class ddIR3 {
  public:
@@ -145,7 +146,7 @@ dIR3 inverse(const dIR3& m);
 
 //! Binary operation between two arbitrary types with `operator[i]`.
 /*!
-    Used to build at **compile time** Expression Templates representing an
+    Used to build at _compile time_ Expression Templates representing an
     arbitrary combination of indexed objects via binary operations. The objects
     being used must have `operator[i]` implemented.
 */

@@ -42,8 +42,9 @@
 using namespace gyronimo;
 
 void print_help() {
-  std::cout << "vmectrace, powered by ::gyronimo::v" << version_major
-            << "." << version_minor << "." << version_patch << ".\n";
+  std::cout << "vmectrace, powered by ::gyronimo::v" << version_major << "."
+            << version_minor << "." << version_patch
+            << " (git-commit:" << git_commit_hash << ").\n";
   std::string help_message =
       "usage: vmectrace [options] vmec_netcdf_file\n"
       "reads a vmec output file, prints guiding-centre orbit to stdout.\n"
@@ -113,13 +114,15 @@ int main(int argc, char* argv[]) {
   double energy_ref = 0.5 * codata::m_proton * mass * vref * vref;
   double energy_si = energy * codata::e;
   guiding_centre gc(
-      lref, vref, charge / mass, lambda * energy_si / energy_ref, &veq, nullptr);
+      lref, vref, charge / mass, lambda * energy_si / energy_ref, &veq,
+      nullptr);
   guiding_centre::state initial_state = gc.generate_state(
       {flux, zeta, theta}, energy_si / energy_ref,
       (vpp_sign > 0 ? guiding_centre::plus : guiding_centre::minus), 0);
 
-  std::cout << "# vmectrace, powered by ::gyronimo::v" << version_major << "."
-            << version_minor << " " << version_patch << ".\n";
+  std::cout << "vmectrace, powered by ::gyronimo::v" << version_major << "."
+            << version_minor << "." << version_patch
+            << " (git-commit:" << git_commit_hash << ").\n";
   std::cout << "# args: ";
   for (int i = 1; i < argc; i++) std::cout << argv[i] << " ";
   std::cout << std::endl

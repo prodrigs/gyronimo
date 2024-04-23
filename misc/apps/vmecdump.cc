@@ -40,9 +40,9 @@
 using namespace gyronimo;
 
 void print_help() {
-  std::cout << "vmecdump, powered by ::gyronimo::v" << gyronimo::version_major
-            << "." << gyronimo::version_minor << "."
-            << gyronimo::version_patch << ".\n";
+  std::cout << "vmecdump, powered by ::gyronimo::v" << version_major << "."
+            << version_minor << "." << version_patch
+            << " (git-commit:" << git_commit_hash << ").\n";
   std::string help_message =
       "usage: vmecdump [options] vmec_netcdf_file\n"
       "reads a vmec output file, prints required information to stdout.\n"

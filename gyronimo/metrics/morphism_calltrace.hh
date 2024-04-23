@@ -43,13 +43,13 @@ class morphism_calltrace : public T {
   virtual ddIR3 ddel(const IR3& q) const override;
   virtual double jacobian(const IR3& q) const override;
   virtual dIR3 del_inverse(const IR3& q) const override;
-  virtual dIR3 tan_basis(const IR3& q) const override;
-  virtual dIR3 dual_basis(const IR3& q) const override;
   virtual IR3 to_covariant(const IR3& A, const IR3& q) const override;
   virtual IR3 to_contravariant(const IR3& A, const IR3& q) const override;
   virtual IR3 from_covariant(const IR3& A, const IR3& q) const override;
   virtual IR3 from_contravariant(const IR3& A, const IR3& q) const override;
   virtual IR3 translation(const IR3& q, const IR3& delta) const override;
+  virtual std::array<IR3, 3> tan_basis(const IR3& q) const override;
+  virtual std::array<IR3, 3> dual_basis(const IR3& q) const override;
  private:
   static inline IR3 un_init_ = {123456789., 987654321., 192837465.};
 };
@@ -85,12 +85,12 @@ dIR3 morphism_calltrace<T>::del_inverse(const IR3& q) const {
   return T::del_inverse(q);
 }
 template<typename T> requires std::derived_from<T, morphism>
-dIR3 morphism_calltrace<T>::tan_basis(const IR3& q) const {
+std::array<IR3, 3> morphism_calltrace<T>::tan_basis(const IR3& q) const {
   std::cout << "morphism::tan_basis(q)\n";
   return T::tan_basis(q);
 }
 template<typename T> requires std::derived_from<T, morphism>
-dIR3 morphism_calltrace<T>::dual_basis(const IR3& q) const {
+std::array<IR3, 3> morphism_calltrace<T>::dual_basis(const IR3& q) const {
   std::cout << "morphism::dual_basis(q)\n";
   return T::dual_basis(q);
 }

@@ -25,29 +25,21 @@
 
 namespace gyronimo {
 
-enum variance_type {covariant, contravariant};
-enum contraction_index {first, second, third};
+enum variance_type { covariant, contravariant };
+enum contraction_index { first, second, third };
 
-IR3 contraction(const SM3& g, const IR3& B);
 double inner_product(const IR3& A, const IR3& B);
-IR3 cross_product(const IR3& A, const IR3& B);
+IR3 contraction(const SM3& g, const IR3& B);
+template<contraction_index> IR3 contraction(const dIR3& A, const IR3& B);
+template<contraction_index> dIR3 contraction(const dSM3& A, const IR3& B);
+template<contraction_index> dIR3 contraction(const dIR3& A, const SM3& B);
+template<contraction_index> ddIR3 contraction(const ddIR3& A, const SM3& g);
+template<contraction_index> ddIR3 contraction(const dIR3& A, const ddIR3& B);
 dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h);
-
+IR3 cross_product(const IR3& A, const IR3& B);
 template<variance_type>
 IR3 cross_product(const IR3& A, const IR3& B, double jacobian);
-template<contraction_index>
-IR3 contraction(const dIR3& dA, const IR3& B);
-template<contraction_index>
-dIR3 contraction(const dSM3& dA, const IR3& B);
-template<contraction_index, contraction_index>
-IR3 contraction(const ddIR3& ddA, const IR3& B, const IR3& C);
-template<contraction_index, contraction_index>
-ddIR3 contraction(const SM3& g, const ddIR3& ddA);
-template<contraction_index, contraction_index>
-ddIR3 contraction(const dIR3& dA, const ddIR3& ddB);
-template<contraction_index, contraction_index>
-dIR3 contraction(const SM3& g, const dIR3& dB);
 
-} // end namespace gyronimo.
+}  // end namespace gyronimo.
 
-#endif // end GYRONIMO_CONTRACTION
+#endif  // end GYRONIMO_CONTRACTION

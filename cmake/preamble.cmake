@@ -31,6 +31,18 @@ if(${KNOWN_BUILD_TYPE} LESS "0")
   message(FATAL_ERROR "Unknown build type " ${CMAKE_BUILD_TYPE} ".")
 endif()
 
+# gets the latest commit hash and routes it to version.hh via compile flag:
+find_program(git_found "git")
+if(git_found)
+  execute_process(
+    COMMAND git rev-parse --short=16 HEAD WORKING_DIRECTORY
+    ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+  set(GIT_COMMIT_HASH "unavailable")
+endif()
+add_compile_definitions("-DGYRONIMO_GIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
+
 # extracts version numbers from version.hh, stores output in gyronimo_version:
 set(version_major_regex "[ \t]*constexpr int version_major = ([0-9]+);")
 set(version_minor_regex "[ \t]*constexpr int version_minor = ([0-9]+);")

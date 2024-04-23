@@ -30,15 +30,21 @@ namespace gyronimo {
 /*!
     Requires derived classes to implement the 6 independent components @f$
     g_{ij} @f$ of the covariant metric tensor for a given coordinate system in
-    IR^3 [via the `operator()()` method] and their corresponding 18 partial
-    derivatives [via the `del()` method]. The class implements general methods
-    to compute the Jacobian (square root of its determinant) and its gradient,
-    to transform contravariant vectors into covariant ones and conversely. These
-    three methods are left as virtual to allow more efficient reimplementations
-    in derived classes, if needed. The `q` argument stands for the three
-    contravariant components @f$ q^i @f$ of the position vector @f$ \vec{q} @f$
-    in each specific coordinate set. Regarding units, all methods must ensure
-    that @f$g_{ij} q^i q^j@f$ returns values in SI (m^2).
+    @f$\mathbb{R}^3@f$ [via the `operator()()` method] and their corresponding
+    18 partial derivatives [via the `del()` method]. The class implements
+    general methods to compute the Jacobian (square root of its determinant) and
+    its gradient, to transform contravariant vectors into covariant ones and
+    conversely, to get its inverse derivatives, and to get Christoffel's
+    symbols. These methods are left as virtual to allow more efficient
+    reimplementations in derived classes, if needed. The `IR3 q` argument stands
+    for the three independent variables mapping the underlying coordinate system
+    to the cartesian space via some invertible mapping @f$ \mathbf{x}(q^u, q^v,
+    q^w) @f$. Notice that such mapping (i.e., a `gyronimo::morphism`) does not
+    have to be explicitly known at this level, only the components @f$ g_{ij} =
+    \partial_i \mathbf{x} \cdot \partial_j \mathbf{x} @f$ and their derivatives.
+    Regarding units, all methods must ensure that @f$g_{ij} q^i q^j@f$ returns
+    values in SI (m^2). **Atention**: the coordinates @f$ \{q^u, q^v, q^w\} @f$
+    must be right-hand ordered to ensure a positive determinant.
 */
 class metric_covariant {
  public:
@@ -77,15 +83,8 @@ inline IR3 metric_covariant::to_contravariant(
 
 //! General Christoffel symbol @f$\Gamma^k_{ij} = g^{km} \, \Gamma_{mij}@f$.
 inline ddIR3 metric_covariant::christoffel_second_kind(const IR3& q) const {
-  return contraction<second, first>(
-      this->inverse(q), this->christoffel_first_kind(q));
-}
-
-//! Inertial force @f$ F^k = - \Gamma^k_{ij} \, \dot{q}^i \, \dot{q}^j @f$.
-inline IR3 metric_covariant::inertial_force(
-    const IR3& q, const IR3& dot_q) const {
-  ddIR3 gamma = christoffel_second_kind(q);
-  return (-1.0) * contraction<second, third>(gamma, dot_q, dot_q);
+  return contraction<first>(
+      this->christoffel_first_kind(q), this->inverse(q));
 }
 
 }  // namespace gyronimo

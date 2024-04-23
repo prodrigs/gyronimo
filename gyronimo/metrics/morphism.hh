@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2024 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,13 +48,15 @@ class morphism {
 
   virtual double jacobian(const IR3& q) const;
   virtual dIR3 del_inverse(const IR3& q) const;
-  virtual dIR3 tan_basis(const IR3& q) const;
-  virtual dIR3 dual_basis(const IR3& q) const;
   virtual IR3 to_covariant(const IR3& A, const IR3& q) const;
   virtual IR3 to_contravariant(const IR3& A, const IR3& q) const;
   virtual IR3 from_covariant(const IR3& A, const IR3& q) const;
   virtual IR3 from_contravariant(const IR3& A, const IR3& q) const;
   virtual IR3 translation(const IR3& q, const IR3& delta) const;
+  virtual std::array<IR3, 3> tan_basis(const IR3& q) const;
+  virtual std::array<IR3, 3> dual_basis(const IR3& q) const;
+ private:
+  std::array<IR3, 3> export_basis_set(const dIR3& d) const;
 };
 
 inline dIR3 morphism::del_inverse(const IR3& q) const {
@@ -62,10 +64,14 @@ inline dIR3 morphism::del_inverse(const IR3& q) const {
 }
 
 //! Tangent basis @f$ \textbf{e}_\gamma = \partial_\gamma \mathbf{x} @f$.
-inline dIR3 morphism::tan_basis(const IR3& q) const { return del(q); }
+inline std::array<IR3, 3> morphism::tan_basis(const IR3& q) const {
+  return this->export_basis_set(this->del(q));
+}
 
 //! Dual basis @f$ \textbf{e}^\gamma = \nabla q^\gamma(\mathbf{x}) @f$.
-inline dIR3 morphism::dual_basis(const IR3& q) const { return del_inverse(q); }
+inline std::array<IR3, 3> morphism::dual_basis(const IR3& q) const {
+  return this->export_basis_set(this->del_inverse(q));
+}
 
 //! Covariant components of cartesian `A` at curvilinear @f$q^\gamma@f$.
 inline IR3 morphism::to_covariant(const IR3& A, const IR3& q) const {
@@ -90,6 +96,13 @@ inline IR3 morphism::from_contravariant(const IR3& A, const IR3& q) const {
 //! Curvilinear after cartesian displacement @f$\mathbf{x}(q^\gamma)+\delta@f$.
 inline IR3 morphism::translation(const IR3& q, const IR3& delta) const {
   return this->inverse((*this)(q) + delta);
+}
+
+inline std::array<IR3, 3> morphism::export_basis_set(const dIR3& d) const {
+  return {
+      IR3 {d[dIR3::uu], d[dIR3::vu], d[dIR3::wu]},
+      IR3 {d[dIR3::uv], d[dIR3::vv], d[dIR3::wv]},
+      IR3 {d[dIR3::uw], d[dIR3::vw], d[dIR3::ww]}};
 }
 
 }  // end namespace gyronimo
