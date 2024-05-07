@@ -38,7 +38,8 @@ namespace gyronimo {
     supplied. Contravariant components have dimensions of [m^{-1}]. Being an
     **equilibrium** field, `t_factor` is set to one. Only the minimal interface
     is implemented here, all other functionality is inherited from the parent
-    classes.
+    classes. Also, only stellarator-symmetric configurations are presently
+    supported.
 */
 class equilibrium_vmec : public IR3field_c1 {
  public:

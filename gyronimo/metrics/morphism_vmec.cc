@@ -46,6 +46,8 @@ morphism_vmec::morphism_vmec(
     const parser_vmec* p, const interpolator1d_factory* ifactory)
     : parser_(p), harmonics_(p->mnmax()), m_(p->xm()), n_(p->xn()),
       index_(harmonics_), r_mn_(p->mnmax()), z_mn_(p->mnmax()) {
+  if (!p->is_stell_symmetric())
+      error(__func__, __FILE__, __LINE__, "stell asymmetry not supported.", 1);
   std::iota(index_.begin(), index_.end(), 0);
   this->build_interpolator_array(r_mn_, parser_->rmnc(), ifactory);
   this->build_interpolator_array(z_mn_, parser_->zmns(), ifactory);

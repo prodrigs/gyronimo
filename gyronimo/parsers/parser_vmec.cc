@@ -45,7 +45,7 @@ parser_vmec::parser_vmec(const std::string& filename) {
     get_data(dataFile, "jcuru", jcuru_);
     get_data(dataFile, "jcurv", jcurv_);
     get_data(dataFile, "jdotb", jdotb_);
-    get_data(dataFile, "lasym__logical__", is_axisymmetric_);
+    get_data(dataFile, "lasym__logical__", stell_symmetry_flag_);
     get_data(dataFile, "mass", mass_);
     get_data(dataFile, "mnmax", mnmax_);
     get_data(dataFile, "mnmax_nyq", mnmax_nyq_);

@@ -37,7 +37,9 @@ namespace gyronimo {
     normalised to its boundary value (`u`, or `VMEC` @f$\chi@f$), the toroidal
     angle (`v`, or `VMEC` @f$\zeta@f$, in rads) measured **counter-clockwise**
     when looking from the torus top, and an angle on the poloidal cross section
-    (`w`, or `VMEC` @f$\theta@f$, also in rads). More info at the website
+    (`w`, or `VMEC` @f$\theta@f$, also in rads). Only stellarator-symmetric
+    configurations are presently supported and an error is issued at
+    construction otherwise. More info at the website
     [STELLOPT](https://princetonuniversity.github.io/STELLOPT/VMEC.html).
 */
 class morphism_vmec : public morphism {
