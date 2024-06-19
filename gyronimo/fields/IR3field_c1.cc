@@ -52,8 +52,25 @@ IR3 IR3field_c1::partial_t_covariant(const IR3& position, double time) const {
   return this->metric()->to_covariant(dE, position);
 }
 
+//! Divergence of the field.
+/*!
+    Implements the rule
+    \f$ \nabla\cdot\mathbf{E} =
+        \partial_i E^i + \sqrt{g}^{-1} E^i \partial_i \sqrt{g} \f$
+*/
+double IR3field_c1::div(const IR3& position, double time) const {
+  double ijacobian = 1.0 / this->metric()->jacobian(position);
+  IR3 E = this->contravariant(position, time);
+  dIR3 dE = this->del_contravariant(position, time);
+  return dE[dIR3::uu] + dE[dIR3::vv] + dE[dIR3::ww] +
+      ijacobian * inner_product(E, this->metric()->del_jacobian(position));
+}
+
 //! Contravariant components of the curl operator.
-//  Note: dE[ij]=d_j E_i, J curl^k = e^kij (d_i E_j - d_j E_i)
+/*!
+    Implements the rule
+    \f$ \sqrt{g}(\nabla\times\mathbf{E})^k = \epsilon^{kij}\partial_iE_j \f$
+*/
 IR3 IR3field_c1::curl(const IR3& position, double time) const {
   double ijacobian = 1.0 / this->metric()->jacobian(position);
   dIR3 dE = this->del_covariant(position, time);

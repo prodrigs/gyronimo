@@ -57,6 +57,7 @@ class IR3field_c1 : public IR3field {
   virtual dIR3 del_covariant( const IR3& position, double time) const;
   virtual IR3 partial_t_covariant(const IR3& position, double time) const;
   virtual IR3 curl(const IR3& position, double time) const;
+  virtual double div(const IR3& position, double time) const;
 };
 
 } // end namespace gyronimo.
