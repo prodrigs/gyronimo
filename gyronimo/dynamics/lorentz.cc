@@ -92,11 +92,16 @@ double lorentz::energy_kinetic(const state& s) const {
   return inner_product(dot_tilde_q, metric_->to_covariant(dot_tilde_q, q));
 }
 
-//! Returns the parallel energy of the state, normalized to `Uref`.
-double lorentz::energy_parallel(const state& s, const double& time) const {
+//! Returns the parallel velocity of the state, normalized to `Vref`.
+double lorentz::v_parallel(const state& s, const double& time) const {
   IR3 q = this->get_position(s), dot_tilde_q = this->get_velocity(s);
   IR3 b = magnetic_field_->covariant_versor(q, iB_time_factor_ * time);
-  double v_parallel = inner_product(dot_tilde_q, b);
+  return inner_product(dot_tilde_q, b);
+}
+
+//! Returns the parallel energy of the state, normalized to `Uref`.
+double lorentz::energy_parallel(const state& s, const double& time) const {
+  double v_parallel = this->v_parallel(s, time);
   return v_parallel * v_parallel;
 }
 

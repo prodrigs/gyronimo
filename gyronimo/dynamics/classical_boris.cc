@@ -72,6 +72,15 @@ classical_boris::state classical_boris::do_step(
   return this->generate_state(updated_q, updated_v);
 }
 
+//! Returns the parallel velocity of the state, normalised to `Vref`.
+double classical_boris::v_parallel(
+    const state& s, const double& time) const {
+  IR3 q = this->get_position(s), v = this->get_velocity(s);
+  IR3 b = my_morphism_->from_contravariant(
+      magnetic_field_->contravariant_versor(q, time * iB_time_factor_), q);
+  return inner_product(v, b);
+}
+
 //! Returns the kinetic energy of the state, normalised to `Uref`.
 double classical_boris::energy_kinetic(const state& s) const {
   IR3 v = this->get_velocity(s);
@@ -81,10 +90,7 @@ double classical_boris::energy_kinetic(const state& s) const {
 //! Returns the parallel energy of the state, normalised to `Uref`.
 double classical_boris::energy_parallel(
     const state& s, const double& time) const {
-  IR3 q = this->get_position(s), v = this->get_velocity(s);
-  IR3 b = my_morphism_->from_contravariant(
-      magnetic_field_->contravariant_versor(q, time * iB_time_factor_), q);
-  double v_parallel = inner_product(v, b);
+  double v_parallel = this->v_parallel(s, time);
   return v_parallel * v_parallel;
 }
 
