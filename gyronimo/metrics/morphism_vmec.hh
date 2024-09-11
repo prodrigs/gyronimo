@@ -20,6 +20,7 @@
 #ifndef GYRONIMO_MORPHISM_VMEC
 #define GYRONIMO_MORPHISM_VMEC
 
+#include <gyronimo/core/multiroot_c1.hh>
 #include <gyronimo/interpolators/interpolator1d.hh>
 #include <gyronimo/metrics/morphism.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
@@ -43,8 +44,10 @@ namespace gyronimo {
 class morphism_vmec : public morphism {
  public:
   using narray_type = parser_vmec::narray_type;
+  const static multiroot_c1::configuration_t default_configuration_;
   morphism_vmec(
-      const parser_vmec* parser, const interpolator1d_factory* ifactory);
+      const parser_vmec* parser, const interpolator1d_factory* ifactory,
+      const multiroot_c1::configuration_t& configuration = default_configuration_);
   virtual ~morphism_vmec() override {};
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
@@ -61,6 +64,7 @@ class morphism_vmec : public morphism {
   const narray_type m_, n_;
   std::vector<size_t> index_;
   std::vector<std::unique_ptr<interpolator1d>> r_mn_, z_mn_;
+  const multiroot_c1 inverse_root_finder_;
 
   using cis_container_t = std::vector<std::complex<double>>;
   const cis_container_t& cached_cis(double theta, double zeta) const;

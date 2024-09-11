@@ -17,7 +17,6 @@
 
 // @morphism_vmec.cc, this file is part of ::gyronimo::
 
-#include <gyronimo/core/multiroot_c1.hh>
 #include <gyronimo/metrics/morphism_vmec.hh>
 
 #include <numeric>
@@ -42,10 +41,16 @@ const morphism_vmec::cis_container_t& morphism_vmec::cached_cis(
   return cis_mn;
 }
 
+const multiroot_c1::configuration_t morphism_vmec::default_configuration_ =
+{.method = gsl_multiroot_fdfsolver_newton, .tolerance_abs = 1e-12,
+.tolerance_rel = 1e-12, .is_residual_tested = false, .iterations = 10};
+
 morphism_vmec::morphism_vmec(
-    const parser_vmec* p, const interpolator1d_factory* ifactory)
+    const parser_vmec* p, const interpolator1d_factory* ifactory,
+    const multiroot_c1::configuration_t& configuration)
     : parser_(p), harmonics_(p->mnmax()), m_(p->xm()), n_(p->xn()),
-      index_(harmonics_), r_mn_(p->mnmax()), z_mn_(p->mnmax()) {
+      index_(harmonics_), r_mn_(p->mnmax()), z_mn_(p->mnmax()),
+      inverse_root_finder_(configuration) {
   std::iota(index_.begin(), index_.end(), 0);
   this->build_interpolator_array(r_mn_, parser_->rmnc(), ifactory);
   this->build_interpolator_array(z_mn_, parser_->zmns(), ifactory);
@@ -88,7 +93,6 @@ IR3 morphism_vmec::inverse(
     const IR3& X, const std::pair<double, double>& guess) const {
   double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
   double r = std::sqrt(x * x + y * y), zeta = std::atan2(y, x);
-  multiroot_c1 root_finder(multiroot_c1::newton, 1.0e-12, 100);
   using IR2 = std::array<double, 2>;
   using IR4 = std::array<double, 4>;
   std::function<std::pair<IR2, IR4>(const IR2&)> zero_fdf =
@@ -112,7 +116,7 @@ IR3 morphism_vmec::inverse(
         });
     return {{a.r - r, a.z - z}, {a.drdu, a.drdw, a.dzdu, a.dzdw}};
   };
-  auto roots = root_finder(zero_fdf, IR2 {guess.first, guess.second});
+  auto roots = inverse_root_finder_(zero_fdf, IR2 {guess.first, guess.second});
   auto [flux, theta] = reflection_past_axis(roots[0], roots[1]);
   return {flux, zeta, theta};
 }

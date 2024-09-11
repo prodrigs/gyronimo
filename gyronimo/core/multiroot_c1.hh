@@ -20,7 +20,6 @@
 #ifndef GYRONIMO_MULTIROOT_C1
 #define GYRONIMO_MULTIROOT_C1
 
-#include <gyronimo/core/error.hh>
 #include <gyronimo/core/generators.hh>
 
 #include <gsl/gsl_multiroots.h>
@@ -39,21 +38,21 @@ namespace gyronimo {
     - Most general case, may not be optimal when evaluating derivatives:
     ```
     container_t guess = {1.0, ..., 2.2};
-    container_t root = multiroot_c1(multiroot_c1::hybridj, 1e-9, 75)(
+    container_t root = multiroot_c1(gsl_multiroot_fdfsolver_hybridj, 1e-9, 75)(
         my_root_f, my_root_df, my_root_fdf, guess);
     ```
     - Simplified case, recommended only when the computation of the function
     cannot be recycled for the computation of the jacobian:
     ```
     container_t guess = {1.0, ..., 2.2};
-    container_t root = multiroot_c1(multiroot_c1::gnewton, 1e-9, 75)(
+    container_t root = multiroot_c1(gsl_multiroot_fdfsolver_gnewton, 1e-9, 75)(
         my_root_f, my_root_df, guess);
     ```
     - Simplest case, works only with the `newton` method:
     ```
     container_t guess = {1.0, ..., 2.2};
-    container_t root =
-        multiroot_c1(multiroot_c1::newton, 1e-9, 75)(my_root_fdf, guess);
+    container_t root = multiroot_c1(gsl_multiroot_fdfsolver_newton, 1e-9, 75)(
+        my_root_fdf, guess);
     ```
     Here, `container_t` and `container_d_t` are any storage types following
     `SizedContiguousRange`, `my_root_f` is a `std::function<container_t(const
@@ -68,11 +67,17 @@ namespace gyronimo {
 */
 class multiroot_c1 {
  public:
-  enum solver { hybridsj, hybridj, newton, gnewton };
+  struct runtime_error : public std::runtime_error {
+    runtime_error(const char* message) : std::runtime_error(message) {};
+  };
+  struct configuration_t {
+    const gsl_multiroot_fdfsolver_type* method;
+    const double tolerance_abs, tolerance_rel;
+    const bool is_residual_tested;
+    const size_t iterations;
+  };
 
-  multiroot_c1(solver s, double tolerance, size_t iterations)
-      : method_(this->get_gsl_solver_type(s)), iterations_(iterations),
-        tolerance_(tolerance) {};
+  multiroot_c1(const configuration_t& c) : configuration_(c) {};
 
   template<SizedContiguousRange UserArgs>
   using user_function_t = typename std::function<UserArgs(const UserArgs&)>;
@@ -94,26 +99,27 @@ class multiroot_c1 {
       user_function_t<UserArgs>& f, user_dfunction_t<UserArgs, UserDArgs>& df,
       user_fdfunction_t<UserArgs, UserDArgs>& fdf, const UserArgs& guess) const;
 
-  const gsl_multiroot_fdfsolver_type* method() const { return method_; };
-  double tolerance() const { return tolerance_; };
-  size_t iterations() const { return iterations_; };
+  const configuration_t get_configuration() const { return configuration_; };
  private:
-  const gsl_multiroot_fdfsolver_type* method_;
-  const size_t iterations_;
-  const double tolerance_;
+  const configuration_t configuration_;
 
-  inline const gsl_multiroot_fdfsolver_type* get_gsl_solver_type(
-      const solver& s) const;
+  inline bool is_iteration_converged(const gsl_multiroot_fdfsolver* s) const;
+  inline void deallocate_gsl_objects(
+      gsl_multiroot_fdfsolver* solver, gsl_vector* guess_gsl,
+      gsl_multiroot_function_fdf* struct_fdf_gsl) const;
 
   template<SizedContiguousRange UserArgs>
-  UserArgs solve(gsl_multiroot_fdfsolver* solver) const;
+  UserArgs solve_kernel(gsl_multiroot_fdfsolver* solver) const;
 
   template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
-  struct function_pack {
+  struct function_pack_t {
     user_function_t<UserArgs>* f;
     user_dfunction_t<UserArgs, UserDArgs>* df;
     user_fdfunction_t<UserArgs, UserDArgs>* fdf;
   };
+  template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
+  auto allocate_gsl_objects(
+      function_pack_t<UserArgs, UserDArgs>& fpack, const UserArgs& guess) const;
 
   template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
   static int translation_function(
@@ -125,33 +131,16 @@ class multiroot_c1 {
   static int translation_fdfunction(
       const gsl_vector* args_gsl, void* fpack, gsl_vector* eval_gsl,
       gsl_matrix* deval_gsl);
-
-  template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
-  auto allocate_gsl_objects(
-      function_pack<UserArgs, UserDArgs>& fpack, const UserArgs& guess) const;
-  inline void deallocate_gsl_objects(
-      gsl_multiroot_fdfsolver* solver, gsl_vector* guess_gsl,
-      gsl_multiroot_function_fdf* struct_fdf_gsl) const;
 };
-
-inline const gsl_multiroot_fdfsolver_type* multiroot_c1::get_gsl_solver_type(
-    const solver& s) const {
-  switch (s) {
-    case solver::hybridsj: return gsl_multiroot_fdfsolver_hybridsj;
-    case solver::hybridj: return gsl_multiroot_fdfsolver_hybridj;
-    case solver::gnewton: return gsl_multiroot_fdfsolver_gnewton;
-    default: return gsl_multiroot_fdfsolver_newton;
-  }
-}
 
 template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
 UserArgs multiroot_c1::operator()(
     user_function_t<UserArgs>& f, user_dfunction_t<UserArgs, UserDArgs>& df,
     user_fdfunction_t<UserArgs, UserDArgs>& fdf, const UserArgs& guess) const {
-  function_pack<UserArgs, UserDArgs> pack = {&f, &df, &fdf};
+  function_pack_t<UserArgs, UserDArgs> pack = {&f, &df, &fdf};
   auto [solver, guess_gsl, struct_fdf_gsl] =
       allocate_gsl_objects<UserArgs, UserDArgs>(pack, guess);
-  UserArgs root = solve<UserArgs>(solver);
+  UserArgs root = solve_kernel<UserArgs>(solver);
   deallocate_gsl_objects(solver, guess_gsl, struct_fdf_gsl);
   return root;
 }
@@ -182,34 +171,37 @@ UserArgs multiroot_c1::operator()(
 }
 
 template<SizedContiguousRange UserArgs>
-UserArgs multiroot_c1::solve(gsl_multiroot_fdfsolver* solver) const {
-  for (auto iteration : std::views::iota(1u, iterations_)) {
+UserArgs multiroot_c1::solve_kernel(gsl_multiroot_fdfsolver* solver) const {
+  for (auto iteration : std::views::iota(1u, configuration_.iterations)) {
     int flag = gsl_multiroot_fdfsolver_iterate(solver);
     switch (flag) {
-      case GSL_ENOPROG:
-        error(__func__, __FILE__, __LINE__, "iteration is stuck.", 1);
-      case GSL_ENOPROGJ:
-        error(__func__, __FILE__, __LINE__, "jacobian not improving.", 1);
-      case GSL_EBADFUNC:
-        error(__func__, __FILE__, __LINE__, "singular function (Inf/NaN).", 1);
+      case GSL_ENOPROG: throw runtime_error("iteration is stuck.");
+      case GSL_ENOPROGJ: throw runtime_error("jacobian not improving.");
+      case GSL_EBADFUNC: throw runtime_error("singular function (Inf/NaN).");
     }
-    if (gsl_multiroot_test_residual(solver->f, tolerance_) == GSL_SUCCESS)
-      break;
+    if (this->is_iteration_converged(solver)) break;
   }
-  if (gsl_multiroot_test_residual(solver->f, tolerance_) == GSL_CONTINUE)
-    error(__func__, __FILE__, __LINE__, "max iterations exceeded.", 1);
+  if (!this->is_iteration_converged(solver))
+    throw runtime_error("max iterations exceeded.");
 
   UserArgs root = generate_sized<UserArgs>(solver->x->size);
   std::ranges::copy(std::span(solver->x->data, solver->x->size), root.begin());
   return root;
 }
 
+inline bool multiroot_c1::is_iteration_converged(const gsl_multiroot_fdfsolver* solver) const {
+  auto convergence_flag = (configuration_.is_residual_tested ?
+      gsl_multiroot_test_residual(solver->f, configuration_.tolerance_abs) :
+      gsl_multiroot_test_delta(solver->dx, solver->x, configuration_.tolerance_abs, configuration_.tolerance_rel));
+  return (convergence_flag == GSL_SUCCESS ? true : false);
+};
+
 template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
 int multiroot_c1::translation_function(
     const gsl_vector* args_gsl, void* fpack, gsl_vector* eval_gsl) {
   UserArgs args = generate_sized<UserArgs>(args_gsl->size);
   std::ranges::copy(std::span(args_gsl->data, args_gsl->size), args.begin());
-  auto* pk = static_cast<function_pack<UserArgs, UserDArgs>*>(fpack);
+  auto* pk = static_cast<function_pack_t<UserArgs, UserDArgs>*>(fpack);
   UserArgs eval = (*pk->f)(args);
   std::ranges::copy(eval, eval_gsl->data);
   return GSL_SUCCESS;
@@ -220,7 +212,7 @@ int multiroot_c1::translation_dfunction(
     const gsl_vector* args_gsl, void* fpack, gsl_matrix* deval_gsl) {
   UserArgs args = generate_sized<UserArgs>(args_gsl->size);
   std::ranges::copy(std::span(args_gsl->data, args_gsl->size), args.begin());
-  auto* pk = static_cast<function_pack<UserArgs, UserDArgs>*>(fpack);
+  auto* pk = static_cast<function_pack_t<UserArgs, UserDArgs>*>(fpack);
   UserDArgs deval = (*pk->df)(args);
   std::ranges::copy(deval, deval_gsl->data);
   return GSL_SUCCESS;
@@ -232,7 +224,7 @@ int multiroot_c1::translation_fdfunction(
     gsl_matrix* deval_gsl) {
   UserArgs args = generate_sized<UserArgs>(args_gsl->size);
   std::ranges::copy(std::span(args_gsl->data, args_gsl->size), args.begin());
-  auto* pk = static_cast<function_pack<UserArgs, UserDArgs>*>(fpack);
+  auto* pk = static_cast<function_pack_t<UserArgs, UserDArgs>*>(fpack);
   std::pair<UserArgs, UserDArgs> eval = (*pk->fdf)(args);
   std::ranges::copy(eval.first, eval_gsl->data);
   std::ranges::copy(eval.second, deval_gsl->data);
@@ -241,9 +233,9 @@ int multiroot_c1::translation_fdfunction(
 
 template<SizedContiguousRange UserArgs, SizedContiguousRange UserDArgs>
 auto multiroot_c1::allocate_gsl_objects(
-    function_pack<UserArgs, UserDArgs>& fpack, const UserArgs& guess) const {
+    function_pack_t<UserArgs, UserDArgs>& fpack, const UserArgs& guess) const {
   const size_t n = guess.size();
-  gsl_multiroot_fdfsolver* solver = gsl_multiroot_fdfsolver_alloc(method_, n);
+  gsl_multiroot_fdfsolver* solver = gsl_multiroot_fdfsolver_alloc(configuration_.method, n);
   gsl_vector* guess_gsl = gsl_vector_alloc(n);
   auto* struct_fdf_gsl = new gsl_multiroot_function_fdf {
       &translation_function<UserArgs, UserDArgs>,
