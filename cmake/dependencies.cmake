@@ -24,7 +24,7 @@ message(STATUS "  library: " ${GSL_LIBRARIES})
 find_package(Boost 1.73.0 REQUIRED)
 message(STATUS "  include: " ${Boost_INCLUDE_DIRS})
 
-# add libraries to provide VMEC support (ncxx4 and dependencies) if required;
+# if supporting VMEC, finds the needed resources (netcdf-cxx4 and netcdf):
 if(SUPPORT_VMEC)
   message(STATUS "Configuring VMEC support (SUPPORT_VMEC=ON)")
 
@@ -33,17 +33,29 @@ if(SUPPORT_VMEC)
   if(ncxx4-config_found)
     message(STATUS "  found ncxx4-config: " "${ncxx4-config_found}")
     execute_process(COMMAND "${ncxx4-config_found}" --includedir
-        OUTPUT_VARIABLE ncxx4_include_dirs)
-    string(STRIP ${ncxx4_include_dirs} ncxx4_include_dirs)
+        OUTPUT_VARIABLE NCXX4_INCLUDE_DIRS)
+    string(STRIP ${NCXX4_INCLUDE_DIRS} NCXX4_INCLUDE_DIRS)
     execute_process(COMMAND "${ncxx4-config_found}" --libs
         OUTPUT_VARIABLE ncxx4_libs_raw)
     string(REGEX MATCH "^\ ?-L[^\ ]+" part1 ${ncxx4_libs_raw})  # removes...
     string(REGEX MATCH "\ -l[^\ ]+" part2 ${ncxx4_libs_raw})  # ...extraneous...
-    string(JOIN " " ncxx4_libraries ${part1} ${part2})  # ... -lnetcdf info.
-    message(STATUS "  include: " ${ncxx4_include_dirs})
-    message(STATUS "  library: " ${ncxx4_libraries})
+    string(JOIN " " NCXX4_LIBRARIES ${part1} ${part2})  # ... -lnetcdf info.
+    message(STATUS "  include: " ${NCXX4_INCLUDE_DIRS})
+    message(STATUS "  library: " ${NCXX4_LIBRARIES})
   else()
     message(FATAL_ERROR "ncxx4-config not found in PATH")
+  endif()
+
+  # tries to find the nc-config utility in the current PATH:
+  find_program(nc-config_found "nc-config")
+  if(nc-config_found)
+    message(STATUS "  found nc-config: " "${nc-config_found}")
+    execute_process(COMMAND "${nc-config_found}" --libs
+        OUTPUT_VARIABLE nc_libs_raw)
+    string(STRIP ${nc_libs_raw} NC_LIBRARIES)
+    message(STATUS "  library: " ${NC_LIBRARIES})
+  else()
+    message(FATAL_ERROR "nc-config not found in PATH")
   endif()
 else()
   message(STATUS "Skipping VMEC support (SUPPORT_VMEC=OFF)")

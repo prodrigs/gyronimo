@@ -57,8 +57,9 @@ set_target_properties(gyronimo PROPERTIES VERSION ${PROJECT_VERSION})
 target_link_libraries(gyronimo PUBLIC ${GSL_LIBRARIES})
 
 if(SUPPORT_VMEC)
-  target_include_directories(gyronimo PUBLIC ${ncxx4_include_dirs})
-  target_link_libraries(gyronimo PUBLIC ${ncxx4_libraries})
+  target_include_directories(gyronimo PUBLIC ${NCXX4_INCLUDE_DIRS})
+  target_link_libraries(gyronimo PUBLIC ${NCXX4_LIBRARIES})
+  target_link_libraries(gyronimo PUBLIC ${NC_LIBRARIES})
 endif()
 install(TARGETS gyronimo LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
