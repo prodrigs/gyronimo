@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
+// Copyright (C) 2022-2024 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,16 +41,16 @@ const morphism_vmec::cis_container_t& morphism_vmec::cached_cis(
   return cis_mn;
 }
 
-const multiroot_c1::configuration_t morphism_vmec::default_configuration_ =
-{.method = gsl_multiroot_fdfsolver_newton, .tolerance_abs = 1e-12,
-.tolerance_rel = 1e-12, .is_residual_tested = false, .iterations = 10};
+const multiroot_c1::settings_t morphism_vmec::default_settings_ = {
+    .method = gsl_multiroot_fdfsolver_newton, .tolerance_abs = 1e-12,
+    .tolerance_rel = 1e-12, .is_residual_tested = false, .iterations = 10};
 
 morphism_vmec::morphism_vmec(
     const parser_vmec* p, const interpolator1d_factory* ifactory,
-    const multiroot_c1::configuration_t& configuration)
+    const multiroot_c1::settings_t& settings)
     : parser_(p), harmonics_(p->mnmax()), m_(p->xm()), n_(p->xn()),
       index_(harmonics_), r_mn_(p->mnmax()), z_mn_(p->mnmax()),
-      inverse_root_finder_(configuration) {
+      inverse_root_finder_(settings) {
   std::iota(index_.begin(), index_.end(), 0);
   this->build_interpolator_array(r_mn_, parser_->rmnc(), ifactory);
   this->build_interpolator_array(z_mn_, parser_->zmns(), ifactory);
@@ -69,13 +69,6 @@ void morphism_vmec::build_interpolator_array(
       });
 }
 
-IR3 morphism_vmec::inverse(const IR3& X) const {
-  double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
-  double r = std::sqrt(x * x + y * y), zeta = std::atan2(y, x);
-  auto [r_axis, z_axis] = get_rz({0, zeta, 0});
-  return this->inverse(X, {0.5, std::atan2(z - z_axis, r - r_axis)});
-}
-
 std::pair<double, double> morphism_vmec::get_rz(const IR3& q) const {
   double flux = q[IR3::u], zeta = q[IR3::v], theta = q[IR3::w];
   const auto& cis_mn = morphism_vmec::cached_cis(theta, zeta);
@@ -92,7 +85,7 @@ std::pair<double, double> morphism_vmec::get_rz(const IR3& q) const {
 IR3 morphism_vmec::inverse(
     const IR3& X, const std::pair<double, double>& guess) const {
   double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
-  double r = std::sqrt(x * x + y * y), zeta = std::atan2(y, x);
+  double r = std::hypot(x, y), zeta = std::atan2(y, x);
   using IR2 = std::array<double, 2>;
   using IR4 = std::array<double, 4>;
   std::function<std::pair<IR2, IR4>(const IR2&)> zero_fdf =
@@ -161,8 +154,9 @@ dIR3 morphism_vmec::del(const IR3& q) const {
       });
   double sin_zeta = std::sin(zeta), cos_zeta = std::cos(zeta);
   return {
-      a.drdu * cos_zeta, a.drdv * cos_zeta - a.r * sin_zeta, a.drdw * cos_zeta,
-      a.drdu * sin_zeta, a.drdv * sin_zeta + a.r * cos_zeta, a.drdw * sin_zeta,
+      a.drdu * cos_zeta, a.drdv * cos_zeta - a.r * sin_zeta,
+      a.drdw * cos_zeta, a.drdu * sin_zeta,
+      a.drdv * sin_zeta + a.r * cos_zeta, a.drdw * sin_zeta,
       a.dzdu, a.dzdv, a.dzdw};
 }
 
@@ -206,9 +200,9 @@ ddIR3 morphism_vmec::ddel(const IR3& q) const {
       a.d2rdudu * cos_zeta, a.d2rdudv * cos_zeta - a.drdu * sin_zeta,
       a.d2rdudw * cos_zeta,
       (a.d2rdvdv - a.r) * cos_zeta - 2 * a.drdv * sin_zeta,
-      a.d2rdvdw * cos_zeta - a.drdw * sin_zeta,
-      a.d2rdwdw * cos_zeta, a.d2rdudu * sin_zeta,
-      a.d2rdudv * sin_zeta + a.drdu * cos_zeta, a.d2rdudw * sin_zeta,
+      a.d2rdvdw * cos_zeta - a.drdw * sin_zeta, a.d2rdwdw * cos_zeta,
+      a.d2rdudu * sin_zeta, a.d2rdudv * sin_zeta + a.drdu * cos_zeta,
+      a.d2rdudw * sin_zeta,
       (a.d2rdvdv - a.r) * sin_zeta + 2 * a.drdv * cos_zeta,
       a.d2rdvdw * sin_zeta + a.drdw * cos_zeta, a.d2rdwdw * sin_zeta,
       a.d2zdudu, a.d2zdudv, a.d2zdudw, a.d2zdvdv, a.d2zdvdw, a.d2zdwdw};
