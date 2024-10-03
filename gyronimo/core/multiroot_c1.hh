@@ -75,9 +75,9 @@ class multiroot_c1 {
  public:
   struct settings_t {
     const gsl_multiroot_fdfsolver_type* method;
-    const double tolerance_abs, tolerance_rel;
-    const bool is_residual_tested;
-    const size_t iterations;
+    double tolerance_abs, tolerance_rel;
+    bool is_residual_tested;
+    size_t iterations;
   };
   multiroot_c1(const settings_t& c) : settings_(c) {};
   const settings_t get_settings() const { return settings_; };
