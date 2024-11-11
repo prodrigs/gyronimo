@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2024 Paulo Rodrigues.
+// Copyright (C) 2024 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,21 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
 
-// @version.hh, this file is part of ::gyronimo::
+// @version.cc, this file is part of ::gyronimo::
 
-#ifndef GYRONIMO_VERSION
-#define GYRONIMO_VERSION
-
-#include <string>
+#include <gyronimo/version.hh>
 
 namespace gyronimo {
 
-constexpr int version_major = 0;
-constexpr int version_minor = 3;
-constexpr int version_patch = 1;
-
-extern const std::string git_commit_hash;
+#ifndef GYRONIMO_GIT_COMMIT_HASH
+#define GYRONIMO_GIT_COMMIT_HASH "unavailable"
+#endif
+const std::string git_commit_hash = GYRONIMO_GIT_COMMIT_HASH;
 
 }  // end namespace gyronimo.
-
-#endif  // GYRONIMO_VERSION

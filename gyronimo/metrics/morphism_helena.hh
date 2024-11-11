@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2024 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #ifndef GYRONIMO_MORPHISM_HELENA
 #define GYRONIMO_MORPHISM_HELENA
 
+#include <gyronimo/core/multiroot.hh>
 #include <gyronimo/interpolators/interpolator2d.hh>
 #include <gyronimo/metrics/morphism.hh>
 #include <gyronimo/parsers/parser_helena.hh>
@@ -43,7 +44,8 @@ namespace gyronimo {
 class morphism_helena : public morphism {
  public:
   morphism_helena(
-      const parser_helena* parser, const interpolator2d_factory* ifactory);
+      const parser_helena* parser, const interpolator2d_factory* ifactory,
+      const multiroot::settings_t& settings = default_settings_);
   virtual ~morphism_helena() override;
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
@@ -54,8 +56,11 @@ class morphism_helena : public morphism {
   virtual IR3 translation(const IR3& q, const IR3& delta) const override;
   const parser_helena* parser() const { return parser_; };
  private:
+  const static multiroot::settings_t default_settings_;
   const parser_helena* parser_;
   interpolator2d *R_, *z_;
+  multiroot root_finder_;
+
   std::pair<double, double> reflection_past_axis(double s, double chi) const;
 };
 

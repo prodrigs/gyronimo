@@ -20,6 +20,7 @@
 #ifndef GYRONIMO_GENERATORS
 #define GYRONIMO_GENERATORS
 
+#include <gyronimo/core/error.hh>
 #include <ranges>
 
 namespace gyronimo {
@@ -39,7 +40,7 @@ template<SizedContiguousRange Container> requires
   (! std::constructible_from<Container, size_t>)
 Container generate_sized(size_t size) {
   Container sample;
-  if(size != sample.size()) gyronimo::error(__func__, __FILE__, __LINE__,
+  if(size != sample.size()) error(__func__, __FILE__, __LINE__,
       "required size does not match template deduction.", 1);
   return sample;
 }

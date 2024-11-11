@@ -18,45 +18,21 @@
 # @dependencies.cmake, this file is part of ::gyronimo::
 
 find_package(GSL REQUIRED)
-message(STATUS "  include: " ${GSL_INCLUDE_DIRS})
-message(STATUS "  library: " ${GSL_LIBRARIES})
+message(STATUS "  include: " "${GSL_INCLUDE_DIRS}")
+message(STATUS "  library: " "${GSL_LIBRARIES}")
 
 find_package(Boost 1.73.0 REQUIRED)
-message(STATUS "  include: " ${Boost_INCLUDE_DIRS})
+message(STATUS "  include: " "${Boost_INCLUDE_DIRS}")
 
-# if supporting VMEC, finds the needed resources (netcdf-cxx4 and netcdf):
+# add libraries to provide VMEC support (netcdf-cxx4) if required;
 if(SUPPORT_VMEC)
   message(STATUS "Configuring VMEC support (SUPPORT_VMEC=ON)")
-
-  # tries to find the ncxx4-config utility in the current PATH:
-  find_program(ncxx4-config_found "ncxx4-config")
-  if(ncxx4-config_found)
-    message(STATUS "  found ncxx4-config: " "${ncxx4-config_found}")
-    execute_process(COMMAND "${ncxx4-config_found}" --includedir
-        OUTPUT_VARIABLE NCXX4_INCLUDE_DIRS)
-    string(STRIP ${NCXX4_INCLUDE_DIRS} NCXX4_INCLUDE_DIRS)
-    execute_process(COMMAND "${ncxx4-config_found}" --libs
-        OUTPUT_VARIABLE ncxx4_libs_raw)
-    string(REGEX MATCH "^\ ?-L[^\ ]+" part1 ${ncxx4_libs_raw})  # removes...
-    string(REGEX MATCH "\ -l[^\ ]+" part2 ${ncxx4_libs_raw})  # ...extraneous...
-    string(JOIN " " NCXX4_LIBRARIES ${part1} ${part2})  # ... -lnetcdf info.
-    message(STATUS "  include: " ${NCXX4_INCLUDE_DIRS})
-    message(STATUS "  library: " ${NCXX4_LIBRARIES})
-  else()
-    message(FATAL_ERROR "ncxx4-config not found in PATH")
-  endif()
-
-  # tries to find the nc-config utility in the current PATH:
-  find_program(nc-config_found "nc-config")
-  if(nc-config_found)
-    message(STATUS "  found nc-config: " "${nc-config_found}")
-    execute_process(COMMAND "${nc-config_found}" --libs
-        OUTPUT_VARIABLE nc_libs_raw)
-    string(STRIP ${nc_libs_raw} NC_LIBRARIES)
-    message(STATUS "  library: " ${NC_LIBRARIES})
-  else()
-    message(FATAL_ERROR "nc-config not found in PATH")
-  endif()
+  find_path(NCXX4_INCLUDE_DIRS NAMES ncOpaqueType.h REQUIRED)
+  find_library(NCXX4_LIBRARIES NAMES netcdf-cxx4 REQUIRED)
+  find_library(NC_LIBRARIES NAMES netcdf REQUIRED)
+  message(STATUS "  include: " "${NCXX4_INCLUDE_DIRS}")
+  message(STATUS "  library: " "${NCXX4_LIBRARIES}")
+  message(STATUS "  library: " "${NC_LIBRARIES}")
 else()
   message(STATUS "Skipping VMEC support (SUPPORT_VMEC=OFF)")
 endif()
