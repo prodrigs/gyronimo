@@ -96,4 +96,18 @@ double IR3field_c1::partial_t_magnitude(
           this->covariant(position, time)));
 }
 
+//! Gradient of the field.
+/*!
+    Implements the rule
+    \f$\nabla_i E^i = \partial_i E^i + \Gamma^i_{ij} E^j\f$
+*/
+
+double IR3field_c1::div(const IR3& position, double time) const {
+  double ijacobian = 1.0 / this->metric()->jacobian(position);
+  IR3 E = this->contravariant(position, time);
+  dIR3 dE = this->del_contravariant(position, time);
+  return dE[dIR3::uu] + dE[dIR3::vv] + dE[dIR3::ww] +
+    ijacobian * inner_product(E, this->metric()->del_jacobian(position));
+}
+
 } // end namespace gyronimo.
