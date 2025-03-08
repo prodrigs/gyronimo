@@ -21,6 +21,13 @@
 
 namespace gyronimo {
 
+dIR3 transpose(const dIR3& m){
+  return {
+    m[dIR3::uu], m[dIR3::vu], m[dIR3::wu],
+    m[dIR3::uv], m[dIR3::vv], m[dIR3::wv],
+    m[dIR3::uw], m[dIR3::vw], m[dIR3::ww]};
+};
+
 dIR3 inverse(const dIR3& m) {
   double ideterminant = 1.0/(
       m[dIR3::uu]*(m[dIR3::vv]*m[dIR3::ww] - m[dIR3::vw]*m[dIR3::wv]) -
