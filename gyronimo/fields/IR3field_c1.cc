@@ -110,6 +110,7 @@ double IR3field_c1::div(const IR3& position, double time) const {
     ijacobian * inner_product(E, this->metric()->del_jacobian(position));
 }
 
+// Contravariant derivate of the magnetic field versor
 dIR3 versor_field::del_contravariant(const IR3& q, double t) const {
   IR3 Bj = base_field_->contravariant(q, t);
   IR3 dB = base_field_->del_magnitude(q, t);
@@ -125,6 +126,23 @@ dIR3 versor_field::del_contravariant(const IR3& q, double t) const {
     iB * (dBj[dIR3::wu] - iB * Bj[IR3::w] * dB[IR3::u]),
     iB * (dBj[dIR3::wv] - iB * Bj[IR3::w] * dB[IR3::v]),
     iB * (dBj[dIR3::ww] - iB * Bj[IR3::w] * dB[IR3::w])};
+}
+
+// Covariant derivate of the magnetic field versor
+dIR3 versor_field::del_covariant(const IR3& q, double t) const {
+  IR3 b_con = this->contravariant(q, t);
+  dIR3 del_b_con = this->del_contravariant(q, t);
+  ddIR3 christoffel = this->metric()->christoffel_second_kind(q);
+  return {
+    del_b_con[dIR3::uu] + christoffel[ddIR3::uuu]*b_con[IR3::u] + christoffel[ddIR3::uuv]*b_con[IR3::v] + christoffel[ddIR3::uuw]*b_con[IR3::w],
+    del_b_con[dIR3::uv] + christoffel[ddIR3::uuv]*b_con[IR3::u] + christoffel[ddIR3::uvv]*b_con[IR3::v] + christoffel[ddIR3::uvw]*b_con[IR3::w],
+    del_b_con[dIR3::uw] + christoffel[ddIR3::uuw]*b_con[IR3::u] + christoffel[ddIR3::uvw]*b_con[IR3::v] + christoffel[ddIR3::uww]*b_con[IR3::w],
+    del_b_con[dIR3::vu] + christoffel[ddIR3::vuu]*b_con[IR3::u] + christoffel[ddIR3::vuv]*b_con[IR3::v] + christoffel[ddIR3::vuw]*b_con[IR3::w],
+    del_b_con[dIR3::vv] + christoffel[ddIR3::vuv]*b_con[IR3::u] + christoffel[ddIR3::vvv]*b_con[IR3::v] + christoffel[ddIR3::vvw]*b_con[IR3::w],
+    del_b_con[dIR3::vw] + christoffel[ddIR3::vuw]*b_con[IR3::u] + christoffel[ddIR3::vvw]*b_con[IR3::v] + christoffel[ddIR3::vww]*b_con[IR3::w],
+    del_b_con[dIR3::wu] + christoffel[ddIR3::wuu]*b_con[IR3::u] + christoffel[ddIR3::wuv]*b_con[IR3::v] + christoffel[ddIR3::wuw]*b_con[IR3::w],
+    del_b_con[dIR3::wv] + christoffel[ddIR3::wuv]*b_con[IR3::u] + christoffel[ddIR3::wvv]*b_con[IR3::v] + christoffel[ddIR3::wvw]*b_con[IR3::w],
+    del_b_con[dIR3::ww] + christoffel[ddIR3::wuw]*b_con[IR3::u] + christoffel[ddIR3::wvw]*b_con[IR3::v] + christoffel[ddIR3::www]*b_con[IR3::w]};
 }
 
 } // end namespace gyronimo.

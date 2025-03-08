@@ -74,6 +74,7 @@ class versor_field : public IR3field_c1 {
       return {0,0,0};
     };
     virtual dIR3 del_contravariant(const IR3& q, double t) const override;
+    virtual dIR3 del_covariant(const IR3& q, double t) const override;
 
   private:
      const IR3field_c1* base_field_;
