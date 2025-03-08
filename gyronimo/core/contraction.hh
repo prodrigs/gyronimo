@@ -33,6 +33,8 @@ IR3 contraction(const SM3& g, const IR3& B);
 template<contraction_index> IR3 contraction(const dIR3& A, const IR3& B);
 template<contraction_index> dIR3 contraction(const dSM3& A, const IR3& B);
 template<contraction_index> dIR3 contraction(const dIR3& A, const SM3& B);
+template<contraction_index> dIR3 contraction(const ddIR3& A, const IR3& B);
+template<contraction_index> dIR3 contraction(const dIR3& A, const dIR3& B);
 template<contraction_index> ddIR3 contraction(const ddIR3& A, const SM3& g);
 template<contraction_index> ddIR3 contraction(const dIR3& A, const ddIR3& B);
 dSM3 contraction(const SM3& g, const dSM3& d, const SM3& h);

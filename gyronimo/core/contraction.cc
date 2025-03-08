@@ -398,4 +398,117 @@ template<> dIR3 contraction<second>(const dIR3& A, const SM3& B) {
           B[SM3::ww] * A[dIR3::ww]};
 }
 
+//! First-index contraction of a `ddIR3` object with an `IR3` object.
+/*!
+    Returns the object @f$ C_{ij} = A^k_{ij} B_k @f$,
+    ```
+    C[dIR3::ij] = A[ddIR3::uij]*B[IR3::u]
+         + A[ddIR3::vij]*B[IR3::v] + A[ddIR3::wij]*B[IR3::w]
+    ```
+    with `i,j = u, v, w`. Be sure to respect the variances of `A` and `B`.
+*/
+template<> dIR3 contraction<second>(const dIR3& A, const dIR3& B) {
+  return {
+    A[ddIR3::uuu]*B[IR3::u] + A[ddIR3::vuu]*B[IR3::v] + A[ddIR3::wuu]*B[IR3::w],
+    A[ddIR3::uuv]*B[IR3::u] + A[ddIR3::vuv]*B[IR3::v] + A[ddIR3::wuv]*B[IR3::w],
+    A[ddIR3::uuw]*B[IR3::u] + A[ddIR3::vuw]*B[IR3::v] + A[ddIR3::wuw]*B[IR3::w],
+    A[ddIR3::uvu]*B[IR3::u] + A[ddIR3::vvu]*B[IR3::v] + A[ddIR3::wvu]*B[IR3::w],
+    A[ddIR3::uvv]*B[IR3::u] + A[ddIR3::vvv]*B[IR3::v] + A[ddIR3::wvv]*B[IR3::w],
+    A[ddIR3::uvw]*B[IR3::u] + A[ddIR3::vvw]*B[IR3::v] + A[ddIR3::wvw]*B[IR3::w],
+    A[ddIR3::uwu]*B[IR3::u] + A[ddIR3::vwu]*B[IR3::v] + A[ddIR3::wwu]*B[IR3::w],
+    A[ddIR3::uwv]*B[IR3::u] + A[ddIR3::vwv]*B[IR3::v] + A[ddIR3::wwv]*B[IR3::w],
+    A[ddIR3::uww]*B[IR3::u] + A[ddIR3::vww]*B[IR3::v] + A[ddIR3::www]*B[IR3::w]};
+}
+
+//! Second-index contraction of a `ddIR3` object with an `IR3` object.
+/*!
+    Returns the object @f$ C^i_j = A^i_{jk} B^k @f$,
+    ```
+    C[dIR3::ij] = A[ddIR3::iju]*B[IR3::u]
+         + A[ddIR3::ijv]*B[IR3::v] + A[ddIR3::ijw]*B[IR3::w]
+    ```
+    with `i,j = u, v, w`. Be sure to respect the variances of `A` and `B`.
+*/
+template<> dIR3 contraction<second>(const dIR3& A, const dIR3& B) {
+  return {
+    A[ddIR3::uuu]*B[IR3::u] + A[ddIR3::uuv]*B[IR3::v] + A[ddIR3::uuw]*B[IR3::w],
+    A[ddIR3::uuv]*B[IR3::u] + A[ddIR3::uvv]*B[IR3::v] + A[ddIR3::uvw]*B[IR3::w],
+    A[ddIR3::uuw]*B[IR3::u] + A[ddIR3::uvw]*B[IR3::v] + A[ddIR3::uww]*B[IR3::w],
+    A[ddIR3::vuu]*B[IR3::u] + A[ddIR3::vuv]*B[IR3::v] + A[ddIR3::vuw]*B[IR3::w],
+    A[ddIR3::vuv]*B[IR3::u] + A[ddIR3::vvv]*B[IR3::v] + A[ddIR3::vvw]*B[IR3::w],
+    A[ddIR3::vuw]*B[IR3::u] + A[ddIR3::vvw]*B[IR3::v] + A[ddIR3::vww]*B[IR3::w],
+    A[ddIR3::wuu]*B[IR3::u] + A[ddIR3::wuv]*B[IR3::v] + A[ddIR3::wuw]*B[IR3::w],
+    A[ddIR3::wuv]*B[IR3::u] + A[ddIR3::wvv]*B[IR3::v] + A[ddIR3::wvw]*B[IR3::w],
+    A[ddIR3::wuw]*B[IR3::u] + A[ddIR3::wvw]*B[IR3::v] + A[ddIR3::www]*B[IR3::w]};
+}
+
+// TODO : New contractions implemented for M3 objects (theoretically storing the same 
+// information as dIR3 objects but representing different quantitities).
+
+//! First-index contraction of a `dIR3` object with the first-index of a `dIR3` object.
+/*!
+    Returns the object @f$ C^{ij} = A^i_k B^{kj} @f$,
+    ```
+    C[dIR3::ij] = A[dIR3::ui]*B[dIR3::uj]
+         + A[dIR3::vi]*B[dIR3::vj] + A[dIR3::wi]*B[dIR3::wj]
+    ```
+    with `i,j = u, v, w`. Be sure to respect the variances of `A` and `B`.
+*/
+template<> dIR3 contraction<first, first>(const dIR3& A, const dIR3& B) {
+  return {
+    dA[dIR3::uu]*dB[dIR3::uu] + dA[dIR3::vu]*dB[dIR3::vu] + dA[dIR3::wu]*dB[dIR3::wu],
+    dA[dIR3::uu]*dB[dIR3::uv] + dA[dIR3::vu]*dB[dIR3::vv] + dA[dIR3::wu]*dB[dIR3::wv],
+    dA[dIR3::uu]*dB[dIR3::uw] + dA[dIR3::vu]*dB[dIR3::vw] + dA[dIR3::wu]*dB[dIR3::ww],
+    dA[dIR3::uv]*dB[dIR3::uu] + dA[dIR3::vv]*dB[dIR3::vu] + dA[dIR3::wv]*dB[dIR3::wu],
+    dA[dIR3::uv]*dB[dIR3::uv] + dA[dIR3::vv]*dB[dIR3::vv] + dA[dIR3::wv]*dB[dIR3::wv],
+    dA[dIR3::uv]*dB[dIR3::uw] + dA[dIR3::vv]*dB[dIR3::vw] + dA[dIR3::wv]*dB[dIR3::ww],
+    dA[dIR3::uw]*dB[dIR3::uu] + dA[dIR3::vw]*dB[dIR3::vu] + dA[dIR3::ww]*dB[dIR3::wu],
+    dA[dIR3::uw]*dB[dIR3::uv] + dA[dIR3::vw]*dB[dIR3::vv] + dA[dIR3::ww]*dB[dIR3::wv],
+    dA[dIR3::uw]*dB[dIR3::uw] + dA[dIR3::vw]*dB[dIR3::vw] + dA[dIR3::ww]*dB[dIR3::ww]};
+}
+
+//! Second-index contraction of a `dIR3` object with the first-index of a `dIR3` object.
+/*!
+    Returns the object @f$ C^{ij} = A^i_k B^{kj} @f$,
+    ```
+    C[dIR3::ij] = A[dIR3::iu]*B[dIR3::uj]
+         + A[dIR3::iv]*B[dIR3::vj] + A[dIR3::iw]*B[dIR3::wj]
+    ```
+    with `i,j = u, v, w`. Be sure to respect the variances of `A` and `B`.
+*/
+template<> dIR3 contraction<second, first>(const dIR3& A, const dIR3& B) {
+  return {
+    A[dIR3::uu]*B[dIR3::uu] + A[dIR3::uv]*B[dIR3::vu] + A[dIR3::uw]*B[dIR3::wu],
+    A[dIR3::uu]*B[dIR3::uv] + A[dIR3::uv]*B[dIR3::vv] + A[dIR3::uw]*B[dIR3::wv],
+    A[dIR3::uu]*B[dIR3::uw] + A[dIR3::uv]*B[dIR3::vw] + A[dIR3::uw]*B[dIR3::ww],
+    A[dIR3::vu]*B[dIR3::uu] + A[dIR3::vv]*B[dIR3::vu] + A[dIR3::vw]*B[dIR3::wu],
+    A[dIR3::vu]*B[dIR3::uv] + A[dIR3::vv]*B[dIR3::vv] + A[dIR3::vw]*B[dIR3::wv],
+    A[dIR3::vu]*B[dIR3::uw] + A[dIR3::vv]*B[dIR3::vw] + A[dIR3::vw]*B[dIR3::ww],
+    A[dIR3::wu]*B[dIR3::uu] + A[dIR3::wv]*B[dIR3::vu] + A[dIR3::ww]*B[dIR3::wu],
+    A[dIR3::wu]*B[dIR3::uv] + A[dIR3::wv]*B[dIR3::vv] + A[dIR3::ww]*B[dIR3::wv],
+    A[dIR3::wu]*B[dIR3::uw] + A[dIR3::wv]*B[dIR3::vw] + A[dIR3::ww]*B[dIR3::ww]};
+}
+
+//! Second-index contraction of a `dIR3` object with the second-index of a `dIR3` object.
+/*!
+    Returns the object @f$ C^{ij} = A^i_k B^{jk} @f$,
+    ```
+    C[dIR3::ij] = A[dIR3::iu]*B[dIR3::ju]
+         + A[dIR3::iv]*B[dIR3::jv] + A[dIR3::iw]*B[dIR3::jw]
+    ```
+    with `i,j = u, v, w`. Be sure to respect the variances of `A` and `B`.
+*/
+template<> dIR3 contraction<second, second>(const dIR3& A, const dIR3& B) {
+  return {
+    dA[dIR3::uu]*dB[dIR3::uu] + dA[dIR3::uv]*dB[dIR3::uv] + dA[dIR3::uw]*dB[dIR3::uw],
+    dA[dIR3::uu]*dB[dIR3::vu] + dA[dIR3::uv]*dB[dIR3::vv] + dA[dIR3::uw]*dB[dIR3::vw],
+    dA[dIR3::uu]*dB[dIR3::wu] + dA[dIR3::uv]*dB[dIR3::wv] + dA[dIR3::uw]*dB[dIR3::ww],
+    dA[dIR3::vu]*dB[dIR3::uu] + dA[dIR3::vv]*dB[dIR3::uv] + dA[dIR3::vw]*dB[dIR3::uw],
+    dA[dIR3::vu]*dB[dIR3::vu] + dA[dIR3::vv]*dB[dIR3::vv] + dA[dIR3::vw]*dB[dIR3::vw],
+    dA[dIR3::vu]*dB[dIR3::wu] + dA[dIR3::vv]*dB[dIR3::wv] + dA[dIR3::vw]*dB[dIR3::ww],
+    dA[dIR3::wu]*dB[dIR3::uu] + dA[dIR3::wv]*dB[dIR3::uv] + dA[dIR3::ww]*dB[dIR3::uw],
+    dA[dIR3::wu]*dB[dIR3::vu] + dA[dIR3::wv]*dB[dIR3::vv] + dA[dIR3::ww]*dB[dIR3::vw],
+    dA[dIR3::wu]*dB[dIR3::wu] + dA[dIR3::wv]*dB[dIR3::wv] + dA[dIR3::ww]*dB[dIR3::ww]};
+}
+
 }  // end namespace gyronimo.
