@@ -70,7 +70,7 @@ class orbit_observer {
       : zstar_(zstar), vstar_(vstar), eq_pointer_(e), gc_pointer_(g) {};
   void operator()(const gyronimo::guiding_centre::state& s, double t) {
     gyronimo::IR3 x = gc_pointer_->get_position(s);
-    double v_parallel = gc_pointer_->get_vpp(s);
+    double v_parallel = gc_pointer_->v_parallel(s);
     double bphi = eq_pointer_->covariant_versor(x, t)[gyronimo::IR3::w];
     double flux = x[gyronimo::IR3::u] * x[gyronimo::IR3::u];
     std::cout << t << " " << x[gyronimo::IR3::u] << " " << x[gyronimo::IR3::v]

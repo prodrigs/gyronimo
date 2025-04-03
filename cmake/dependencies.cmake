@@ -18,33 +18,21 @@
 # @dependencies.cmake, this file is part of ::gyronimo::
 
 find_package(GSL REQUIRED)
-message(STATUS "  include: " ${GSL_INCLUDE_DIRS})
-message(STATUS "  library: " ${GSL_LIBRARIES})
+message(STATUS "  include: " "${GSL_INCLUDE_DIRS}")
+message(STATUS "  library: " "${GSL_LIBRARIES}")
 
 find_package(Boost 1.73.0 REQUIRED)
-message(STATUS "  include: " ${Boost_INCLUDE_DIRS})
+message(STATUS "  include: " "${Boost_INCLUDE_DIRS}")
 
-# add libraries to provide VMEC support (ncxx4 and dependencies) if required;
+# add libraries to provide VMEC support (netcdf-cxx4) if required;
 if(SUPPORT_VMEC)
   message(STATUS "Configuring VMEC support (SUPPORT_VMEC=ON)")
-
-  # tries to find the ncxx4-config utility in the current PATH:
-  find_program(ncxx4-config_found "ncxx4-config")
-  if(ncxx4-config_found)
-    message(STATUS "  found ncxx4-config: " "${ncxx4-config_found}")
-    execute_process(COMMAND "${ncxx4-config_found}" --includedir
-        OUTPUT_VARIABLE ncxx4_include_dirs)
-    string(STRIP ${ncxx4_include_dirs} ncxx4_include_dirs)
-    execute_process(COMMAND "${ncxx4-config_found}" --libs
-        OUTPUT_VARIABLE ncxx4_libs_raw)
-    string(REGEX MATCH "^\ ?-L[^\ ]+" part1 ${ncxx4_libs_raw})  # removes...
-    string(REGEX MATCH "\ -l[^\ ]+" part2 ${ncxx4_libs_raw})  # ...extraneous...
-    string(JOIN " " ncxx4_libraries ${part1} ${part2})  # ... -lnetcdf info.
-    message(STATUS "  include: " ${ncxx4_include_dirs})
-    message(STATUS "  library: " ${ncxx4_libraries})
-  else()
-    message(FATAL_ERROR "ncxx4-config not found in PATH")
-  endif()
+  find_path(NCXX4_INCLUDE_DIRS NAMES ncOpaqueType.h REQUIRED)
+  find_library(NCXX4_LIBRARIES NAMES netcdf-cxx4 REQUIRED)
+  find_library(NC_LIBRARIES NAMES netcdf REQUIRED)
+  message(STATUS "  include: " "${NCXX4_INCLUDE_DIRS}")
+  message(STATUS "  library: " "${NCXX4_LIBRARIES}")
+  message(STATUS "  library: " "${NC_LIBRARIES}")
 else()
   message(STATUS "Skipping VMEC support (SUPPORT_VMEC=OFF)")
 endif()

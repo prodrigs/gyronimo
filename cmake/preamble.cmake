@@ -41,7 +41,7 @@ if(git_found)
 else()
   set(GIT_COMMIT_HASH "unavailable")
 endif()
-add_compile_definitions("-DGYRONIMO_GIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
+add_compile_definitions("GYRONIMO_GIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
 # extracts version numbers from version.hh, stores output in gyronimo_version:
 set(version_major_regex "[ \t]*constexpr int version_major = ([0-9]+);")

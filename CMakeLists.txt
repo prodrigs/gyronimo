@@ -57,8 +57,9 @@ set_target_properties(gyronimo PROPERTIES VERSION ${PROJECT_VERSION})
 target_link_libraries(gyronimo PUBLIC ${GSL_LIBRARIES})
 
 if(SUPPORT_VMEC)
-  target_include_directories(gyronimo PUBLIC ${ncxx4_include_dirs})
-  target_link_libraries(gyronimo PUBLIC ${ncxx4_libraries})
+  target_include_directories(gyronimo PUBLIC ${NCXX4_INCLUDE_DIRS})
+  target_link_libraries(gyronimo PUBLIC ${NCXX4_LIBRARIES})
+  target_link_libraries(gyronimo PUBLIC ${NC_LIBRARIES})
 endif()
 install(TARGETS gyronimo LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
@@ -74,3 +75,14 @@ foreach(target_file IN LISTS apps_sources)
   target_link_libraries(${target} PRIVATE gyronimo)
   install(TARGETS ${target} DESTINATION bin)
 endforeach()
+
+# creates the gyronimo-config utility:
+get_target_property(GYRONIMO_INCLUDE_DIRS gyronimo INCLUDE_DIRECTORIES)
+get_target_property(GYRONIMO_LIBRARIES gyronimo LINK_LIBRARIES)
+list(REMOVE_DUPLICATES GYRONIMO_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES GYRONIMO_LIBRARIES)
+string(REPLACE ";" ":" GYRONIMO_INCLUDE_DIRS "${GYRONIMO_INCLUDE_DIRS}")
+string(REPLACE ";" ":" GYRONIMO_LIBRARIES "${GYRONIMO_LIBRARIES}")
+configure_file(cmake/gyronimo-config.in gyronimo-config @ONLY
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

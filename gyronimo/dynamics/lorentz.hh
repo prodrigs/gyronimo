@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
+// Copyright (C) 2022-2024 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ class lorentz {
   double Oref_tilde() const { return Oref_tilde_; };
   double Eref_tilde() const { return Eref_tilde_; };
   double energy_kinetic(const state& s) const;
+  double v_parallel(const state& s, const double& time) const;
   double energy_parallel(const state& s, const double& time) const;
   double energy_perpendicular(const state& s, const double& time) const;
   IR3 get_position(const state& s) const;

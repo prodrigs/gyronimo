@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2023 Paulo Rodrigues.
+// Copyright (C) 2021-2024 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -72,34 +72,34 @@ guiding_centre::guiding_centre(
 guiding_centre::state guiding_centre::operator()(
     const state& s, const double& time) const {
   IR3 q = this->get_position(s);
-  double vpp = this->get_vpp(s);
+  double v_parallel = this->v_parallel(s);
   double jacobian = magnetic_field_->metric()->jacobian(q);
   double B_time = time * iB_time_factor_;
   IR3 covariant_b = magnetic_field_->covariant_versor(q, B_time);
   IR3 contravariant_b = magnetic_field_->contravariant_versor(q, B_time);
   auto [iO_tilde, iota, c_tilde, d_tilde] = this->dynamical_system_coefficients(
-      q, vpp, B_time, jacobian, covariant_b);
+      q, v_parallel, B_time, jacobian, covariant_b);
   IR3 dot_X = iota *
-      (vpp * contravariant_b +
+      (v_parallel * contravariant_b +
        iO_tilde *
-           (vpp * c_tilde +
+           (v_parallel * c_tilde +
             cross_product<contravariant>(covariant_b, d_tilde, jacobian)));
-  double dot_vpp =
+  double dot_v_parallel =
       -iota * inner_product(contravariant_b + iO_tilde * c_tilde, d_tilde);
-  return {dot_X[IR3::u], dot_X[IR3::v], dot_X[IR3::w], dot_vpp};
+  return {dot_X[IR3::u], dot_X[IR3::v], dot_X[IR3::w], dot_v_parallel};
 }
 
 //! Returns the sequence @f$\{1/\tilde{\Omega},\iota,\tilde{c},\tilde{d}\}@f$.
 std::tuple<double, double, IR3, IR3>
 guiding_centre::dynamical_system_coefficients(
-    IR3& q, double vpp, double B_time, double jacobian,
+    IR3& q, double v_parallel, double B_time, double jacobian,
     IR3& covariant_b) const {
   double inverseB = 1 / magnetic_field_->magnitude(q, B_time);
   IR3 gradB = Lref_ * magnetic_field_->del_magnitude(q, B_time);
   auto [curl_b, partial_t_b] =
       this->del_versor_b(q, B_time, inverseB, jacobian, gradB, covariant_b);
-  IR3 c_tilde = vpp * curl_b;
-  IR3 d_tilde = 0.5 * mu_tilde_ * gradB + vpp * partial_t_b;
+  IR3 c_tilde = v_parallel * curl_b;
+  IR3 d_tilde = 0.5 * mu_tilde_ * gradB + v_parallel * partial_t_b;
   if (electric_field_) {
     double E_time = B_time * (iE_time_factor_ / iB_time_factor_);
     d_tilde -= Oref_tilde_ * electric_field_->covariant(q, E_time);
@@ -130,15 +130,17 @@ std::array<IR3, 2> guiding_centre::del_versor_b(
   return {curl_b, partial_t_b};
 }
 
-//! Returns the `guiding_centre::state` at a given  position, time, vpp sign.
+//! Returns the `guiding_centre::state` at a given  position, time, v_parallel sign.
 guiding_centre::state guiding_centre::generate_state(
     const IR3& position, const double& energy_tilde,
     const guiding_centre::vpp_sign& sign, const double& time) const {
   double iLref = 1 / Lref_;
   double B_time = time * iB_time_factor_;
   double B = magnetic_field_->magnitude(position, B_time);
-  double vpp = (double)(sign)*std::sqrt(energy_tilde - mu_tilde_ * B);
-  return {iLref * position[0], iLref * position[1], iLref * position[2], vpp};
+  double v_parallel = (double)(sign)*std::sqrt(energy_tilde - mu_tilde_ * B);
+  return {
+      iLref * position[0], iLref * position[1], iLref * position[2],
+      v_parallel};
 }
 
 //! Returns the perpendicular energy, normalised to `Uref`.

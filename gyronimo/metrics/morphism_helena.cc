@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Paulo Rodrigues and Manuel Assunção.
+// Copyright (C) 2022-2024 Paulo Rodrigues and Manuel Assunção.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,9 +25,14 @@
 
 namespace gyronimo {
 
+const multiroot::settings_t morphism_helena::default_settings_ = {
+    .method = gsl_multiroot_fsolver_hybrids, .tolerance_abs = 1e-12,
+    .tolerance_rel = 1e-12, .is_residual_tested = false, .iterations = 10};
+
 morphism_helena::morphism_helena(
-    const parser_helena* p, const interpolator2d_factory* ifactory)
-    : parser_(p), R_(nullptr), z_(nullptr) {
+    const parser_helena* p, const interpolator2d_factory* ifactory,
+    const multiroot::settings_t& settings)
+    : parser_(p), R_(nullptr), z_(nullptr), root_finder_(settings) {
   double Rgeo = p->rgeo();
   double a = p->eps() * Rgeo;
   dblock_adapter s_range(p->s()), chi_range(p->chi());
@@ -50,14 +55,13 @@ IR3 morphism_helena::operator()(const IR3& q) const {
 IR3 morphism_helena::inverse(const IR3& X) const {
   double x = X[IR3::u], y = X[IR3::v], z = X[IR3::w];
   double R = std::sqrt(x * x + y * y);
-  multiroot root_finder(gsl_multiroot_fsolver_hybrids, 1.0e-12, 75);
   using IR2 = std::array<double, 2>;
   IR2 guess = {0.5, std::atan2(z, R - parser_->rmag())};
   std::function<IR2(const IR2&)> zero_function = [&](const IR2& args) {
     auto [s, chi] = reflection_past_axis(args[0], args[1]);
     return IR2({(*R_)(s, chi) - R, (*z_)(s, chi) - z});
   };
-  IR2 roots = root_finder(zero_function, guess);
+  IR2 roots = root_finder_(zero_function, guess);
   auto [s, chi] = reflection_past_axis(roots[0], roots[1]);
   return {s, chi, std::atan2(-y, x)};
 }
@@ -67,14 +71,13 @@ IR3 morphism_helena::translation(const IR3& q, const IR3& delta) const {
   double y = X[IR3::v] + delta[IR3::v];
   double z = X[IR3::w] + delta[IR3::w];
   double R = std::sqrt(x * x + y * y);
-  multiroot root_finder(gsl_multiroot_fsolver_hybrids, 1.0e-12, 75);
   using IR2 = std::array<double, 2>;
   IR2 guess = {q[IR3::u], q[IR3::v]};
   std::function<IR2(const IR2&)> zero_function = [&](const IR2& args) {
     auto [s, chi] = reflection_past_axis(args[0], args[1]);
     return IR2 {(*R_)(s, chi) - R, (*z_)(s, chi) - z};
   };
-  IR2 roots = root_finder(zero_function, guess);
+  IR2 roots = root_finder_(zero_function, guess);
   auto [s, chi] = reflection_past_axis(roots[0], roots[1]);
   return {s, chi, std::atan2(-y, x)};
 }
@@ -83,8 +86,9 @@ dIR3 morphism_helena::del(const IR3& q) const {
   double R = (*R_)(s, chi);
   double Ru = R_->partial_u(s, chi), Rv = R_->partial_v(s, chi);
   double cos = std::cos(phi), sin = std::sin(phi);
-  return {Ru * cos, Rv * cos, -R * sin, -Ru * sin, -Rv * sin,
-      -R * cos, z_->partial_u(s, chi), z_->partial_v(s, chi), 0.0};
+  return {
+      Ru * cos, Rv * cos, -R * sin, -Ru * sin, -Rv * sin, -R * cos,
+      z_->partial_u(s, chi), z_->partial_v(s, chi), 0.0};
 }
 ddIR3 morphism_helena::ddel(const IR3& q) const {
   double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]), phi = q[IR3::w];
@@ -96,9 +100,10 @@ ddIR3 morphism_helena::ddel(const IR3& q) const {
   double Zuu = z_->partial2_uu(s, chi), Zuv = z_->partial2_uv(s, chi),
       Zvv = z_->partial2_vv(s, chi);
   double cos = std::cos(phi), sin = std::sin(phi);
-  return {Ruu * cos, Ruv * cos, -Ru * sin, Rvv * cos,
-      -Rv * sin, -R * cos, -Ruu * sin, -Ruv * sin, -Ru * cos,
-      -Rvv * sin, -Rv * cos, R * sin, Zuu, Zuv, 0, Zvv, 0, 0};
+  return {
+      Ruu * cos, Ruv * cos, -Ru * sin, Rvv * cos, -Rv * sin, -R * cos,
+      -Ruu * sin, -Ruv * sin, -Ru * cos, -Rvv * sin, -Rv * cos, R * sin,
+      Zuu, Zuv, 0, Zvv, 0, 0};
 }
 double morphism_helena::jacobian(const IR3& q) const {
   double s = q[IR3::u], chi = parser_->reduce_chi(q[IR3::v]);

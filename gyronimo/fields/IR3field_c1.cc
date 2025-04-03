@@ -52,8 +52,25 @@ IR3 IR3field_c1::partial_t_covariant(const IR3& position, double time) const {
   return this->metric()->to_covariant(dE, position);
 }
 
+//! Divergence of the field.
+/*!
+    Implements the rule
+    \f$ \nabla\cdot\mathbf{E} =
+        \partial_i E^i + \sqrt{g}^{-1} E^i \partial_i \sqrt{g} \f$
+*/
+double IR3field_c1::div(const IR3& position, double time) const {
+  double ijacobian = 1.0 / this->metric()->jacobian(position);
+  IR3 E = this->contravariant(position, time);
+  dIR3 dE = this->del_contravariant(position, time);
+  return dE[dIR3::uu] + dE[dIR3::vv] + dE[dIR3::ww] +
+      ijacobian * inner_product(E, this->metric()->del_jacobian(position));
+}
+
 //! Contravariant components of the curl operator.
-//  Note: dE[ij]=d_j E_i, J curl^k = e^kij (d_i E_j - d_j E_i)
+/*!
+    Implements the rule
+    \f$ \sqrt{g}(\nabla\times\mathbf{E})^k = \epsilon^{kij}\partial_iE_j \f$
+*/
 IR3 IR3field_c1::curl(const IR3& position, double time) const {
   double ijacobian = 1.0 / this->metric()->jacobian(position);
   dIR3 dE = this->del_covariant(position, time);
@@ -94,6 +111,40 @@ double IR3field_c1::partial_t_magnitude(
       inner_product(
           this->partial_t_contravariant(position, time),
           this->covariant(position, time)));
+}
+
+dIR3 versor_field::del_contravariant(const IR3& q, double t) const {
+  IR3 Bj = base_field_->contravariant(q, t);
+  IR3 dB = base_field_->del_magnitude(q, t);
+  double iB = 1 / base_field_->magnitude(q, t);
+  dIR3 dBj = base_field_->del_contravariant(q, t);
+  return {
+    iB * (dBj[dIR3::uu] - iB * Bj[IR3::u] * dB[IR3::u]),
+    iB * (dBj[dIR3::uv] - iB * Bj[IR3::u] * dB[IR3::v]),
+    iB * (dBj[dIR3::uw] - iB * Bj[IR3::u] * dB[IR3::w]),
+    iB * (dBj[dIR3::vu] - iB * Bj[IR3::v] * dB[IR3::u]),
+    iB * (dBj[dIR3::vv] - iB * Bj[IR3::v] * dB[IR3::v]),
+    iB * (dBj[dIR3::vw] - iB * Bj[IR3::v] * dB[IR3::w]),
+    iB * (dBj[dIR3::wu] - iB * Bj[IR3::w] * dB[IR3::u]),
+    iB * (dBj[dIR3::wv] - iB * Bj[IR3::w] * dB[IR3::v]),
+    iB * (dBj[dIR3::ww] - iB * Bj[IR3::w] * dB[IR3::w])};
+}
+
+// Covariant derivate of the magnetic field versor
+dIR3 versor_field::del_covariant(const IR3& q, double t) const {
+  IR3 b_con = this->contravariant(q, t);
+  dIR3 del_b_con = this->del_contravariant(q, t);
+  ddIR3 christoffel = this->metric()->christoffel_second_kind(q);
+  return {
+    del_b_con[dIR3::uu] + christoffel[ddIR3::uuu]*b_con[IR3::u] + christoffel[ddIR3::uuv]*b_con[IR3::v] + christoffel[ddIR3::uuw]*b_con[IR3::w],
+    del_b_con[dIR3::uv] + christoffel[ddIR3::uuv]*b_con[IR3::u] + christoffel[ddIR3::uvv]*b_con[IR3::v] + christoffel[ddIR3::uvw]*b_con[IR3::w],
+    del_b_con[dIR3::uw] + christoffel[ddIR3::uuw]*b_con[IR3::u] + christoffel[ddIR3::uvw]*b_con[IR3::v] + christoffel[ddIR3::uww]*b_con[IR3::w],
+    del_b_con[dIR3::vu] + christoffel[ddIR3::vuu]*b_con[IR3::u] + christoffel[ddIR3::vuv]*b_con[IR3::v] + christoffel[ddIR3::vuw]*b_con[IR3::w],
+    del_b_con[dIR3::vv] + christoffel[ddIR3::vuv]*b_con[IR3::u] + christoffel[ddIR3::vvv]*b_con[IR3::v] + christoffel[ddIR3::vvw]*b_con[IR3::w],
+    del_b_con[dIR3::vw] + christoffel[ddIR3::vuw]*b_con[IR3::u] + christoffel[ddIR3::vvw]*b_con[IR3::v] + christoffel[ddIR3::vww]*b_con[IR3::w],
+    del_b_con[dIR3::wu] + christoffel[ddIR3::wuu]*b_con[IR3::u] + christoffel[ddIR3::wuv]*b_con[IR3::v] + christoffel[ddIR3::wuw]*b_con[IR3::w],
+    del_b_con[dIR3::wv] + christoffel[ddIR3::wuv]*b_con[IR3::u] + christoffel[ddIR3::wvv]*b_con[IR3::v] + christoffel[ddIR3::wvw]*b_con[IR3::w],
+    del_b_con[dIR3::ww] + christoffel[ddIR3::wuw]*b_con[IR3::u] + christoffel[ddIR3::wvw]*b_con[IR3::v] + christoffel[ddIR3::www]*b_con[IR3::w]};
 }
 
 } // end namespace gyronimo.

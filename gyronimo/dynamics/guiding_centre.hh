@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2021-2023 Paulo Rodrigues.
+// Copyright (C) 2021-2024 Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ namespace gyronimo {
     storing the curvilinear position divided by the reference length
     (@f$\tilde{q}^\gamma = q^\gamma/L_{ref}@f$) and the normalised parallel
     velocity. Member functions are provided to convert between these types
-    [i.e., `get_position(state)`, `get_vpp(state)`, `generate_state(q, v)`].
+    [i.e., `get_position(state)`, `v_parallel(state)`, `generate_state(q, v)`].
 */
 class guiding_centre {
  public:
@@ -94,7 +94,7 @@ class guiding_centre {
   double mu_tilde() const { return mu_tilde_; };
   double qom_tilde() const { return qom_tilde_; };
   double Oref_tilde() const { return Oref_tilde_; };
-  double get_vpp(const state& s) const { return s[3]; };
+  double v_parallel(const state& s) const { return s[3]; };
   double energy_parallel(const state& s) const;
   double energy_perpendicular(const state& s, const double& time) const;
   IR3 get_position(const state& s) const;

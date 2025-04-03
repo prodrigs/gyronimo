@@ -44,7 +44,7 @@ class parser_vmec {
   ~parser_vmec() {};
 
   int signgs() const { return signgs_; };
-  bool is_axisymmetric() const { return is_axisymmetric_; };
+  bool is_stell_symmetric() const { return !stell_symmetry_flag_; };
   size_t mnmax() const { return mnmax_; };
   size_t mnmax_nyq() const { return mnmax_nyq_; };
   size_t mpol() const { return mpol_; };
@@ -110,7 +110,7 @@ class parser_vmec {
   const narray_type& zmns() const { return zmns_; };
  private:
   int signgs_;
-  bool is_axisymmetric_;
+  bool stell_symmetry_flag_;
   size_t mnmax_;
   size_t mnmax_nyq_;
   size_t mpol_;

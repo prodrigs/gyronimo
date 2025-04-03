@@ -67,18 +67,18 @@ void print_help() {
 }
 
 void print_info(const parser_vmec& vmec) {
-  std::cout << "axisymmetric: " << (vmec.is_axisymmetric() ? "yes\n" : "no\n");
-  std::cout << "fieldperiods: " << vmec.nfp() << '\n';
-  std::cout << "     nradial: " << vmec.ns() << '\n';
-  std::cout << "        ntor: " << vmec.ntor() << '\n';
-  std::cout << "        mpol: " << vmec.mpol() << '\n';
-  std::cout << "      signgs: " << vmec.signgs() << '\n';
-  std::cout << "       B_mag: " << vmec.B0() << " [T]" << '\n';
-  std::cout << "       R_mag: " << vmec.R0() << " [m]" << '\n';
-  std::cout << "       F_mag: " << vmec.rbtor0() << " [m.T]" << '\n';
-  std::cout << "       R_geo: " << vmec.rmajor() << " [m]" << '\n';
-  std::cout << "     a_minor: " << vmec.aminor() << " [m]" << '\n';
-  std::cout << "      volume: " << vmec.volume() << " [m^3]" << '\n';
+  std::cout << "stellsymmetry: " << (vmec.is_stell_symmetric() ? "y\n" : "n\n");
+  std::cout << " fieldperiods: " << vmec.nfp() << '\n';
+  std::cout << "      nradial: " << vmec.ns() << '\n';
+  std::cout << "         ntor: " << vmec.ntor() << '\n';
+  std::cout << "         mpol: " << vmec.mpol() << '\n';
+  std::cout << "       signgs: " << vmec.signgs() << '\n';
+  std::cout << "        B_mag: " << vmec.B0() << " [T]" << '\n';
+  std::cout << "        R_mag: " << vmec.R0() << " [m]" << '\n';
+  std::cout << "        F_mag: " << vmec.rbtor0() << " [m.T]" << '\n';
+  std::cout << "        R_geo: " << vmec.rmajor() << " [m]" << '\n';
+  std::cout << "      a_minor: " << vmec.aminor() << " [m]" << '\n';
+  std::cout << "       volume: " << vmec.volume() << " [m^3]" << '\n';
 }
 
 void print_profiles(const parser_vmec& vmec) {

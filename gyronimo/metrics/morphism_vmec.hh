@@ -1,6 +1,6 @@
 // ::gyronimo:: - gyromotion for the people, by the people -
 // An object-oriented library for gyromotion applications in plasma physics.
-// Copyright (C) 2022-2023 Manuel Assunção and Paulo Rodrigues.
+// Copyright (C) 2022-2024 Manuel Assunção and Paulo Rodrigues.
 
 // ::gyronimo:: is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #ifndef GYRONIMO_MORPHISM_VMEC
 #define GYRONIMO_MORPHISM_VMEC
 
+#include <gyronimo/core/multiroot_c1.hh>
 #include <gyronimo/interpolators/interpolator1d.hh>
 #include <gyronimo/metrics/morphism.hh>
 #include <gyronimo/parsers/parser_vmec.hh>
@@ -37,17 +38,21 @@ namespace gyronimo {
     normalised to its boundary value (`u`, or `VMEC` @f$\chi@f$), the toroidal
     angle (`v`, or `VMEC` @f$\zeta@f$, in rads) measured **counter-clockwise**
     when looking from the torus top, and an angle on the poloidal cross section
-    (`w`, or `VMEC` @f$\theta@f$, also in rads). More info at the website
+    (`w`, or `VMEC` @f$\theta@f$, also in rads). Only stellarator-symmetric
+    configurations are presently supported and an error is issued at
+    construction otherwise. More info at the website
     [STELLOPT](https://princetonuniversity.github.io/STELLOPT/VMEC.html).
 */
 class morphism_vmec : public morphism {
  public:
   using narray_type = parser_vmec::narray_type;
   morphism_vmec(
-      const parser_vmec* parser, const interpolator1d_factory* ifactory);
+      const parser_vmec* parser, const interpolator1d_factory* ifactory,
+      const multiroot_c1::settings_t& settings = default_settings_);
   virtual ~morphism_vmec() override {};
   virtual IR3 operator()(const IR3& q) const override;
   virtual IR3 inverse(const IR3& x) const override;
+  virtual double jacobian(const IR3& q) const override;
   virtual dIR3 del(const IR3& q) const override;
   virtual ddIR3 ddel(const IR3& q) const override;
   virtual IR3 translation(const IR3& q, const IR3& delta) const override;
@@ -55,11 +60,13 @@ class morphism_vmec : public morphism {
   const parser_vmec* my_parser() const { return parser_; };
   std::pair<double, double> get_rz(const IR3& q) const;
  private:
+  const static multiroot_c1::settings_t default_settings_;
   const parser_vmec* parser_;
   const size_t harmonics_;
   const narray_type m_, n_;
   std::vector<size_t> index_;
   std::vector<std::unique_ptr<interpolator1d>> r_mn_, z_mn_;
+  const multiroot_c1 inverse_root_finder_;
 
   using cis_container_t = std::vector<std::complex<double>>;
   const cis_container_t& cached_cis(double theta, double zeta) const;
@@ -69,14 +76,22 @@ class morphism_vmec : public morphism {
   void build_interpolator_array(
       std::vector<std::unique_ptr<interpolator1d>>& interpolator_array,
       const narray_type& samples_array, const interpolator1d_factory* ifactory);
-  struct aux_rz_t { double r, z; };
-  struct aux_del_t { double r, drdu, drdv, drdw, dzdu, dzdv, dzdw; };
+  struct aux_rz_t {
+    double r, z;
+  };
+  struct aux_rz_del_t {
+    double r, z, drdu, drdw, dzdu, dzdw;
+  };
+  struct aux_del_t {
+    double r, drdu, drdv, drdw, dzdu, dzdv, dzdw;
+  };
   struct aux_ddel_t {
     double r, drdu, drdv, drdw, dzdu, dzdv, dzdw;
     double d2rdudu, d2rdudv, d2rdudw, d2rdvdv, d2rdvdw, d2rdwdw;
     double d2zdudu, d2zdudv, d2zdudw, d2zdvdv, d2zdvdw, d2zdwdw;
   };
   friend aux_rz_t operator+(const aux_rz_t& x, const aux_rz_t& y);
+  friend aux_rz_del_t operator+(const aux_rz_del_t& x, const aux_rz_del_t& y);
   friend aux_del_t operator+(const aux_del_t& x, const aux_del_t& y);
   friend aux_ddel_t operator+(const aux_ddel_t& x, const aux_ddel_t& y);
 };
@@ -85,6 +100,10 @@ inline IR3 morphism_vmec::operator()(const IR3& q) const {
   double zeta = q[IR3::v];
   auto [r, z] = this->get_rz(q);
   return {r * std::cos(zeta), r * std::sin(zeta), z};
+}
+
+inline IR3 morphism_vmec::inverse(const IR3& x) const {
+  return this->inverse(x, {0.5, 0.0});
 }
 
 inline IR3 morphism_vmec::translation(const IR3& q, const IR3& delta) const {
@@ -103,10 +122,19 @@ inline morphism_vmec::aux_rz_t operator+(
   return {x.r + y.r, x.z + y.z};
 }
 
+inline morphism_vmec::aux_rz_del_t operator+(
+    const morphism_vmec::aux_rz_del_t& x,
+    const morphism_vmec::aux_rz_del_t& y) {
+  return {
+      x.r + y.r, x.z + y.z, x.drdu + y.drdu, x.drdw + y.drdw, x.dzdu + y.dzdu,
+      x.dzdw + y.dzdw};
+}
+
 inline morphism_vmec::aux_del_t operator+(
     const morphism_vmec::aux_del_t& x, const morphism_vmec::aux_del_t& y) {
-  return {x.r + y.r, x.drdu + y.drdu, x.drdv + y.drdv, x.drdw + y.drdw,
-          x.dzdu + y.dzdu, x.dzdv + y.dzdv, x.dzdw + y.dzdw};
+  return {
+      x.r + y.r, x.drdu + y.drdu, x.drdv + y.drdv, x.drdw + y.drdw,
+      x.dzdu + y.dzdu, x.dzdv + y.dzdv, x.dzdw + y.dzdw};
 }
 
 inline morphism_vmec::aux_ddel_t operator+(

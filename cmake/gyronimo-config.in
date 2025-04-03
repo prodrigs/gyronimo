@@ -1,0 +1,30 @@
+#!/bin/bash
+# ::gyronimo:: - gyromotion for the people, by the people -
+# An object-oriented library for gyromotion applications in plasma physics.
+# Copyright (C) 2024 Paulo Rodrigues.
+
+# ::gyronimo:: is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# ::gyronimo:: is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with ::gyronimo::.  If not, see <https://www.gnu.org/licenses/>.
+
+# @gyronimo-config, this file is part of ::gyronimo::
+
+GYRONIMO_INCLUDE_DIRS="@GYRONIMO_INCLUDE_DIRS@"
+GYRONIMO_LIBRARIES="@GYRONIMO_LIBRARIES@"
+
+while getopts ":ILlh" OPT; do
+  case ${OPT} in
+    I ) echo "${GYRONIMO_INCLUDE_DIRS}";;
+    l ) echo "${GYRONIMO_LIBRARIES}";;
+    h|\? ) echo "usage: gyronimo-config [-I] [-l]";;
+  esac
+done
