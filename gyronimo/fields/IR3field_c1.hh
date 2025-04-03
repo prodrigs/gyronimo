@@ -60,6 +60,25 @@ class IR3field_c1 : public IR3field {
   virtual double div(const IR3& position, double time) const;
 };
 
+class versor_field : public IR3field_c1 {
+  public:
+    versor_field(const IR3field_c1* p)
+      : IR3field_c1(1, p->t_factor(), p->metric()), base_field_(p) {};
+    virtual IR3 contravariant(const IR3& q, double t) const override {
+      return base_field_->contravariant_versor(q, t);
+    };
+    virtual IR3 covariant(const IR3& q, double t) const override {
+      return base_field_->covariant_versor(q, t);
+    };
+    virtual IR3 partial_t_contravariant(const IR3& q, double t) const override {
+      return {0,0,0};
+    };
+    virtual dIR3 del_contravariant(const IR3& q, double t) const override;
+
+  private:
+     const IR3field_c1* base_field_;
+};
+
 } // end namespace gyronimo.
 
 #endif // GYRONIMO_IR3FIELD_C1

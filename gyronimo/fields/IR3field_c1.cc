@@ -113,4 +113,21 @@ double IR3field_c1::partial_t_magnitude(
           this->covariant(position, time)));
 }
 
+dIR3 versor_field::del_contravariant(const IR3& q, double t) const {
+  IR3 Bj = base_field_->contravariant(q, t);
+  IR3 dB = base_field_->del_magnitude(q, t);
+  double iB = 1 / base_field_->magnitude(q, t);
+  dIR3 dBj = base_field_->del_contravariant(q, t);
+  return {
+    iB * (dBj[dIR3::uu] - iB * Bj[IR3::u] * dB[IR3::u]),
+    iB * (dBj[dIR3::uv] - iB * Bj[IR3::u] * dB[IR3::v]),
+    iB * (dBj[dIR3::uw] - iB * Bj[IR3::u] * dB[IR3::w]),
+    iB * (dBj[dIR3::vu] - iB * Bj[IR3::v] * dB[IR3::u]),
+    iB * (dBj[dIR3::vv] - iB * Bj[IR3::v] * dB[IR3::v]),
+    iB * (dBj[dIR3::vw] - iB * Bj[IR3::v] * dB[IR3::w]),
+    iB * (dBj[dIR3::wu] - iB * Bj[IR3::w] * dB[IR3::u]),
+    iB * (dBj[dIR3::wv] - iB * Bj[IR3::w] * dB[IR3::v]),
+    iB * (dBj[dIR3::ww] - iB * Bj[IR3::w] * dB[IR3::w])};
+}
+
 } // end namespace gyronimo.
