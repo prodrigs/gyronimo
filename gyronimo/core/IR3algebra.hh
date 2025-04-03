@@ -141,6 +141,9 @@ class ddIR3 {
   std::array<double, 18> data_;
 };
 
+//! Transpose of a dIR3 matrix.
+dIR3 transpose(const dIR3& m);
+
 //! Inverse of a dIR3 matrix.
 dIR3 inverse(const dIR3& m);
 
